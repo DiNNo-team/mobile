@@ -279,6 +279,7 @@ Nunca agregues paquetes con `npm install <paquete>`; siempre con `npx expo insta
 - `EXPO_PUBLIC_API_URL` es el origen **sin `/v1` y sin `/` final**. Las variables `EXPO_PUBLIC_*` quedan dentro de la app: **nunca pongas secretos en ellas.**
 - Sesión: `useAuth()` de `src/features/session/SessionProvider.tsx` (Firebase JS SDK con persistencia). Un solo flujo tras cualquier inicio de sesión (`GET /me` → `PROFILE_REQUIRED` → `POST /diners/me`). Las rutas se abren por `status` con `Stack.Protected`: no redirijas a mano.
 - Toda llamada pasa por `src/lib/api/client.ts` (`apiRequest`): token de Firebase, timeout de 60 s y errores normalizados (`ApiError` con `status`, `errorCode`, `kind`). Los textos para el usuario salen de `getErrorMessage`, nunca del `message` del backend.
+- Búsqueda: lo que eligió el comensal (origen: ubicación **o** zona, radio, categoría, personas) vive en `useSearchStore` (`src/features/search/store.ts`, zustand) y se borra al cerrar sesión; los datos del servidor, en TanStack Query (`src/features/search/queries.ts`). La ubicación sale solo del GPS con `expo-location` (`src/features/location/`): permiso en primer plano, máximo 10 s y, si falla, la app pasa a zona.
 - `localhost` no funciona desde el emulador: el backend local es `http://10.0.2.2:3000`. Después de cambiar `.env`, reinicia con `npx expo start -c`.
 
 ### Despliegue
