@@ -57,10 +57,6 @@ export default function ExploreScreen() {
         Rutas
       </Text>
       {__DEV__ ? <PlaceholderLink href="/kit" label="Ver el kit móvil" /> : null}
-      <PlaceholderLink href="/login" label="Ir a iniciar sesión" />
-      <PlaceholderLink href="/crear-cuenta" label="Ir a crear cuenta" />
-      <PlaceholderLink href="/verificar-correo" label="Ir a verificar correo" />
-      <PlaceholderLink href="/cuenta-restaurante" label="Ir a cuenta de restaurante" />
       {first ? <PlaceholderLink href={`/restaurante/${first.id}`} label={`Ver detalle de ${first.name}`} /> : null}
       <PlaceholderLink href={`/restaurante/${MISSING_RESTAURANT_ID}`} label="Ver un restaurante que no existe" />
     </ScreenPlaceholder>
