@@ -58,6 +58,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
+    [
+      // Foreground location only (ACCESS_COARSE/FINE_LOCATION). No background location, no motion data.
+      'expo-location',
+      {
+        locationWhenInUsePermission: 'DiNNo usa tu ubicación para mostrarte restaurantes con mesa cerca de ti.',
+        locationAlwaysAndWhenInUsePermission: false,
+        locationAlwaysPermission: false,
+        motionUsagePermission: false,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
