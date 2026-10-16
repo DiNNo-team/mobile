@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { Pressable, View } from 'react-native';
 
 import { PlaceholderLink, ScreenPlaceholder } from '@/components/ScreenPlaceholder';
-import { Text } from '@/components/ui/Text';
+import { SegmentedControl, Text } from '@/components/ui';
 import { env } from '@/config/env';
 import { searchApi } from '@/features/search/api';
 import { DEFAULT_RADIUS_KM } from '@/features/search/types';
@@ -10,11 +9,11 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { formatDistance } from '@/lib/format/distance';
 import { useTheme, type ThemePreference } from '@/theme/ThemeProvider';
 
-const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
+const THEME_OPTIONS = [
   { value: 'system', label: 'Sistema' },
   { value: 'light', label: 'Claro' },
   { value: 'dark', label: 'Oscuro' },
-];
+] as const satisfies readonly { value: ThemePreference; label: string }[];
 
 const MISSING_RESTAURANT_ID = '00000000-0000-4000-8000-000000000000';
 
@@ -36,21 +35,7 @@ export default function ExploreScreen() {
       <Text variant="label" tone="secondary">
         Tema
       </Text>
-      <View className="flex-row gap-2">
-        {THEME_OPTIONS.map((option) => (
-          <Pressable
-            key={option.value}
-            accessibilityRole="button"
-            accessibilityState={{ selected: preference === option.value }}
-            onPress={() => setPreference(option.value)}
-            className={`min-h-11 flex-1 items-center justify-center rounded-btn border-1.5 ${
-              preference === option.value ? 'border-accent bg-surface' : 'border-line bg-surface-2'
-            }`}
-          >
-            <Text variant="button">{option.label}</Text>
-          </Pressable>
-        ))}
-      </View>
+      <SegmentedControl options={THEME_OPTIONS} value={preference} onChange={setPreference} accessibilityLabel="Tema" />
 
       <Text variant="label" tone="secondary" className="mt-4">
         Conexión
@@ -71,6 +56,7 @@ export default function ExploreScreen() {
       <Text variant="label" tone="secondary" className="mt-4">
         Rutas
       </Text>
+      {__DEV__ ? <PlaceholderLink href="/kit" label="Ver el kit móvil" /> : null}
       <PlaceholderLink href="/login" label="Ir a iniciar sesión" />
       <PlaceholderLink href="/crear-cuenta" label="Ir a crear cuenta" />
       <PlaceholderLink href="/verificar-correo" label="Ir a verificar correo" />

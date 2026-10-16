@@ -50,16 +50,22 @@ Para agregar librerías usa siempre `npx expo install <paquete>` (elige versione
 ## 3. Correr la app (development build)
 
 1. Enciende el emulador desde Android Studio (*Device Manager* → ▶) o con `emulator -avd <nombre>`.
-2. **La primera vez, y cada vez que cambie algo nativo** (`app.config.ts`, una librería nativa nueva):
+2. **La primera vez**:
    ```bash
    npx expo run:android
    ```
    Genera la carpeta `android/` (no se versiona), compila con Gradle, instala **DiNNo** en el emulador y
    abre el servidor de desarrollo. La primera compilación tarda varios minutos.
-3. **El resto del tiempo** (solo cambias código TypeScript): `npx expo start` y presiona `a`. La app ya
+3. **Cada vez que cambie algo nativo** (`app.config.ts`, fuentes, una librería nativa nueva; siempre se
+   anuncia en `AVISOS.md`). `run:android` solo no basta, porque no vuelve a generar `android/` si ya existe:
+   ```bash
+   npx expo prebuild --clean
+   npx expo run:android
+   ```
+4. **El resto del tiempo** (solo cambias código TypeScript): `npx expo start` y presiona `a`. La app ya
    instalada se conecta al servidor y los cambios se ven al guardar.
 
-Si algo nativo se ve raro después de un `git pull`: `npx expo prebuild --clean` y `npx expo run:android`.
+Si `tailwind.config.js` cambia, reinicia limpiando la caché: `npx expo start -c`.
 
 ### SHA-1 del build (Google Cloud y Firebase)
 
@@ -109,6 +115,7 @@ Se leen solo en [`src/config/env.ts`](src/config/env.ts); en el resto del códig
 | Comando | Qué hace |
 |---|---|
 | `npx expo run:android` (o `npm run android`) | Compila e instala el development build en el emulador |
+| `npx expo prebuild --clean` | Regenera `android/` desde `app.config.ts` (antes de `run:android` tras un cambio nativo) |
 | `npx expo start` (o `npm start`) | Servidor de desarrollo para el build ya instalado. `-c` limpia la caché |
 | `npm test` | Pruebas (Jest con `jest-expo`) |
 | `npx expo lint` (o `npm run lint`) | ESLint |

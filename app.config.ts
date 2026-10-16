@@ -35,6 +35,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     [
+      // Plus Jakarta Sans embedded in the build: available from the first frame, with the family names of
+      // the manual's tokens (PlusJakartaSans_500Medium…), which on Android are the file names.
+      'expo-font',
+      {
+        fonts: [
+          'node_modules/@expo-google-fonts/plus-jakarta-sans/500Medium/PlusJakartaSans_500Medium.ttf',
+          'node_modules/@expo-google-fonts/plus-jakarta-sans/700Bold/PlusJakartaSans_700Bold.ttf',
+          'node_modules/@expo-google-fonts/plus-jakarta-sans/800ExtraBold/PlusJakartaSans_800ExtraBold.ttf',
+        ],
+      },
+    ],
+    [
       'expo-splash-screen',
       {
         image: './assets/images/splash-icon.png',

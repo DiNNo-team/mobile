@@ -22,11 +22,6 @@ module.exports = {
     borderRadius: { none: '0px', input: '12px', btn: '14px', tile: '16px', card: '20px', sheet: '28px', chip: '999px' },
     boxShadow: {},
     fontWeight: {},
-    fontFamily: {
-      sans: ['PlusJakartaSans_500Medium'],
-      bold: ['PlusJakartaSans_700Bold'],
-      extrabold: ['PlusJakartaSans_800ExtraBold'],
-    },
     fontSize: {
       display: ['48px', { lineHeight: '52px', letterSpacing: '-1.44px' }],
       h1: ['32px', { lineHeight: '36px', letterSpacing: '-0.96px' }],
@@ -40,8 +35,16 @@ module.exports = {
       chip: ['12px', { lineHeight: '16px' }],
     },
     extend: {
-      borderWidth: { 1.5: '1.5px' },
-      opacity: { 45: '0.45', 55: '0.55' },
+      // In `extend` because the NativeWind preset extends `sans` with the system font and would win otherwise.
+      fontFamily: {
+        sans: ['PlusJakartaSans_500Medium'],
+        bold: ['PlusJakartaSans_700Bold'],
+        extrabold: ['PlusJakartaSans_800ExtraBold'],
+      },
+      borderWidth: { 1.5: '1.5px', 3: '3px' },
+      opacity: { 12: '0.12', 45: '0.45', 55: '0.55' },
+      // Manual 9: empty states 360, dialogs 480, toasts 400.
+      maxWidth: { empty: '360px', dialog: '480px', toast: '400px' },
     },
   },
   plugins: [],

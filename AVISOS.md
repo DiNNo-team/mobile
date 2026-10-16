@@ -4,6 +4,80 @@
 
 ---
 
+## 15 oct 2026 (noche) · Sebastián · Kit móvil publicado (`src/components/ui`)
+
+**Después del pull hay que recompilar**, porque las fuentes ahora van incrustadas en el build:
+
+```bash
+npm install
+npx expo prebuild --clean
+npx expo run:android
+```
+
+> **Corrección del aviso anterior:** tras un cambio nativo (`app.config.ts`, fuentes o una librería nativa) no basta con `npx expo run:android`, porque no regenera `android/` si ya existe. Siempre va primero `npx expo prebuild --clean`.
+
+**Catálogo:** con la app en desarrollo, abre Explorar → «Ver el kit móvil» (ruta `/kit`). Ahí está cada componente con todos sus estados, en claro y oscuro (el selector de tema está arriba). Ábrelo antes de armar una pantalla.
+
+**Jacobo y Sergio, cómo armar una pantalla:**
+- **Todo sale de `@/components/ui`:**
+
+  ```tsx
+  import { Button, ScreenHeader, Text, TextField } from '@/components/ui';
+  ```
+
+  No uses `Text`, `TextInput` ni `Pressable` de React Native para cosas visibles, ni `style` con colores, ni `className` con colores o tamaños. Si te falta algo, pídemelo y lo agrego al kit.
+- **`className` en los componentes del kit es solo para posición:** márgenes (`mt-4`), ancho (`self-stretch`).
+- **Un solo `Button` primario por pantalla.** Los botones dicen verbo + objeto («Crear cuenta», «Cerrar sesión»). Mientras guarda: `loading` + `loadingLabel="Creando cuenta…"`.
+- **Formularios:** `TextField` con `label` siempre visible y `optional` para «(opcional)». `errorText` dice qué hacer («Escribe tu correo»), no «Campo requerido». `password` agrega el ojo. Se valida al salir del campo y al enviar, nunca en cada tecla.
+- **Estados de carga, vacío y error en cada pantalla:**
+  - Carga: `Skeleton` con la forma real, más `useDelayedLoading(isPending)` para no mostrarlo si tarda menos de 300 ms.
+  - Vacío: `EmptyState`.
+  - Error: `ErrorState`, con el botón «Intentar de nuevo» y `getErrorMessage(error)` como descripción.
+- **Confirmaciones:** `Dialog`. Sergio, para «¿Cerrar sesión?» tienes el ejemplo en `/kit` (acciones apiladas y a lo ancho, la principal arriba).
+- **Avisos:** `Alert` dentro de la pantalla (los errores no desaparecen solos) y `useToast().showToast({ type, message })` para confirmaciones cortas.
+- **Encabezado:** `ScreenHeader` con `title`, `subtitle`, `showBack` (flecha atrás) y `actions`.
+- **Tema (Sergio, Perfil):** `SegmentedControl` con *Sistema / Claro / Oscuro* y `useTheme()`. Hay un ejemplo arriba en `/kit`.
+- **Marca:** `<Logo />` (cambia solo a la versión oscura) y `<BrandSymbol />`.
+
+**Lista del kit:**
+
+| Componente | Para qué |
+|---|---|
+| `Text` | Todo texto. `variant`: `display`, `h1`, `h2`, `h3`, `body`, `sec`, `label`, `figure`, `button`, `fieldLabel`, `chip`. `tone`: `default`, `secondary`, `accent`, `error`… |
+| `Button` | `primary`, `secondary`, `outline`, `ghost` y `danger`. Tamaños `md` 48, `float` 44 y `sm` 40. Admite `icon`, `loading` y `fullWidth` |
+| `IconButton` | Solo ícono, 44 × 44. `accessibilityLabel` obligatorio |
+| `Icon` | Ícono Lucide con trazo 1.75 y color de token |
+| `TextField` | Campo con label, ayuda, error, `optional`, `password` e `icon` |
+| `Card` | Tarjeta. Con `onPress` se puede tocar; `selected` pone el borde naranja |
+| `AvailabilityChip`, `OpenStatusChip`, `StatusChip` | Disponible · Pocas mesas · Sin mesas · Cerrado, y Abierto (con pulso) / Cerrado |
+| `AvailabilityMarker`, `UserLocationMarker` | Pines del mapa con la forma del estado, y el punto naranja con radar del usuario |
+| `FilterChip` | Opciones de filtro y filtros activos con `x` |
+| `SegmentedControl` | Elegir una opción (distancia, tema) |
+| `NumberStepper` | Número con − / + (personas, de 1 a 20) |
+| `Alert` | Aviso en línea: `success`, `info`, `warning` o `error` |
+| `ToastProvider` / `useToast` | Aviso temporal; ya está montado en la raíz |
+| `Dialog` | Confirmación modal |
+| `BottomSheet` | Hoja inferior con título, contenido desplazable y pie fijo |
+| `EmptyState`, `ErrorState` | Sin datos / error de carga con «Intentar de nuevo» |
+| `Skeleton`, `useDelayedLoading`, `Spinner` | Carga |
+| `ScreenHeader` | Encabezado de pantalla |
+| `FloatingSurface` | Controles sobre el mapa (sólido por ahora; el vidrio llega con el mapa) |
+| `Logo`, `BrandSymbol` | Marca |
+
+**Textos:**
+- El botón de reintentar dice **«Intentar de nuevo»** (manual 11.4), igual que en la web. El reparto dice «Reintentar», pero así web y app hablan igual.
+- Disponibilidad: Disponible · Pocas mesas · Sin mesas · Cerrado (reparto 2.2), nunca con número de mesas.
+
+**Para el equipo de Google Cloud y Jacobo, sobre el SHA-1** (el mismo del aviso anterior, explicado):
+- Las llaves de Google se restringen para que solo nuestra app pueda usarlas. Google la reconoce por dos datos: el paquete **`com.dinno.app`** y la huella **SHA-1** `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`.
+- **Equipo de Google Cloud:** son los dos datos que pide la llave de Android (checklist 7, punto 4: *Restricciones de aplicación → Apps de Android → Agregar*).
+- **Jacobo:** son los mismos para el cliente OAuth de Android de Google Sign-In en Firebase (*Configuración del proyecto → Agregar huella digital*).
+- Es igual en todos los computadores, así que no hay que agregar una por persona.
+
+**Pendiente para un sprint futuro:** adaptar la app a iPhone. Mientras tanto, todo se escribe sin nada exclusivo de Android.
+
+---
+
 ## 15 oct 2026 · Sebastián · Development build, tokens, rutas y cliente HTTP
 
 **La app ya no se abre con Expo Go.** Corre como *development build* en el emulador de Android Studio, porque Google Sign-In y Google Maps necesitan código nativo y el paquete propio `com.dinno.app`.

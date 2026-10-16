@@ -238,7 +238,8 @@ Expo SDK **57**, React Native **0.86**, React **19**, Expo Router, NativeWind **
 ### Comandos
 ```bash
 npm ci                       # instalar (o npm install después de cada pull)
-npx expo run:android         # compila e instala el development build (la primera vez y tras cambios nativos)
+npx expo prebuild --clean    # regenera android/ tras un cambio nativo (app.config.ts, librería nativa)
+npx expo run:android         # compila e instala el development build
 npx expo start               # servidor de desarrollo para el build instalado (-c limpia caché)
 npx expo install <paquete>   # SIEMPRE para agregar librerías (elige versiones compatibles con el SDK)
 npx expo lint                # lint
@@ -254,7 +255,9 @@ Nunca agregues paquetes con `npm install <paquete>`; siempre con `npx expo insta
 - Lo que no es pantalla va fuera de `src/app/`: componentes base en `src/components/ui/`, otros componentes en `src/components/`, lógica por funcionalidad en `src/features/<dominio>/`.
 - Usa el alias `@/` para importar desde `src/`.
 - Las carpetas `ios/` y `android/` se generan solas: **nunca las crees ni las edites a mano**; la configuración nativa va en `app.config.ts` y en plugins.
-- Una librería con código nativo obliga a todos a recompilar (`npx expo run:android`): avísalo en `AVISOS.md` al agregarla.
+- Una librería con código nativo o un cambio en `app.config.ts` obliga a todos a recompilar (`npx expo prebuild --clean` + `npx expo run:android`): avísalo en `AVISOS.md`.
+- Las fuentes (Plus Jakarta Sans 500/700/800) van incrustadas en el build con el plugin de `expo-font`; no se cargan con `useFonts`.
+- Pantallas: solo con el kit de `@/components/ui` (catálogo en la ruta `/kit`, solo en desarrollo).
 - Contratos de la API en `src/features/<dominio>/types.ts`; cada dominio tiene `api.ts` (elige real o mock con `EXPO_PUBLIC_USE_MOCKS`).
 
 ### Diseño: el manual de identidad v1.1 manda
