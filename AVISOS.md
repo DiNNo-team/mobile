@@ -4,6 +4,46 @@
 
 ---
 
+## 15 oct 2026 · Sebastián · Development build, tokens, rutas y cliente HTTP
+
+**La app ya no se abre con Expo Go.** Corre como *development build* en el emulador de Android Studio, porque Google Sign-In y Google Maps necesitan código nativo y el paquete propio `com.dinno.app`.
+- **Una vez por computador:** instala Android Studio, el JDK 17 y un emulador con imagen «Google Play». Los pasos están en el README (sección 1). En Windows, el repo va fuera de OneDrive y en una ruta corta.
+- **Cada vez que cambie algo nativo** (`app.config.ts` o una librería nativa nueva, siempre anunciado aquí): `npx expo run:android`. **El resto del tiempo:** `npx expo start` y presiona `a`.
+- `app.json` ya no existe: la configuración nativa está en `app.config.ts`. Ícono, splash y colores son los del manual.
+- **SHA-1 del build de desarrollo** (igual en todos los computadores): `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`, paquete `com.dinno.app`. Equipo de Google Cloud: es el que va en la llave de Android. Jacobo: es el del cliente OAuth de Android en Firebase.
+- **Ubicación simulada:** `adb emu geo fix -74.0567 4.6576` (Calle 72; **longitud primero**).
+
+**Variables nuevas en `.env.example`** (copia las que te falten a tu `.env` y reinicia con `npx expo start -c`):
+- `EXPO_PUBLIC_USE_MOCKS`: con `true`, la app usa datos de ejemplo con la forma exacta del contrato (10 restaurantes alrededor de la Calle 72 con los tres niveles de disponibilidad, 2 cerrados que solo se ven en el detalle, horarios que cierran al día siguiente y de 24 horas, y las 20 zonas).
+- `EXPO_PUBLIC_DEV_USER_ID`: solo para el backend local, envía `x-dev-user-id` cuando no hay sesión.
+- `EXPO_PUBLIC_FIREBASE_API_KEY`, `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN` y `EXPO_PUBLIC_FIREBASE_PROJECT_ID`: los mismos valores de la web.
+- Backend local desde el emulador: `EXPO_PUBLIC_API_URL=http://10.0.2.2:3000`.
+
+**Dependencias nuevas:** `expo-dev-client`, `@expo-google-fonts/plus-jakarta-sans`, `react-native-svg`, `lucide-react-native`, `@tanstack/react-query` y `@react-native-async-storage/async-storage`. Para desarrollo: `jest-expo`, `jest` y `@types/jest`. Además se alinearon los parches del SDK con `npx expo install --fix`. Después del pull: `npm install` y `npx expo run:android`.
+
+**Diseño (para Jacobo y Sergio):**
+- Tailwind **solo conoce los tokens del manual**. `bg-slate-*`, `text-blue-*`, `rounded-lg` y `text-5xl` ya no existen. Las clases se llaman igual que en la web: `bg-surface`, `text-fg`, `text-fg-2`, `border-line`, `rounded-card`, `bg-ok/15`…
+- El texto va siempre con `Text` de `@/components/ui/Text`, con `variant` (`h1`, `h2`, `h3`, `body`, `sec`, `label`, `button`…) y `tone` (`secondary`, `accent`, `error`…). No uses el `Text` de React Native.
+- Para íconos, navegación o mapa (props sin `className`): `const { colors } = useTheme()` y `colors.accentText`, `colors.text2`, etc.
+- Íconos: solo `lucide-react-native`, con `strokeWidth={1.75}`.
+- El kit completo llega mañana (fase 2), con su aviso aquí.
+
+**Rutas** (las pantallas pendientes muestran quién las hace):
+- `(auth)`: `/login` (Sebastián), `/crear-cuenta` (Jacobo), `/verificar-correo` (Jacobo) y `/cuenta-restaurante` (mensaje de `RESTAURANT_ACCOUNT`).
+- `(app)/(tabs)`: `/` (Explorar) y `/perfil` (Sergio).
+- `(app)/restaurante/[id]`: detalle.
+- La protección de rutas por sesión llega con el login (fase 3).
+
+**Sergio, sobre el tema:** el comensal elige *Sistema*, *Claro* u *Oscuro* y la elección se guarda en el teléfono. Va en tu pestaña Perfil: `const { preference, setPreference } = useTheme()` (`'system' | 'light' | 'dark'`). Mientras llega el kit, hay un selector de prueba en Explorar.
+
+**Para todos:**
+- Cliente HTTP: `apiRequest` en `src/lib/api/client.ts`. Los errores llegan como `ApiError` (`status`, `errorCode`, `kind`) y el texto para el usuario sale de `getErrorMessage`.
+- Contratos: `src/features/search/types.ts` y `src/features/account/types.ts`.
+- **Categorías:** uso las etiquetas de la web («Mariscos», «Cafetería»). La §2.3 del reparto dice «Pescados y mariscos» y «Café», pero también dice «igual a la web». Si se cambian, hay que cambiarlas en los dos repos.
+- Comandos antes de un PR: `npx expo lint`, `npx tsc --noEmit` y `npm test`.
+
+---
+
 ## 15 oct 2026 · Elizabeth · Contratos del Sprint 2 publicados
 
 - Los contratos del Sprint 2 están en `CLAUDE.md`, sección "Sprint 2 · Contratos". Es la fuente de verdad para backend, web y app; si algo no está ahí, se pregunta antes de inventarlo. Las fechas de cada contrato están en la tabla "Cuándo está listo cada contrato en `develop`".

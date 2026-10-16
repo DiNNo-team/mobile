@@ -222,7 +222,12 @@ Todos bajo `/v1`, con `Authorization: Bearer <token de Firebase>`.
 
 ## 11. Este repositorio: mobile (app del comensal)
 
-> **En el Sprint 1 no hay tareas de mobile.** No agregues funcionalidades sin un PBI asignado.
+> **Sprint 2:** Sebastián es dueño de la app (revisa todos los PR de mobile). Jacobo hace Google Sign-In, crear cuenta y verificación de correo; Sergio, la pestaña Perfil. No agregues funcionalidades sin un PBI asignado.
+
+### Cómo corre la app
+- **Development build en el emulador de Android Studio** (`npx expo run:android`), **nunca Expo Go**: Google Sign-In y Google Maps necesitan código nativo y el paquete propio `com.dinno.app`. Requisitos e instalación en el README.
+- La configuración nativa está en **`app.config.ts`** (no hay `app.json`). La carpeta `android/` la genera `prebuild` y no se versiona.
+- El SHA-1 del build de desarrollo es el del `debug.keystore` de la plantilla y es igual en todos los computadores (README, sección 3).
 
 ### Versiones: Expo cambia en cada SDK, no confíes en la memoria
 Expo SDK **57**, React Native **0.86**, React **19**, Expo Router, NativeWind **v4** con **Tailwind CSS v3**, TypeScript **6**, Node **24**.
@@ -233,25 +238,30 @@ Expo SDK **57**, React Native **0.86**, React **19**, Expo Router, NativeWind **
 ### Comandos
 ```bash
 npm ci                       # instalar (o npm install después de cada pull)
-npx expo start               # servidor de desarrollo (-c limpia caché, --tunnel en redes restringidas)
+npx expo run:android         # compila e instala el development build (la primera vez y tras cambios nativos)
+npx expo start               # servidor de desarrollo para el build instalado (-c limpia caché)
 npx expo install <paquete>   # SIEMPRE para agregar librerías (elige versiones compatibles con el SDK)
 npx expo lint                # lint
 npx tsc --noEmit             # chequeo de tipos
+npm test                     # pruebas (jest-expo)
 npx expo-doctor              # diagnóstico de dependencias
 ```
-**Antes de dar una tarea por terminada:** `npx expo lint` y `npx tsc --noEmit` sin errores.
+**Antes de dar una tarea por terminada:** `npx expo lint`, `npx tsc --noEmit` y `npm test` sin errores.
 Nunca agregues paquetes con `npm install <paquete>`; siempre con `npx expo install`, y solo después de preguntar.
 
 ### Estructura
 - **Rutas solo en `src/app/`** (Expo Router): cada archivo es una pantalla y `_layout.tsx` define la navegación.
 - Lo que no es pantalla va fuera de `src/app/`: componentes base en `src/components/ui/`, otros componentes en `src/components/`, lógica por funcionalidad en `src/features/<dominio>/`.
 - Usa el alias `@/` para importar desde `src/`.
-- Las carpetas `ios/` y `android/` se generan solas: **nunca las crees ni las edites a mano**; la configuración nativa va en `app.json` y en plugins.
-- Si una librería tiene código nativo que no está en Expo Go, hace falta un *development build*: avísalo antes de agregarla.
+- Las carpetas `ios/` y `android/` se generan solas: **nunca las crees ni las edites a mano**; la configuración nativa va en `app.config.ts` y en plugins.
+- Una librería con código nativo obliga a todos a recompilar (`npx expo run:android`): avísalo en `AVISOS.md` al agregarla.
+- Contratos de la API en `src/features/<dominio>/types.ts`; cada dominio tiene `api.ts` (elige real o mock con `EXPO_PUBLIC_USE_MOCKS`).
 
 ### Diseño: el manual de identidad v1.1 manda
 - Si no tienes el manual en el contexto, **pídelo antes de hacer cualquier pantalla.**
-- Los colores, radios, espacios y tipografía del manual (valores de `tokens.ts`, sección 16.5) se cargan en `tailwind.config.js` (NativeWind usa Tailwind **v3**, a diferencia de la web). **No uses colores sueltos** ni las clases genéricas de Tailwind para colores.
+- Los colores, radios, espacios y tipografía del manual (valores de `tokens.ts`, sección 16.5) se cargan en `tailwind.config.js` (NativeWind usa Tailwind **v3**, a diferencia de la web). **No uses colores sueltos** ni las clases genéricas de Tailwind para colores: la paleta, los radios y los tamaños de texto por defecto de Tailwind están desactivados.
+- Clases con los mismos nombres de la web (`bg-surface text-fg border-line rounded-card`). Texto siempre con `Text` del kit (`variant`, `tone`). Para props que no aceptan `className` (íconos, navegación, mapa) usa `useTheme().colors`.
+- Tema: el comensal elige *Sistema*, *Claro* u *Oscuro* (`useTheme().setPreference`); se guarda en el teléfono.
 - Los mismos nombres de estados, textos y glosario que en la web.
 - **Liquid Glass solo en lo que flota sobre el mapa** (manual, sección 7), con alternativa sólida.
 - Objetivos táctiles de al menos 44 px; funciona en modo claro y oscuro.
@@ -259,7 +269,8 @@ Nunca agregues paquetes con `npm install <paquete>`; siempre con `npx expo insta
 ### Conexión con el backend
 - La URL del backend sale **solo de `src/config/env.ts`** (`env.apiUrl`) más el prefijo `/v1`. Nunca uses `process.env` en otra parte.
 - `EXPO_PUBLIC_API_URL` es el origen **sin `/v1` y sin `/` final**. Las variables `EXPO_PUBLIC_*` quedan dentro de la app: **nunca pongas secretos en ellas.**
-- `localhost` no funciona desde el celular: usa la IP del computador en la misma red o la URL de Render. Después de cambiar `.env`, reinicia con `npx expo start -c`.
+- Toda llamada pasa por `src/lib/api/client.ts` (`apiRequest`): token de Firebase, timeout de 60 s y errores normalizados (`ApiError` con `status`, `errorCode`, `kind`). Los textos para el usuario salen de `getErrorMessage`, nunca del `message` del backend.
+- `localhost` no funciona desde el emulador: el backend local es `http://10.0.2.2:3000`. Después de cambiar `.env`, reinicia con `npx expo start -c`.
 
 ### Despliegue
-Builds y actualizaciones con EAS (`npx eas-cli@latest build`, `update`). No hagas builds ni publiques actualizaciones sin que la persona lo pida.
+En el Sprint 2 la app se prueba y se presenta como development build en el emulador, contra el backend de Render. No hagas builds en EAS ni publiques actualizaciones sin que la persona lo pida.
