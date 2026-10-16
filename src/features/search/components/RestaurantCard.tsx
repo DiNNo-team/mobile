@@ -9,12 +9,15 @@ import { ADDRESS_FALLBACK, getCategoryLabel, type RestaurantSummary } from '../t
 interface RestaurantCardProps {
   restaurant: RestaurantSummary;
   onPress: () => void;
-  /** Highlighted from the map (phase 5). */
+  /** Highlighted from the map. */
   selected?: boolean;
+  /** Card floating over the map (carousel). */
+  floating?: boolean;
+  className?: string;
 }
 
 /** One search result: name, availability (color + shape + word), category, distance and address. Never a number of tables. */
-export function RestaurantCard({ restaurant, onPress, selected = false }: RestaurantCardProps) {
+export function RestaurantCard({ restaurant, onPress, selected = false, floating = false, className }: RestaurantCardProps) {
   const category = getCategoryLabel(restaurant.category);
   const distance = formatDistance(restaurant.distanceKm);
   const address = restaurant.address ?? ADDRESS_FALLBACK;
@@ -25,6 +28,8 @@ export function RestaurantCard({ restaurant, onPress, selected = false }: Restau
     <Card
       onPress={onPress}
       selected={selected}
+      elevation={floating ? 'floating' : 'soft'}
+      className={className}
       accessibilityLabel={[restaurant.name, availability, meta, address].join(', ')}
       accessibilityHint="Abre el detalle del restaurante"
     >

@@ -10,6 +10,11 @@ export interface CardProps extends Omit<PressableProps, 'children' | 'style'> {
   selected?: boolean;
   /** `card` 20 (default) or `tile` 16 for compact cards. */
   shape?: 'card' | 'tile';
+  /**
+   * `floating`: over the map (manual 7, solid fallback of the glass: surface, soft border, floating shadow).
+   * Android cannot blur the Google map behind it, so the app always uses this fallback.
+   */
+  elevation?: 'soft' | 'floating';
   /** Layout only (margins, width). */
   className?: string;
 }
@@ -18,8 +23,9 @@ export interface CardProps extends Omit<PressableProps, 'children' | 'style'> {
  * Card (manual 6 and 9): surface, 1 px border, soft shadow, padding 16 on mobile. Pressable when it gets
  * `onPress`. Never put another Card inside.
  */
-export function Card({ children, selected = false, shape = 'card', onPress, disabled, className, ...props }: CardProps) {
+export function Card({ children, selected = false, shape = 'card', elevation = 'soft', onPress, disabled, className, ...props }: CardProps) {
   const { colors } = useTheme();
+  const shadow = elevation === 'floating' ? colors.shadowFloat : colors.shadowSoft;
   const frame = cn(
     'bg-surface p-4',
     shape === 'card' ? 'rounded-card' : 'rounded-tile',
@@ -28,7 +34,7 @@ export function Card({ children, selected = false, shape = 'card', onPress, disa
 
   if (!onPress) {
     return (
-      <View className={cn(frame, className)} style={{ boxShadow: colors.shadowSoft }}>
+      <View className={cn(frame, className)} style={{ boxShadow: shadow }}>
         {children}
       </View>
     );
@@ -44,7 +50,7 @@ export function Card({ children, selected = false, shape = 'card', onPress, disa
       {...props}
     >
       {({ pressed }) => (
-        <View className={cn(frame, pressed && 'bg-surface-2')} style={{ boxShadow: pressed ? undefined : colors.shadowSoft }}>
+        <View className={cn(frame, pressed && 'bg-surface-2')} style={{ boxShadow: pressed ? undefined : shadow }}>
           {children}
         </View>
       )}
