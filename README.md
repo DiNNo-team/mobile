@@ -97,6 +97,26 @@ adb emu geo fix -75.5812 6.2442    # Medellín (fuera de Bogotá: sin resultados
 
 También se puede en el emulador: *⋯ (Extended controls) → Location*.
 
+- El emulador arranca en California: hasta que envíes una posición, «Usar mi ubicación» no encuentra restaurantes.
+- La primera vez, Android puede mostrar *Location Accuracy*: toca **Turn on**. Si tardas más de 10 s, la app dice que no encontró tu ubicación a tiempo; vuelve a intentarlo.
+- Para repetir los casos del permiso (Reparto, caso C3):
+
+  ```bash
+  adb shell pm revoke com.dinno.app android.permission.ACCESS_FINE_LOCATION     # volver a ver la explicación
+  adb shell pm revoke com.dinno.app android.permission.ACCESS_COARSE_LOCATION
+  adb shell cmd location set-location-enabled false                              # GPS apagado (true lo enciende)
+  ```
+
+  Rechazar dos veces el permiso lo bloquea; la app muestra «Abrir ajustes».
+
+### El emulador tiene internet pero la app dice «No pudimos conectarnos»
+
+A veces el emulador no resuelve nombres (DNS). Ciérralo y ábrelo con DNS fijos:
+
+```bash
+emulator -avd Pixel_9a -dns-server 8.8.8.8,1.1.1.1
+```
+
 ## 4. Variables de entorno
 
 Se leen solo en [`src/config/env.ts`](src/config/env.ts); en el resto del código usa `env`, nunca `process.env`.

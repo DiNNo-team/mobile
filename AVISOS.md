@@ -4,6 +4,38 @@
 
 ---
 
+## 16 oct 2026 (tarde) · Sebastián · Ubicación, zonas y lista de resultados
+
+**Después del pull hay que recompilar** (la ubicación es código nativo):
+
+```bash
+npm install
+npx expo prebuild --clean
+npx expo run:android
+```
+
+**Dependencias nuevas:**
+- `expo-location`: GPS del teléfono, solo en primer plano (sin ubicación en segundo plano).
+- `zustand`: estado de la búsqueda.
+
+**Qué hay en *Explorar*:**
+- La primera vez, una explicación antes del permiso: «Usar mi ubicación» o «Elegir una zona».
+- Si el permiso se rechaza, el GPS está apagado o pasan 10 s sin posición, la app abre las zonas (`GET /search/zones`) con un mensaje. Nunca se queda en blanco. «Cambiar zona» cambia entre ubicación y zona cuando quieras.
+- Lista de resultados, del más cercano al más lejano: nombre, chip de disponibilidad, categoría, distancia («a 650 m», «a 1,4 km») y dirección. Tiene skeleton, error con «Intentar de nuevo», deslizar para actualizar y un estado sin resultados con «Ampliar a X km» y «Cambiar zona».
+- La búsqueda se conserva al ir al detalle y volver, y se borra al cerrar sesión.
+
+**Sergio:** el selector de tema (*Sistema · Claro · Oscuro*) pasó a la pantalla provisional de *Perfil*. Llévalo a tu pantalla con `useTheme()`; el código de ejemplo está en `src/app/(app)/(tabs)/perfil.tsx`.
+
+**Santiago (QA de C3 a C6):** cómo simular la posición, repetir el permiso y apagar el GPS está en el README, sección 3.
+- El emulador arranca en California: envía `adb emu geo fix -74.0567 4.6576` (Calle 72) antes de tocar «Usar mi ubicación».
+- Si el emulador tiene internet pero la app dice «No pudimos conectarnos», ábrelo con `-dns-server 8.8.8.8,1.1.1.1`. Me pasó hoy y no era la app.
+
+**Elizabeth:**
+- La PBI 2.2 dice «dirección o zona», pero en el contrato el comensal solo puede buscar por zona: `/geocode` es solo para `restaurant_admin`. La app ofrece solo zonas, como dice el reparto (2.3, «no usa geocodificación»). Si quieren búsqueda por dirección, haría falta un endpoint para comensales.
+- La búsqueda contra Render todavía no la pude probar con una cuenta de comensal real; `dinnoteam2026@gmail.com` es de restaurante y entra bien a `/cuenta-restaurante`. Cuando haya una cuenta de comensal de prueba, la verifico.
+
+---
+
 ## 16 oct 2026 · Sebastián · Sesión, login con correo y rutas protegidas
 
 **Después del pull:** `npm install` (dependencia nueva: `firebase`, solo JavaScript, así que **no hay que recompilar**). Tu `.env` necesita las tres `EXPO_PUBLIC_FIREBASE_*`, o `EXPO_PUBLIC_USE_MOCKS=true` para trabajar sin Firebase.
