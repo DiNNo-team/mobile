@@ -34,6 +34,14 @@ export const RESTAURANT_CATEGORY_LABELS: Record<RestaurantCategory, string> = {
   other: 'Otra',
 };
 
+/** Label of a category, or null when the restaurant has none yet. */
+export function getCategoryLabel(category: RestaurantCategory | null): string | null {
+  return category ? RESTAURANT_CATEGORY_LABELS[category] : null;
+}
+
+/** Shown when a restaurant has no address yet (category and address can be null, CLAUDE.md §10). */
+export const ADDRESS_FALLBACK = 'Dirección por confirmar';
+
 export const RADIUS_OPTIONS_KM = [1, 2, 5, 10] as const;
 export type RadiusKm = (typeof RADIUS_OPTIONS_KM)[number];
 export const DEFAULT_RADIUS_KM: RadiusKm = 2;
@@ -63,8 +71,10 @@ export interface SearchFilters {
 export interface RestaurantSummary {
   id: string;
   name: string;
-  category: RestaurantCategory;
-  address: string;
+  /** Null in restaurants created before the full sign-up (Sprint 1): show nothing instead. */
+  category: RestaurantCategory | null;
+  /** Null in restaurants created before the full sign-up: show `ADDRESS_FALLBACK`. */
+  address: string | null;
   latitude: number;
   longitude: number;
   /** Kilometers with 2 decimals; the app formats it ("a 650 m", "a 1,4 km"). */
@@ -84,8 +94,8 @@ export interface Schedule {
 export interface RestaurantDetail {
   id: string;
   name: string;
-  category: RestaurantCategory;
-  address: string;
+  category: RestaurantCategory | null;
+  address: string | null;
   latitude: number;
   longitude: number;
   schedules: Schedule[];

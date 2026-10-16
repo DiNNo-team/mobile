@@ -4,6 +4,65 @@
 
 ---
 
+## 16 oct 2026 · Sebastián · Sesión, login con correo y rutas protegidas
+
+**Después del pull:** `npm install` (dependencia nueva: `firebase`, solo JavaScript, así que **no hay que recompilar**). Tu `.env` necesita las tres `EXPO_PUBLIC_FIREBASE_*`, o `EXPO_PUBLIC_USE_MOCKS=true` para trabajar sin Firebase.
+
+**Cómo funciona la sesión** (`src/features/session/`):
+- Firebase Auth con el SDK de JavaScript (el mismo proyecto de la web). La sesión **se conserva al cerrar y abrir la app**.
+- **Un solo flujo después de cualquier inicio de sesión:** `GET /me`. Si responde `PROFILE_REQUIRED`, la app hace `POST /diners/me` y continúa. El rol lo decide el backend.
+- Con una cuenta de restaurante, `GET /me` responde **200 con `role: 'restaurant_admin'`** (no 403). La app la manda igual a `/cuenta-restaurante`; el 403 `RESTAURANT_ACCOUNT` solo llega de `POST /diners/me` y de los endpoints de comensal.
+- **Las rutas se abren solas según el estado** (`useAuth().status`), con `Stack.Protected`. **No hagas `router.replace('/login')` ni redirecciones a mano**: cambia el estado y la app navega sola.
+
+  | `status` | Pantalla |
+  |---|---|
+  | `signed-out` | `/login`, `/crear-cuenta`, `/recuperar-contrasena` |
+  | `email-not-verified` | `/verificar-correo` |
+  | `restaurant-account` | `/cuenta-restaurante` |
+  | `unreachable` | `/sin-conexion` («Intentar de nuevo» o «Cerrar sesión») |
+  | `restoring` / `resolving` | splash / `/conectando` («Conectando con DiNNo…») |
+  | `ready` | pestañas Explorar y Perfil, detalle |
+
+- **401 sin `errorCode`** en cualquier llamada: cierra la sesión y el login muestra «Tu sesión terminó. Inicia sesión de nuevo.».
+
+**Jacobo, lo que tienes listo en `useAuth()`** (`@/features/session/SessionProvider`):
+- **Google:**
+
+  ```ts
+  signInWithFirebase(() => signInWithCredential(getFirebaseAuth(), GoogleAuthProvider.credential(idToken)))
+  ```
+
+  `getFirebaseAuth` está en `@/features/session/firebase`. Devuelve `{ ok: true }` o `{ ok: false, message }` (el texto ya viene listo para un `Alert`). El nombre de Google se envía solo a `POST /diners/me`.
+- **Crear cuenta:**
+
+  ```ts
+  signInWithFirebase(async () => { const c = await createUserWithEmailAndPassword(...); await sendEmailVerification(c.user); }, { errorMessage: getFirebaseSignUpErrorMessage, displayName: nombre })
+  ```
+
+  Como el correo todavía no está verificado, la app pasa sola a `/verificar-correo`. Los textos de error (iguales a la web) están en `@/features/session/auth-errors`, y la validación de la contraseña (mínimo 8) en `validateNewPassword` de `@/features/session/validation`.
+- **«Ya lo verifiqué»:** `reloadEmailVerification()`. Recarga la cuenta, pide un token nuevo y, si ya está verificada, crea el perfil y entra. Devuelve `true` o `false`, para que puedas decir «Todavía no vemos tu correo verificado».
+- **«Reenviar»:** `sendEmailVerification(getFirebaseAuth().currentUser!)`. **Cerrar sesión:** `signOut()`. El correo de la cuenta está en `user.email`.
+- **Tus pantallas ya existen como ruta, con una versión provisional:** `/crear-cuenta`, `/verificar-correo` y `/recuperar-contrasena`. El login ya tiene «¿Olvidaste tu contraseña?» y «Crea tu cuenta» apuntando a ellas.
+- **El botón «Continuar con Google»** va en `src/app/(auth)/login.tsx`, justo debajo de «Iniciar sesión». Hay un comentario marcando el lugar.
+
+**Sergio, para Perfil:**
+- `useAuth().profile` trae `{ id, email, displayName, role, restaurantId }`; si `displayName` es `null`, usa la parte del correo antes de `@`.
+- `signOut()` limpia la caché, los filtros y el socket. Va dentro del `Dialog` «¿Cerrar sesión?».
+- La pantalla provisional de Perfil tiene un botón temporal de cerrar sesión; reemplázalo.
+
+**Para probar sin Firebase** (`EXPO_PUBLIC_USE_MOCKS=true`):
+- Cualquier correo entra como comensal.
+- `restaurante@dinno.test` → cuenta de restaurante.
+- `sinverificar@dinno.test` → verificación.
+- `sinconexion@dinno.test` → error de conexión.
+- La contraseña `incorrecta` siempre falla.
+
+**Elizabeth:** ya ajusté `category` y `address` a `| null` en los tipos de búsqueda y detalle, como pediste. Sin categoría no se muestra nada; sin dirección se muestra «Dirección por confirmar». Además, dos cosas del backend:
+1. **Cuenta de Firebase recreada.** Cuando el correo ya está vinculado a otro UID (alguien borró y volvió a crear su cuenta de Firebase), el resolver responde **401 sin `errorCode`**. La app lo trata como «Tu sesión terminó…», y la persona vuelve a entrar y recibe lo mismo, en bucle. ¿Se puede responder con un código propio (por ejemplo `403 ACCOUNT_CONFLICT`)? Así la app diría «Hay un problema con tu cuenta. Escríbele al equipo de DiNNo.». Si lo agregas, me avisas y lo conecto.
+2. **Cuentas de prueba para QA.** Para probar contra Render necesitamos un comensal real (correo y clave de Firebase, con el correo verificado) y saber si `dinnoteam2026@gmail.com` tiene clave o solo Google. ¿Las puedes compartir por privado con Jacobo, Santiago, Sergio y conmigo?
+
+---
+
 ## 15 oct 2026 (noche) · Elizabeth · Backend del Sprint 2 disponible en `develop`
 
 - **Todo el backend del Sprint 2 está en `develop` desde el 15 oct** (PR #35 a #40 del backend): cuentas y roles, búsqueda con zonas y filtros, detalle público, geocodificación y tiempo real. Ya no hace falta esperar a ninguna fecha: con `EXPO_PUBLIC_USE_MOCKS=false` la app usa la API real.

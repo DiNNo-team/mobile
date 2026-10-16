@@ -104,7 +104,7 @@ Se leen solo en [`src/config/env.ts`](src/config/env.ts); en el resto del códig
 | Variable | Descripción |
 |---|---|
 | `EXPO_PUBLIC_API_URL` | Origen del backend, **sin `/v1` y sin `/` final**. Render: `https://dinno-backend.onrender.com`. Backend local desde el emulador: `http://10.0.2.2:3000` (`localhost` en el emulador es el propio emulador) |
-| `EXPO_PUBLIC_USE_MOCKS` | `true` usa datos de ejemplo en memoria con la forma del contrato (10 restaurantes alrededor de la Calle 72, 20 zonas) |
+| `EXPO_PUBLIC_USE_MOCKS` | `true` usa datos de ejemplo en memoria con la forma del contrato (restaurantes alrededor de la Calle 72, 20 zonas) y una sesión de ejemplo sin Firebase: cualquier correo entra como comensal; `restaurante@dinno.test`, `sinverificar@dinno.test` y `sinconexion@dinno.test` muestran sus pantallas; la contraseña `incorrecta` siempre falla |
 | `EXPO_PUBLIC_DEV_USER_ID` | Solo backend local: UUID de un usuario para la cabecera `x-dev-user-id` cuando no hay sesión de Firebase |
 | `EXPO_PUBLIC_FIREBASE_*` | Configuración pública de Firebase (la misma de la web) |
 
