@@ -23,6 +23,7 @@ const tones = {
   onAccent: 'text-on-accent',
   onBrand: 'text-on-brand',
   onInverse: 'text-on-inverse',
+  inverseAccent: 'text-inverse-accent',
 } as const;
 
 export type TextVariant = keyof typeof variants;
