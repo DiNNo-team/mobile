@@ -181,6 +181,20 @@ export const MOCK_RESTAURANTS: MockRestaurant[] = [
     maxFreeCapacity: 6,
   },
   {
+    // Created in Sprint 1 before the full sign-up: no category and no address yet.
+    id: '6f1c2a10-0013-4c8e-9a01-000000000013',
+    name: 'Sabor de Barrio',
+    category: null,
+    address: null,
+    latitude: 4.6569,
+    longitude: -74.0602,
+    schedules: everyDay('11:00', '21:00'),
+    isOpenNow: true,
+    availability: 'few',
+    searchable: true,
+    maxFreeCapacity: 2,
+  },
+  {
     // Marked as Cerrado from the web (is_open = false): only reachable through the detail.
     id: '6f1c2a10-0011-4c8e-9a01-000000000011',
     name: 'Parrilla Zona G',

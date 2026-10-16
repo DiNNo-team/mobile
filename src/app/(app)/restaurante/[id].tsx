@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { PlaceholderLink, ScreenPlaceholder } from '@/components/ScreenPlaceholder';
 import { Text } from '@/components/ui/Text';
 import { searchApi } from '@/features/search/api';
-import { RESTAURANT_CATEGORY_LABELS } from '@/features/search/types';
+import { ADDRESS_FALLBACK, getCategoryLabel } from '@/features/search/types';
 import { ErrorCode, getErrorMessage, isApiError } from '@/lib/api/errors';
 
 export default function RestaurantDetailScreen() {
@@ -20,7 +20,7 @@ export default function RestaurantDetailScreen() {
       {detail.isError && !notFound ? <Text variant="sec">{getErrorMessage(detail.error)}</Text> : null}
       {detail.data ? (
         <Text variant="sec">
-          {RESTAURANT_CATEGORY_LABELS[detail.data.category]} · {detail.data.address}
+          {[getCategoryLabel(detail.data.category), detail.data.address ?? ADDRESS_FALLBACK].filter(Boolean).join(' · ')}
         </Text>
       ) : null}
       <PlaceholderLink href="/" label="Volver a explorar" />
