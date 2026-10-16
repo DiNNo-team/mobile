@@ -1,3 +1,5 @@
+import Constants from 'expo-constants';
+
 // The only place that reads process.env. Expo inlines EXPO_PUBLIC_* only with static access
 // (process.env.EXPO_PUBLIC_X), so each variable is read by its full name.
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -32,4 +34,9 @@ export const env = {
   devUserId: __DEV__ ? (process.env.EXPO_PUBLIC_DEV_USER_ID ?? null) : null,
   /** Public Firebase web config (not secret). Null until the three variables are set. */
   firebase: readFirebaseConfig(),
+  /**
+   * True when the build has the Google Maps key (GOOGLE_MAPS_ANDROID_API_KEY in app.config.ts). The key itself
+   * never reaches JavaScript. After adding it: `npx expo prebuild --clean` + `npx expo run:android`.
+   */
+  mapsEnabled: Constants.expoConfig?.extra?.mapsEnabled === true,
 } as const;
