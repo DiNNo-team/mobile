@@ -4,6 +4,45 @@
 
 ---
 
+## 15 oct 2026 (noche) · Elizabeth · Backend del Sprint 2 disponible en `develop`
+
+- **Todo el backend del Sprint 2 está en `develop` desde el 15 oct** (PR #35 a #40 del backend): cuentas y roles, búsqueda con zonas y filtros, detalle público, geocodificación y tiempo real. Ya no hace falta esperar a ninguna fecha: con `EXPO_PUBLIC_USE_MOCKS=false` la app usa la API real.
+- **El contrato sigue en `CLAUDE.md`, sección 10**, ahora idéntica en los tres repos. Hoy cambió solo la parte de **Tiempo real** (`auth` como función, `EMAIL_NOT_VERIFIED`, `SERVER_ERROR` y cuándo reintentar) y la tabla "Cuándo está listo cada contrato en `develop`". El detalle de cada endpoint, con ejemplos, está en Swagger: `https://dinno-backend.onrender.com/docs`.
+- Las fechas de la entrada "Contratos del Sprint 2 publicados" (más abajo) quedan superadas.
+
+### Por persona
+
+**Sebastián (búsqueda, detalle y tiempo real):**
+- **URL:** `EXPO_PUBLIC_API_URL` sin `/v1`. Las rutas HTTP van con `/v1`; el WebSocket va al mismo origen **sin** `/v1` (ruta por defecto `/socket.io`).
+- **Rutas que usa la app** (todas con `Authorization: Bearer <token de Firebase>`): `GET /v1/me`, `POST /v1/diners/me`, `GET /v1/search/zones`, `GET /v1/search/restaurants` (`lat` + `lng` **o** `zone`, `radiusKm` 1, 2, 5 o 10, `category` y `partySize` opcionales) y `GET /v1/restaurants/:id/public` (`lat` y `lng` opcionales, juntas).
+- **Qué hacer con cada error** (siempre por `errorCode`, nunca por el texto):
+  - `400`: `message` es una lista. Con la interfaz no debería pasar (los valores salen de listas cerradas); si pasa, muestra un error genérico.
+  - `401` sin `errorCode`: la sesión terminó → login. `401` `EMAIL_NOT_VERIFIED` → `/verificar-correo`.
+  - `403` `PROFILE_REQUIRED` → `POST /v1/diners/me` y reintenta. `403` `RESTAURANT_ACCOUNT` → `/cuenta-restaurante`.
+  - `404` `RESTAURANT_NOT_FOUND` (solo el detalle): «Este restaurante ya no está disponible.» con la opción de volver. Pasa también si el id no es un UUID válido.
+  - `500`: error genérico con «Intentar de nuevo».
+- **`availability`:** `available`, `few` o `none` en la búsqueda; además `closed` en el detalle y en el WebSocket. Nunca llega un número de mesas.
+- **`distanceKm`:** número en km con 2 decimales; el formato («a 650 m», «a 1,4 km») lo hace la app. En el detalle solo viene si envías `lat` y `lng`.
+- **En el contrato, `category` y `address` pueden llegar en `null`**, tanto en la búsqueda como en el detalle (restaurantes creados antes del registro completo). Hoy `RestaurantSummary` en `src/features/search/types.ts` los tiene como no nulos; revisa también el tipo del detalle. **Hay que ajustarlos a `| null`** y mostrar un texto por defecto cuando falten.
+- **WebSocket:** `io(BASE_URL, { auth: async (cb) => cb({ token: await user.getIdToken() }) })`, con `auth` como función para que cada reconexión lleve un token vigente. Evento `availability.changed` → `{ restaurantId, availability, isOpenNow, isSearchable }`; usa `isSearchable` para quitar el restaurante o volver a consultar la búsqueda. `connect_error` trae el código en `error.message`: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_ACCOUNT` o `SERVER_ERROR`. **Socket.IO no reintenta solo una conexión rechazada:** con `SERVER_ERROR`, reintenta tú con espera creciente (por ejemplo 5 s, 15 s, 30 s) y mientras tanto sigue la consulta cada 60 s; con los demás códigos no reintentes. Respaldo: consultar al volver al primer plano, al reconectar y cada 60 s.
+- **Para ver los eventos sin la app:** en el repo del backend, `node scripts/listen-availability.mjs` (README del backend, sección 6).
+
+**Jacobo (crear cuenta y verificación):**
+- **El backend ya no crea usuarios al iniciar sesión.** Una cuenta de Firebase nueva queda *sin perfil*: `GET /v1/me` responde `403 PROFILE_REQUIRED` y la app crea el perfil con `POST /v1/diners/me`.
+- **`POST /v1/diners/me`:** body `{ displayName?: string }` (se recortan los espacios; de 1 a 60 caracteres). Sin `displayName`, el backend usa el nombre de la cuenta de Google y, si no hay, la parte del correo antes de `@`. Responde `201` si lo crea y `200` si ya era comensal (no cambia nada), con la misma forma que `GET /v1/me`. Exige el correo verificado: si no, `401 EMAIL_NOT_VERIFIED`. Con una cuenta o un correo de restaurante: `403 RESTAURANT_ACCOUNT`.
+- **Códigos que ve la app:** `EMAIL_NOT_VERIFIED` (401), `PROFILE_REQUIRED` y `RESTAURANT_ACCOUNT` (403). `ACCOUNT_NOT_ENABLED` y `DINER_ACCOUNT` son de la web: la app nunca los recibe.
+- **Para probar:** `dinnoteam2026@gmail.com` es una cuenta de restaurante, así que en la app debe llevar a `/cuenta-restaurante`. Con cualquier otro correo verificado se crea un comensal nuevo.
+
+**Sergio (perfil y matriz de pruebas):**
+- **Perfil:** `GET /v1/me` → `{ id, email, displayName, role, restaurantId }`. En un comensal, `displayName` siempre trae valor; si llega `null`, muestra la parte del correo antes de `@`.
+- **Nombres exactos para la matriz:**
+  - `errorCode` de HTTP: `EMAIL_NOT_VERIFIED`, `ACCOUNT_NOT_ENABLED`, `PROFILE_REQUIRED`, `DINER_ACCOUNT`, `RESTAURANT_ACCOUNT`, `RESTAURANT_REQUIRED`, `RESTAURANT_NOT_FOUND`, `ADDRESS_NOT_FOUND` y `GEOCODING_UNAVAILABLE`.
+  - Códigos del `connect_error` del WebSocket: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_ACCOUNT` y `SERVER_ERROR`.
+  - `availability`: `available`, `few`, `none` y `closed`.
+- **QA de tiempo real:** el script `scripts/listen-availability.mjs` vive en el repo del backend. Uso y ejemplos en el `AVISOS.md` del backend (sección de Sergio) y en su README, sección 6.
+
+---
+
 ## 15 oct 2026 (noche) · Sebastián · Kit móvil publicado (`src/components/ui`)
 
 **Después del pull hay que recompilar**, porque las fuentes ahora van incrustadas en el build:
@@ -121,7 +160,7 @@ npx expo run:android
 ## 15 oct 2026 · Elizabeth · Contratos del Sprint 2 publicados
 
 - Los contratos del Sprint 2 están en `CLAUDE.md`, sección "Sprint 2 · Contratos". Es la fuente de verdad para backend, web y app; si algo no está ahí, se pregunta antes de inventarlo. Las fechas de cada contrato están en la tabla "Cuándo está listo cada contrato en `develop`".
-- **Cambio importante (llega a `develop` el 15 oct en la noche):** el backend deja de crear usuarios automáticamente. Por ahora el único correo real habilitado como restaurante es `dinnoteam2026@gmail.com`. Para probar la web como restaurante, usen esa cuenta o el usuario de desarrollo en local. Cualquier otra cuenta recibe 403 `ACCOUNT_NOT_ENABLED` en la web. Si necesitan habilitar otro correo, pídanselo a Elizabeth.
+- **Cambio importante (ya en `develop` desde el 15 oct):** el backend deja de crear usuarios automáticamente. Por ahora el único correo real habilitado como restaurante es `dinnoteam2026@gmail.com`. Para probar la web como restaurante, usen esa cuenta o el usuario de desarrollo en local. Cualquier otra cuenta recibe 403 `ACCOUNT_NOT_ENABLED` en la web. Si necesitan habilitar otro correo, pídanselo a Elizabeth.
 
 ### Por persona (Sprint 2)
 
@@ -130,8 +169,8 @@ npx expo run:android
 - Al iniciar sesión: llamar `GET /v1/me`. Si responde `PROFILE_REQUIRED` → `POST /v1/diners/me` y continuar. Si responde `RESTAURANT_ACCOUNT` → pantalla con el texto del contrato y *Cerrar sesión*. Si responde `EMAIL_NOT_VERIFIED` → ruta de verificación.
 - `availability` en la búsqueda solo trae `available`, `few` o `none`; `closed` aparece solo en el detalle y en el WebSocket. Nunca se muestra un número de mesas.
 - `distanceKm` llega como número: menos de 1 km se muestra en metros redondeados a 50 («a 650 m») y desde 1 km con un decimal y coma («a 1,4 km»).
-- WebSocket: usa `isSearchable` para quitar o volver a consultar restaurantes en la lista y el mapa.
-- Fechas en `develop`: roles y `/me` el jueves en la noche; búsqueda, zonas y detalle el viernes; WebSocket el sábado. Mientras tanto, datos de ejemplo con esa forma exacta.
+- WebSocket: usa `isSearchable` para quitar o volver a consultar restaurantes en la lista y el mapa. (Conexión, códigos y reintentos actualizados en la entrada "Backend del Sprint 2 disponible en `develop`".)
+- ~~Fechas en `develop`: roles y `/me` el jueves en la noche; búsqueda, zonas y detalle el viernes; WebSocket el sábado. Mientras tanto, datos de ejemplo con esa forma exacta.~~ **Superado:** todo está en `develop` desde el 15 oct (ver la entrada "Backend del Sprint 2 disponible en `develop`").
 
 **Jacobo:**
 - Al crear la cuenta (correo y clave), después de verificar el correo se llama `POST /v1/diners/me` con `{ displayName }` (1–60 caracteres). Con Google, si no se envía `displayName`, el backend toma el nombre de la cuenta de Google.

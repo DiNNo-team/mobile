@@ -181,7 +181,7 @@ Todos bajo `/v1`, con `Authorization: Bearer <token de Firebase>`.
 | GET | `/restaurants/me` | restaurant_admin | — | agrega `latitude`, `longitude` (number \| null) |
 
 **Reglas de los campos:**
-- `latitude` y `longitude` son `number` en JSON, con hasta 6 decimales. Se envían **los dos o ninguno** (si llega solo uno → 400). Deben estar dentro de Bogotá: latitud entre 4.45 y 4.85, longitud entre -74.25 y -73.95 (fuera → 400). En el backend las coordenadas son opcionales para no romper la web actual; la obligatoriedad al registrar la impone el formulario web.
+- `latitude` y `longitude` son `number` en JSON, con hasta 6 decimales. Se aceptan con más de 6: el backend las **redondea** a 6 antes de guardar (no es un error), y las respuestas traen el valor redondeado. Se envían **los dos o ninguno** (si llega solo uno → 400). Deben estar dentro de Bogotá: latitud entre 4.45 y 4.85, longitud entre -74.25 y -73.95 (fuera → 400). En el backend las coordenadas son opcionales para no romper la web actual; la obligatoriedad al registrar la impone el formulario web.
 - Búsqueda: `lat`/`lng` y `zone` son excluyentes (los dos o ninguno → 400). `lat`/`lng` pueden estar fuera de Bogotá (simplemente no habrá resultados). Una `zone` desconocida, una `category` inválida, un `radiusKm` fuera de la lista o un `partySize` fuera de rango → 400 con un mensaje en español.
 - `distanceKm`: número en km con 2 decimales. El formato para mostrar («a 650 m», «a 1,4 km») lo hace la app.
 - `category`: `colombian`, `italian`, `mexican`, `asian`, `grill`, `fast_food`, `healthy`, `seafood`, `cafe`, `other` (los mismos del Sprint 1).
@@ -204,19 +204,24 @@ Todos bajo `/v1`, con `Authorization: Bearer <token de Firebase>`.
 - **Nunca** se expone el número de mesas libres ni de mesas totales.
 
 ### Tiempo real
-- Socket.IO en el mismo host del backend (ruta por defecto `/socket.io`). Conexión: `io(BASE_URL, { auth: { token: <token de Firebase> } })`. Solo se aceptan comensales; si no, la conexión se rechaza con `connect_error`, cuyo `message` es un código: `UNAUTHORIZED` (token ausente, inválido o vencido; solo existe en el WebSocket, en HTTP es el 401 sin `errorCode`), `PROFILE_REQUIRED` o `RESTAURANT_ACCOUNT`.
+- Socket.IO en el mismo host del backend (ruta por defecto `/socket.io`). Conexión: `io(BASE_URL, { auth: async (cb) => cb({ token: await user.getIdToken() }) })`. El `auth` va **como función** para que cada reconexión envíe un token vigente (con un objeto fijo, la reconexión usaría el token viejo). Solo se aceptan comensales; si no, la conexión se rechaza con `connect_error`, cuyo `message` es un código: `UNAUTHORIZED` (token ausente, inválido o vencido; solo existe en el WebSocket, en HTTP es el 401 sin `errorCode`), `EMAIL_NOT_VERIFIED` (correo sin verificar), `PROFILE_REQUIRED`, `RESTAURANT_ACCOUNT` o `SERVER_ERROR` (el handshake falló por algo distinto a la sesión, por ejemplo la base caída).
+- Socket.IO **no reintenta solo** cuando el servidor rechaza la conexión. Con `SERVER_ERROR` la app reintenta ella misma con espera creciente (por ejemplo 5 s, 15 s, 30 s) y, mientras tanto, sigue la consulta cada 60 s. Con los demás códigos no reintenta.
+- Un token que vence **no desconecta** un socket ya abierto: el token solo se revisa al conectar, y la siguiente reconexión pide uno nuevo con la función de `auth`.
 - Evento del servidor `availability.changed`: `{ restaurantId, availability, isOpenNow, isSearchable }`. Se envía a todos los comensales conectados.
   - `isSearchable` = cumple las reglas para aparecer en la búsqueda (sin filtros). Si es `false` → la app lo quita de la lista y del mapa (el detalle muestra `closed` si `isOpenNow` es `false`). Si es `true` y el restaurante no estaba en la lista → la app vuelve a consultar la búsqueda.
 - Se emite cuando: cambia el estado de una mesa, se crea, desactiva o reactiva una mesa, se abre o cierra el restaurante, o se edita su horario o ubicación. Solo después de que la operación queda guardada.
 - Respaldo en la app: vuelve a consultar al regresar al primer plano, al reconectarse y cada 60 s en resultados y detalle.
 
 ### Cuándo está listo cada contrato en `develop`
-| Qué | Día |
+**Todo el backend del Sprint 2 ya está en `develop`** (fusionado el 15 oct). Ya no hace falta usar datos de ejemplo: se consume la API real.
+
+| Qué | En `develop` desde |
 |---|---|
-| Roles, `GET /me`, `POST /diners/me`, coordenadas en la base | Jue 15 (noche) |
-| Búsqueda, zonas, disponibilidad, filtros, detalle público, `GET /geocode`, coordenadas en POST/PATCH | Vie 16 |
-| WebSocket `availability.changed` | Sáb 17 |
-| Mientras tanto | usar datos de ejemplo con la forma exacta de este contrato |
+| Roles, `GET /me`, `POST /diners/me`, coordenadas en la base | 15 oct (PR #35) |
+| Regla de disponibilidad (`AvailabilityService`, sin endpoints) | 15 oct (PR #36) |
+| Búsqueda, zonas, disponibilidad, filtros y detalle público | 15 oct (PR #37) |
+| `GET /geocode` y coordenadas en POST/PATCH | 15 oct (PR #38) |
+| WebSocket `availability.changed` | 15 oct (PR #40) |
 
 ---
 
