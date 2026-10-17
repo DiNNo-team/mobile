@@ -4,6 +4,53 @@
 
 ---
 
+## 17 oct 2026 (noche) · Sebastián · Revisión del recorrido de la demo, hallazgos y APK para QA
+
+**APK para QA:** ya se puede probar la app sin montar el proyecto ni tener Metro corriendo.
+- Con `npm run android:release` sale un APK que apunta a Render. Las instrucciones están en el README, sección 3, «APK para QA».
+- Quien lo necesite (Santiago y Sergio para la matriz), pídamelo y se lo paso por privado.
+- Todavía no tiene mapa: cuando llegue la llave se genera otro.
+
+**Recorrido de la demo (§10 del reparto), probado en el emulador contra Render** con la cuenta de comensal de prueba:
+
+| Paso | Resultado |
+|---|---|
+| 1. Credenciales incorrectas → error claro · correo y clave → *Explorar* | ✅ |
+| 1. Entrar con Google | ⏳ Jacobo |
+| 2. Cuenta de restaurante → «Esta es una cuenta de restaurante…» | ✅ |
+| 3. Conceder ubicación → resultados en lista | ✅ |
+| 3. Resultados en mapa, con los tres niveles | ⏳ Llave de Maps · solo Casa 72 en Render |
+| 4. Detalle con horarios, distancia y «Cómo llegar» | ✅ |
+| 4. Tocar un pin resalta su tarjeta | ⏳ Llave de Maps (probado con datos de ejemplo) |
+| 5. Categoría + personas → cambian los resultados · «Limpiar filtros» | ✅ |
+| 6. Sin resultados → «Ampliar a X km» | ✅ |
+| 7. Rechazar ubicación → zona Chapinero | ✅ |
+| 8. Tiempo real desde la web | ⏳ El socket conecta y se recupera solo; falta cambiar mesas desde la web como Casa 72 |
+| 9 y 10. Web: Google, mensajes de cuenta equivocada, pin de ubicación | ⏳ Jacobo y Santiago |
+| 11. Crear cuenta en la app → verificación | ⏳ Jacobo |
+| 12. Perfil → cerrar sesión con confirmación | ⏳ Sergio (la pantalla provisional cierra sesión sin confirmación) |
+| 12. Modo oscuro | ✅ |
+
+**Revisión visual de la app (§11):**
+- Revisé el código con el checklist del manual (§17): ningún color, radio, sombra ni tamaño suelto, solo íconos de Lucide sin pines genéricos, sin `console.log` ni `TODO`.
+- Las 4 disponibilidades usan los mismos valores y textos en lista, mapa y detalle, nunca con número de mesas.
+- La web no la revisé: no tiene cambios del Sprint 2 en `develop`.
+
+**Hallazgos y dueño:**
+
+| # | Hallazgo | Dueño | Estado |
+|---|---|---|---|
+| 1 | Al entrar, el skeleton se quitaba un instante entre «Buscando tu ubicación…» y los resultados | Sebastián | Corregido en este PR |
+| 2 | Sin llave de Maps no hay mapa (la app muestra solo la lista); cuando llegue, verificar pines y sincronía | Equipo de Google Cloud → Sebastián | Pendiente |
+| 3 | En Render solo aparece Casa 72: no se pueden mostrar los tres niveles de disponibilidad ni varios pines | Santiago (JSON) + Elizabeth (seed) | Pendiente |
+| 4 | Google Sign-In, crear cuenta, verificar correo y recuperar contraseña siguen como pantallas provisionales | Jacobo | Pendiente |
+| 5 | Perfil provisional: faltan los datos de `GET /me`, la confirmación al cerrar sesión y la versión de la app (el selector de tema ya está) | Sergio | Pendiente |
+| 6 | ¿Qué cuenta entra a la web como Casa 72 para el paso 8? | Elizabeth | Pendiente |
+| 7 | En modo oscuro el botón secundario (petróleo, «Cómo llegar») casi se confunde con el fondo, porque en el manual `brand` y `surface` son el mismo color en oscuro | Sebastián (revisar con el manual) | Menor, abierto |
+| 8 | La ubicación del restaurante en la web pasa a «todo Google» (mapa de Google + Geocoding, el dueño confirma el pin) | Santiago + Elizabeth | En curso |
+
+---
+
 ## 17 oct 2026 · Sebastián · Tiempo real, errores de red y Render
 
 **Después del pull hay que recompilar** (NetInfo es nativo):

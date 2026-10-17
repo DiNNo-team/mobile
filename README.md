@@ -109,6 +109,21 @@ También se puede en el emulador: *⋯ (Extended controls) → Location*.
 
   Rechazar dos veces el permiso lo bloquea; la app muestra «Abrir ajustes».
 
+### APK para QA (sin Metro ni tu computador)
+
+El development build necesita Metro corriendo en tu computador. Para que otro integrante pruebe la app en su emulador sin montar el proyecto, genera un APK de *release*. Lleva el JavaScript adentro y usa los valores de tu `.env` en el momento de compilar, así que revisa `EXPO_PUBLIC_USE_MOCKS=false` y la URL de Render.
+
+```bash
+npx expo prebuild --clean
+npm run android:release
+# queda en android/app/build/outputs/apk/release/app-release.apk
+```
+
+- Quien lo reciba lo instala con el emulador encendido: `adb install -r app-release.apk`, o arrastrando el archivo a la ventana del emulador.
+- Va firmado con el mismo `debug.keystore` (mismo SHA-1), así que la llave de Maps restringida también funciona en él.
+- Cuando llegue la llave de Maps, hay que generar un APK nuevo para que tenga mapa.
+- Después de probarlo, vuelve al development build con `npx expo run:android`.
+
 ### Probar el tiempo real
 
 Con `EXPO_PUBLIC_USE_MOCKS=false`, la app abre un WebSocket con Render al iniciar sesión como comensal.
