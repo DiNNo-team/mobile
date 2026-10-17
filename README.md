@@ -109,6 +109,16 @@ También se puede en el emulador: *⋯ (Extended controls) → Location*.
 
   Rechazar dos veces el permiso lo bloquea; la app muestra «Abrir ajustes».
 
+### Probar el tiempo real
+
+Con `EXPO_PUBLIC_USE_MOCKS=false`, la app abre un WebSocket con Render al iniciar sesión como comensal.
+
+1. En el emulador: entra con una cuenta de comensal y busca cerca de la Calle 72 (`adb emu geo fix -74.0567 4.6576`). Debe aparecer Casa 72.
+2. En la web: entra con la cuenta del restaurante y cambia mesas de Casa 72 a *Ocupada*. En la app, el chip baja (*Pocas mesas*, *Sin mesas*) en uno o dos segundos, sin recargar.
+3. Cierra el restaurante desde la web: Casa 72 desaparece de la lista y del mapa. Si tenías el detalle abierto, muestra *Cerrado*. Ábrelo de nuevo: vuelve.
+4. Sin internet (`adb shell cmd connectivity airplane-mode enable`), la lista se conserva con «No pudimos conectarnos…» e «Intentar de nuevo». Al volver la conexión (`disable`), se actualiza sola.
+5. Para ver una red lenta: `adb emu network delay 6000` hace aparecer «Conectando con DiNNo…»; `adb emu network delay none` lo quita.
+
 ### El emulador tiene internet pero la app dice «No pudimos conectarnos»
 
 A veces el emulador no resuelve nombres (DNS). Ciérralo y ábrelo con DNS fijos:
