@@ -34,8 +34,11 @@ export function Skeleton({ className }: SkeletonProps) {
   return <Animated.View className={cn('bg-surface-2', className)} style={style} />;
 }
 
-/** False for the first 300 ms of a load, so quick loads do not flash a skeleton. */
-export function useDelayedLoading(loading: boolean): boolean {
+/**
+ * False for the first 300 ms of a load, so quick loads do not flash a skeleton. With another `delayMs` it
+ * also tells when something takes too long ("Conectando con DiNNo…" after 5 s).
+ */
+export function useDelayedLoading(loading: boolean, delayMs: number = SKELETON_DELAY_MS): boolean {
   const [visible, setVisible] = useState(false);
   const [wasLoading, setWasLoading] = useState(loading);
 
@@ -47,9 +50,9 @@ export function useDelayedLoading(loading: boolean): boolean {
 
   useEffect(() => {
     if (!loading) return;
-    const timer = setTimeout(() => setVisible(true), SKELETON_DELAY_MS);
+    const timer = setTimeout(() => setVisible(true), delayMs);
     return () => clearTimeout(timer);
-  }, [loading]);
+  }, [loading, delayMs]);
 
   return loading && visible;
 }

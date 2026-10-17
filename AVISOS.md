@@ -4,6 +4,44 @@
 
 ---
 
+## 17 oct 2026 · Sebastián · Tiempo real, errores de red y Render
+
+**Después del pull hay que recompilar** (NetInfo es nativo):
+
+```bash
+npm install
+npx expo prebuild --clean
+npx expo run:android
+```
+
+**Dependencias nuevas:**
+- `socket.io-client`: la misma versión 4.8 del backend.
+- `@react-native-community/netinfo`: avisa cuando vuelve internet.
+
+**Qué hace la app ahora:**
+- **Tiempo real:** al entrar como comensal se conecta al WebSocket de Render con el token de Firebase. Cada reconexión pide un token nuevo.
+  - Cada `availability.changed` cambia al instante el chip en la lista, el pin y el detalle.
+  - Si `isSearchable` es falso, el restaurante sale de la lista y del mapa, y el detalle abierto muestra *Cerrado*.
+  - Uno o dos segundos después, la app vuelve a consultar lo que está en pantalla. Así un restaurante que abre reaparece y el filtro de personas sigue siendo correcto.
+- **Reintentos:** con `SERVER_ERROR` la app reintenta a los 5 s, 15 s y luego cada 30 s. Con los otros códigos no reintenta. Si el socket se cae, no se muestra ningún error.
+- **Respaldo:** búsqueda y detalle se vuelven a consultar cada 60 s mientras la app está abierta, al volver a la app y al recuperar internet. En segundo plano el socket se cierra y no se consulta nada.
+- **Red:**
+  - Si una petición tarda más de 5 s (Render despertando), aparece «Conectando con DiNNo…» arriba.
+  - Sin internet, se conserva lo que había y sale «No pudimos conectarnos…» con «Intentar de nuevo». Al volver la conexión se actualiza sola.
+- Con `EXPO_PUBLIC_USE_MOCKS=true` no hay socket: no hay backend.
+
+**Probado contra Render** con la cuenta de comensal de prueba:
+- El socket se conecta, se cierra en segundo plano y se reconecta al volver.
+- Con modo avión aparece el error y la recuperación es automática.
+
+Falta ver un evento real: hay que cambiar mesas de Casa 72 desde la web mientras se mira la app. Los pasos están en el README («Probar el tiempo real»).
+
+**Sergio (QA de C10 y C11):** los casos de disponibilidad en vivo, sin conexión y backend lento se pueden repetir con los comandos del README.
+
+**Elizabeth:** para el recorrido del Día 6 confirmen qué cuenta entra a la web como Casa 72. El seed asegura `dinnoteam2026@gmail.com` como restaurante; ¿es la dueña de Casa 72?
+
+---
+
 ## 16 oct 2026 (noche) · Sebastián · Mapa, detalle, filtros y sin resultados
 
 **Después del pull hay que recompilar** (el mapa es código nativo):

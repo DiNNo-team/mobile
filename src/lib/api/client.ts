@@ -16,6 +16,11 @@ export function setAuthTokenProvider(provider: TokenProvider | null): void {
   tokenProvider = provider;
 }
 
+/** Fresh Firebase token of the session (null without one). The socket uses it on every connection. */
+export async function getAuthToken(): Promise<string | null> {
+  return tokenProvider ? tokenProvider() : null;
+}
+
 /** Called with every 401 and 403 answer, so the session feature can react (expired session, wrong account). */
 export function subscribeToApiErrors(listener: ApiErrorListener): () => void {
   errorListeners.add(listener);
