@@ -34,14 +34,15 @@ export function useLocationFlow({ hasOrigin, onLocated, onFailed }: LocationFlow
 
   const finish = useCallback((result: Awaited<ReturnType<typeof locateDevice>>, id: number) => {
     if (id !== attempt.current) return;
-    setStep('idle');
+    // The origin is set before leaving `locating`, so the screen never sees "no origin and not locating".
     if (result.ok) {
-      setFailure(null);
       latest.current.onLocated(result.coordinates);
+      setFailure(null);
     } else {
       setFailure(result.failure);
       latest.current.onFailed(result.failure);
     }
+    setStep('idle');
   }, []);
 
   /** "Usar mi ubicación": asks the permission if needed and reads the position. */

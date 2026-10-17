@@ -75,7 +75,8 @@ export default function ExploreScreen() {
 
   const results = search.data ?? [];
   const loadingResults = origin !== null && search.isPending;
-  const showSkeleton = useDelayedLoading(loadingResults || location.step === 'checking');
+  // Locating and then searching are one wait for the diner: one skeleton, without a blank gap between them.
+  const showSkeleton = useDelayedLoading(loadingResults || location.step === 'checking' || location.step === 'locating');
   const searchingAgain = search.isFetching && search.isPlaceholderData;
   const showMap = env.mapsEnabled && view === 'map' && results.length > 0;
   // On the map one card is always the current one: the chosen restaurant, or the nearest.
@@ -128,8 +129,7 @@ export default function ExploreScreen() {
   const renderEmpty = () => {
     if (!origin) {
       if (location.step === 'explain') return <LocationIntro onUseLocation={locateMe} onChooseZone={openZones} />;
-      if (location.step === 'locating') return <RestaurantListSkeleton />;
-      if (location.step === 'checking') return showSkeleton ? <RestaurantListSkeleton /> : null;
+      if (location.step === 'locating' || location.step === 'checking') return showSkeleton ? <RestaurantListSkeleton /> : null;
       return <ZonePrompt failure={location.failure} onChooseZone={openZones} onUseLocation={locateMe} />;
     }
     if (loadingResults) return showSkeleton ? <RestaurantListSkeleton /> : null;
