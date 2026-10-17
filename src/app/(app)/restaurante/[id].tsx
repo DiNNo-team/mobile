@@ -11,6 +11,7 @@ import {
   ErrorState,
   Icon,
   OpenStatusChip,
+  RETRY_LABEL,
   ScreenHeader,
   Skeleton,
   Text,
@@ -111,7 +112,21 @@ export default function RestaurantDetailScreen() {
   const notFound = isApiError(detail.error, ErrorCode.RestaurantNotFound);
 
   const renderBody = () => {
-    if (detail.data) return <DetailContent restaurant={detail.data} />;
+    if (detail.data) {
+      return (
+        <>
+          {detail.isError ? (
+            // A failed refresh keeps the last data on screen and says so (the full error state is for no data).
+            <Alert
+              type="error"
+              message={getErrorMessage(detail.error)}
+              action={<Button size="sm" variant="outline" label={RETRY_LABEL} onPress={() => detail.refetch()} />}
+            />
+          ) : null}
+          <DetailContent restaurant={detail.data} />
+        </>
+      );
+    }
     if (detail.isPending) return showSkeleton ? <DetailSkeleton /> : null;
     if (notFound) {
       return (

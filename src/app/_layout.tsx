@@ -9,7 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ToastProvider } from '@/components/ui';
 import { SessionProvider, useAuth } from '@/features/session/SessionProvider';
-import { queryClient } from '@/lib/query-client';
+import { connectQueryLifecycle, queryClient } from '@/lib/query-client';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -63,6 +63,9 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  // Foreground and network drive the refetches (React Native has no window focus).
+  useEffect(() => connectQueryLifecycle(), []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
