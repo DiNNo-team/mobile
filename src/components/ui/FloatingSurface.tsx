@@ -13,8 +13,8 @@ export interface FloatingSurfaceProps {
 
 /**
  * Container for controls that float over the map (manual 7): solid surface, soft border and floating shadow.
- * This is the manual's solid fallback; the frosted glass is added in phase 5 once it is checked against
- * the real map on Android (blur there needs the map wrapped in a blur target).
+ * This is the manual's solid fallback, used on Android on purpose: blurring needs to capture the view behind,
+ * and the Google map draws on its own native surface that the blur cannot read. Revisit for iPhone.
  */
 export function FloatingSurface({ children, shape = 'card', className }: FloatingSurfaceProps) {
   const { colors } = useTheme();

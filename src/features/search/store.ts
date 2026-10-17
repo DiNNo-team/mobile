@@ -13,6 +13,8 @@ interface SearchState {
   setRadius: (radiusKm: RadiusKm) => void;
   setCategory: (category: RestaurantCategory | undefined) => void;
   setPartySize: (partySize: number | undefined) => void;
+  /** Applies the filters sheet at once ("Ver restaurantes"). */
+  setFilters: (filters: SearchFilters) => void;
   /** Back to the general search: default radius, no category, no party size. The origin stays. */
   clearFilters: () => void;
   /** Everything back to the start (sign out). */
@@ -33,6 +35,7 @@ export const useSearchStore = create<SearchState>()((set) => ({
   setRadius: (radiusKm) => set((state) => ({ filters: { ...state.filters, radiusKm } })),
   setCategory: (category) => set((state) => ({ filters: { ...state.filters, category } })),
   setPartySize: (partySize) => set((state) => ({ filters: { ...state.filters, partySize } })),
+  setFilters: (filters) => set({ filters }),
   clearFilters: () => set({ filters: DEFAULT_FILTERS }),
   reset: () => set({ origin: null, filters: DEFAULT_FILTERS }),
 }));

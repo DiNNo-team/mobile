@@ -4,6 +4,11 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 // create android/ from this file. Never edit android/ by hand; change this file and rebuild.
 // Colors are the manual's brand values (section 2.1): petrol #103B46, petrol night #0B2D36, cream #FAF7F1.
 
+// Android Google Maps key (Reparto 2.5 and 7): read here from .env when building, never written in the repo and
+// never EXPO_PUBLIC_* (so it is not in the JavaScript bundle). Without it the build has no map and the app
+// shows only the list (`extra.mapsEnabled`), because the Maps SDK crashes without a key.
+const googleMapsAndroidApiKey = process.env.GOOGLE_MAPS_ANDROID_API_KEY?.trim() || undefined;
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'DiNNo',
@@ -68,7 +73,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         motionUsagePermission: false,
       },
     ],
+    ['react-native-maps', { androidGoogleMapsApiKey: googleMapsAndroidApiKey }],
   ],
+  extra: {
+    ...config.extra,
+    mapsEnabled: googleMapsAndroidApiKey !== undefined,
+  },
   experiments: {
     typedRoutes: true,
     reactCompiler: true,

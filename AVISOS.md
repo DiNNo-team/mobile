@@ -4,6 +4,51 @@
 
 ---
 
+## 16 oct 2026 (noche) · Sebastián · Mapa, detalle, filtros y sin resultados
+
+**Después del pull hay que recompilar** (el mapa es código nativo):
+
+```bash
+npm install
+npx expo prebuild --clean
+npx expo run:android
+```
+
+**Dependencia nueva:** `react-native-maps` (mapa de Google, nativa).
+
+**Variable nueva: `GOOGLE_MAPS_ANDROID_API_KEY`** (en `.env`, **sin** `EXPO_PUBLIC_`).
+- La lee `app.config.ts` al compilar y va a la configuración de Android. No entra al JavaScript ni al repo.
+- **Sin la llave la app funciona igual, pero solo con la lista** (no se cae).
+- **Con la llave, cada vez que la pongas o la cambies, vuelve a correr `prebuild --clean` y `run:android`.** Si solo reinicias Metro, la app cree que hay mapa, pero el build no tiene la llave y se cierra.
+
+**Qué hay en *Explorar*:**
+- Selector *Mapa · Lista* (solo cuando el build tiene la llave).
+- **Mapa:**
+  - Pines con la forma y el color de la disponibilidad, y tu posición con el punto naranja.
+  - Abajo, tarjetas que se deslizan. Tocar un pin mueve las tarjetas a la suya; deslizar una tarjeta lleva el mapa a su pin. El seleccionado se marca con borde naranja, también en la lista.
+  - Tocar la tarjeta abre el detalle.
+  - Las tarjetas usan el **respaldo sólido** del vidrio (manual 7): en Android el desenfoque no puede leer la superficie del mapa de Google.
+- **Filtros** (hoja inferior): categoría, distancia (1, 2, 5 o 10 km) y personas (1 a 20).
+  - Los filtros activos se ven como chips con «x», junto a «Limpiar filtros».
+  - Se conservan al ir al detalle y volver.
+- **Sin resultados:** «Ampliar a X km», «Cambiar filtros» y «Cambiar zona».
+- **Detalle:**
+  - Abierto o Cerrado; si está abierto, también la disponibilidad.
+  - Dirección, distancia (solo si se busca con tu ubicación) y categoría.
+  - «Cómo llegar», que abre Google Maps con la URL universal, sin API.
+  - Horarios de la semana en 12 horas, con «(día siguiente)» y el día de hoy (hora de Bogotá) resaltado.
+  - Un restaurante que no existe muestra «Este restaurante ya no está disponible» y «Volver a explorar».
+
+**Equipo de Google Cloud (Jacobo, Santiago y Sergio):** el mapa está listo y solo falta la llave. Antes de entregármela por privado, revisen:
+- Que **Maps SDK for Android** esté activo y con la prueba gratuita.
+- Que la llave esté restringida a `com.dinno.app` + el SHA-1 del README y solo a *Maps SDK for Android*.
+
+**Probado contra Render:** la cuenta de comensal de prueba del equipo entra, crea su perfil y ve Casa 72 con su disponibilidad. También funcionan la distancia, el filtro de categoría y el detalle con el horario que cierra al día siguiente. Los pines del mapa todavía no se han visto con una llave real: con una llave inválida, Google no dibuja nada encima del mapa.
+
+**Santiago y Elizabeth:** cuando los 15 restaurantes estén en Render, aviso si algo se ve mal en el mapa o el detalle.
+
+---
+
 ## 16 oct 2026 (tarde) · Sebastián · Ubicación, zonas y lista de resultados
 
 **Después del pull hay que recompilar** (la ubicación es código nativo):
