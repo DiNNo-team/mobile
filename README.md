@@ -1,119 +1,202 @@
 # DiNNo — App móvil (comensal)
 
 Aplicación móvil de DiNNo para el comensal: búsqueda de restaurantes, disponibilidad y microreservas.
-Construida con **React Native + Expo (SDK 57)**, **Expo Router** y **TypeScript**, con estilos tipo
-Tailwind mediante **NativeWind**. Consume la API del backend (NestJS, repositorio aparte).
+Construida con **React Native + Expo (SDK 57)**, **Expo Router**, **TypeScript** y **NativeWind v4**
+(Tailwind v3). Consume la API del backend (NestJS, repositorio aparte).
 
-## Requisitos
+> **La app corre como _development build_ en el emulador de Android Studio, no en Expo Go.**
+> Google Sign-In y Google Maps necesitan código nativo propio de la app (paquete `com.dinno.app`),
+> que Expo Go no trae.
 
-- **Node.js 24 LTS** (definido en `.nvmrc` y en `engines` de `package.json`). Con nvm: `nvm use`.
-- **npm** (incluido con Node).
-- **Expo Go** actualizado en el celular (App Store / Google Play). Debe ser la versión compatible
-  con **Expo SDK 57**; si Expo Go dice que el proyecto usa un SDK no soportado, actualízalo.
-- Una **cuenta de Expo** (gratuita) con la **sesión iniciada con la misma cuenta** en:
-  - el computador: `npx expo login` (verifica con `npx expo whoami`);
-  - la app Expo Go del celular (pestaña de perfil).
+## 1. Requisitos (una sola vez por computador)
 
-  Así el servidor de desarrollo aparece directamente en Expo Go, sin escanear el QR.
+| Qué | Cómo |
+|---|---|
+| **Node.js 24** | Fijado en `.nvmrc` y `engines`. Con nvm: `nvm use` |
+| **JDK 17** | macOS: `brew install --cask zulu@17`. Windows: `choco install -y microsoft-openjdk17` (o el instalador de Microsoft OpenJDK 17) |
+| **Android Studio** | https://developer.android.com/studio · instalación **Standard** |
+| **SDK de Android** | Android Studio → *Settings → Languages & Frameworks → Android SDK*. En *SDK Platforms*: **Android 16 (Baklava) → Android SDK Platform 36**. En *SDK Tools*: Build-Tools, Emulator y Platform-Tools |
+| **Emulador** | *More Actions → Virtual Device Manager → Create virtual device* → un **Pixel** reciente con imagen **«Google Play»** (sin Google Play no funcionan Maps ni Google Sign-In) |
 
-## Instalación
+**Variables de entorno.** macOS (`~/.zshrc`):
+
+```bash
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools
+```
+
+Windows (Configuración → *Variables de entorno* del usuario):
+`JAVA_HOME` = la carpeta del JDK 17 (por ejemplo `C:\Program Files\Microsoft\jdk-17…`), `ANDROID_HOME = %LOCALAPPDATA%\Android\Sdk`
+y agrega `%ANDROID_HOME%\platform-tools` y `%ANDROID_HOME%\emulator` al `Path`.
+
+Verifica en una terminal nueva: `java -version` (debe decir 17), `adb version` y `emulator -list-avds`.
+
+> ⚠️ **Windows: el repo va fuera de OneDrive y en una ruta corta**, por ejemplo `C:\dev\dinno\mobile`.
+> Las rutas largas de OneDrive rompen Gradle.
+
+## 2. Instalación
 
 ```bash
 git clone https://github.com/DiNNo-team/mobile.git dinno-mobile
 cd dinno-mobile
 nvm use          # opcional, usa Node 24
 npm ci
-cp .env.example .env
+cp .env.example .env   # y completa los valores (ver sección 4)
 ```
 
 Para agregar librerías usa siempre `npx expo install <paquete>` (elige versiones compatibles con el SDK).
 
-## Variables de entorno
+## 3. Correr la app (development build)
 
-| Variable | Descripción | Ejemplo |
-|---|---|---|
-| `EXPO_PUBLIC_API_URL` | Origen del backend, **sin `/v1` y sin `/` final**. | `http://192.168.1.10:3000` |
+1. Enciende el emulador desde Android Studio (*Device Manager* → ▶) o con `emulator -avd <nombre>`.
+2. **La primera vez**:
+   ```bash
+   npx expo run:android
+   ```
+   Genera la carpeta `android/` (no se versiona), compila con Gradle, instala **DiNNo** en el emulador y
+   abre el servidor de desarrollo. La primera compilación tarda varios minutos.
+3. **Cada vez que cambie algo nativo** (`app.config.ts`, fuentes, una librería nativa nueva; siempre se
+   anuncia en `AVISOS.md`). `run:android` solo no basta, porque no vuelve a generar `android/` si ya existe:
+   ```bash
+   npx expo prebuild --clean
+   npx expo run:android
+   ```
+4. **El resto del tiempo** (solo cambias código TypeScript): `npx expo start` y presiona `a`. La app ya
+   instalada se conecta al servidor y los cambios se ven al guardar.
 
-- Se lee en [`src/config/env.ts`](src/config/env.ts). Si no está definida, la app se detiene con un
-  error que explica cómo configurarla. Usa siempre `env.apiUrl` en lugar de `process.env`.
-- Las rutas del backend llevan el prefijo `/v1`: `` `${env.apiUrl}/v1/health` ``.
-- `.env` no se versiona (solo `.env.example`). Las variables `EXPO_PUBLIC_*` quedan dentro de la app:
-  **no pongas secretos en ellas**.
-- Después de cambiar `.env`, reinicia limpiando la caché: `npx expo start -c`.
+Si `tailwind.config.js` cambia, reinicia limpiando la caché: `npx expo start -c`.
 
-> ⚠️ **`localhost` no funciona desde el celular.** En el teléfono, `localhost` es el propio teléfono,
-> no tu computador. Usa la IP local de tu computador en la misma red Wi-Fi (en macOS:
-> `ipconfig getifaddr en0`; en Windows: `ipconfig`), por ejemplo `http://192.168.1.10:3000`, o la URL
-> pública del backend en Render (`https://<servicio>.onrender.com`).
+### SHA-1 del build (Google Cloud y Firebase)
 
-## Ejecutar la app
+La llave de Google Maps y el cliente OAuth de Google Sign-In están restringidos al paquete
+**`com.dinno.app`** y al **SHA-1** del certificado con que se firma el build. El build de desarrollo
+usa el `debug.keystore` que trae la plantilla de Expo, así que el SHA-1 es **el mismo en todos los
+computadores**:
 
-```bash
-npx expo start
+```
+SHA1: 5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25
 ```
 
-1. Abre **Expo Go** en el celular. Si iniciaste sesión con la misma cuenta, el proyecto aparece en
-   *Development servers*; si no, escanea el código QR de la terminal (en iOS, con la cámara).
-2. El computador y el celular deben estar en la **misma red Wi-Fi**.
-
-**Redes restringidas (universidad, redes corporativas, aislamiento de clientes):** si Expo Go no
-logra conectarse, usa un túnel:
+Para comprobarlo en tu equipo (después de `npx expo run:android` o `npx expo prebuild`):
 
 ```bash
-npx expo start --tunnel
+keytool -list -v -keystore android/app/debug.keystore -storepass android -alias androiddebugkey | grep SHA1
+# o: cd android && ./gradlew signingReport
 ```
 
-La primera vez, Expo pedirá instalar `@expo/ngrok`; acepta. El túnel es más lento, pero funciona
-aunque el celular y el computador no se vean en la red. Ten en cuenta que el túnel solo expone el
-servidor de Metro: el backend debe seguir siendo accesible desde el celular (IP local alcanzable o
-URL de Render).
+### Simular la ubicación del emulador
 
-## Comandos
+Con el emulador encendido, **longitud primero y luego latitud**:
+
+```bash
+adb emu geo fix -74.0567 4.6576    # Calle 72
+adb emu geo fix -74.0306 4.6949    # Usaquén
+adb emu geo fix -75.5812 6.2442    # Medellín (fuera de Bogotá: sin resultados)
+```
+
+También se puede en el emulador: *⋯ (Extended controls) → Location*.
+
+- El emulador arranca en California: hasta que envíes una posición, «Usar mi ubicación» no encuentra restaurantes.
+- La primera vez, Android puede mostrar *Location Accuracy*: toca **Turn on**. Si tardas más de 10 s, la app dice que no encontró tu ubicación a tiempo; vuelve a intentarlo.
+- Para repetir los casos del permiso (Reparto, caso C3):
+
+  ```bash
+  adb shell pm revoke com.dinno.app android.permission.ACCESS_FINE_LOCATION     # volver a ver la explicación
+  adb shell pm revoke com.dinno.app android.permission.ACCESS_COARSE_LOCATION
+  adb shell cmd location set-location-enabled false                              # GPS apagado (true lo enciende)
+  ```
+
+  Rechazar dos veces el permiso lo bloquea; la app muestra «Abrir ajustes».
+
+### APK para QA (sin Metro ni tu computador)
+
+El development build necesita Metro corriendo en tu computador. Para que otro integrante pruebe la app en su emulador sin montar el proyecto, genera un APK de *release*. Lleva el JavaScript adentro y usa los valores de tu `.env` en el momento de compilar, así que revisa `EXPO_PUBLIC_USE_MOCKS=false` y la URL de Render.
+
+```bash
+npx expo prebuild --clean
+npm run android:release
+# queda en android/app/build/outputs/apk/release/app-release.apk
+```
+
+- Quien lo reciba lo instala con el emulador encendido: `adb install -r app-release.apk`, o arrastrando el archivo a la ventana del emulador.
+- Va firmado con el mismo `debug.keystore` (mismo SHA-1), así que la llave de Maps restringida también funciona en él.
+- Cuando llegue la llave de Maps, hay que generar un APK nuevo para que tenga mapa.
+- Después de probarlo, vuelve al development build con `npx expo run:android`.
+
+### Probar el tiempo real
+
+Con `EXPO_PUBLIC_USE_MOCKS=false`, la app abre un WebSocket con Render al iniciar sesión como comensal.
+
+1. En el emulador: entra con una cuenta de comensal y busca cerca de la Calle 72 (`adb emu geo fix -74.0567 4.6576`). Debe aparecer Casa 72.
+2. En la web: entra con la cuenta del restaurante y cambia mesas de Casa 72 a *Ocupada*. En la app, el chip baja (*Pocas mesas*, *Sin mesas*) en uno o dos segundos, sin recargar.
+3. Cierra el restaurante desde la web: Casa 72 desaparece de la lista y del mapa. Si tenías el detalle abierto, muestra *Cerrado*. Ábrelo de nuevo: vuelve.
+4. Sin internet (`adb shell cmd connectivity airplane-mode enable`), la lista se conserva con «No pudimos conectarnos…» e «Intentar de nuevo». Al volver la conexión (`disable`), se actualiza sola.
+5. Para ver una red lenta: `adb emu network delay 6000` hace aparecer «Conectando con DiNNo…»; `adb emu network delay none` lo quita.
+
+### El emulador tiene internet pero la app dice «No pudimos conectarnos»
+
+A veces el emulador no resuelve nombres (DNS). Ciérralo y ábrelo con DNS fijos:
+
+```bash
+emulator -avd Pixel_9a -dns-server 8.8.8.8,1.1.1.1
+```
+
+## 4. Variables de entorno
+
+Se leen solo en [`src/config/env.ts`](src/config/env.ts); en el resto del código usa `env`, nunca `process.env`.
+
+| Variable | Descripción |
+|---|---|
+| `EXPO_PUBLIC_API_URL` | Origen del backend, **sin `/v1` y sin `/` final**. Render: `https://dinno-backend.onrender.com`. Backend local desde el emulador: `http://10.0.2.2:3000` (`localhost` en el emulador es el propio emulador) |
+| `EXPO_PUBLIC_USE_MOCKS` | `true` usa datos de ejemplo en memoria con la forma del contrato (restaurantes alrededor de la Calle 72, 20 zonas) y una sesión de ejemplo sin Firebase: cualquier correo entra como comensal; `restaurante@dinno.test`, `sinverificar@dinno.test` y `sinconexion@dinno.test` muestran sus pantallas; la contraseña `incorrecta` siempre falla |
+| `EXPO_PUBLIC_DEV_USER_ID` | Solo backend local: UUID de un usuario para la cabecera `x-dev-user-id` cuando no hay sesión de Firebase |
+| `EXPO_PUBLIC_FIREBASE_*` | Configuración pública de Firebase (la misma de la web) |
+| `GOOGLE_MAPS_ANDROID_API_KEY` | Llave de Android de Google Maps (la entrega el equipo de Google Cloud por un canal privado). **Sin `EXPO_PUBLIC_`**: la lee `app.config.ts` al compilar y va a la configuración nativa, no al JavaScript. Sin ella la app funciona, pero muestra solo la lista |
+
+`.env` no se versiona. Después de cambiarlo: `npx expo start -c`.
+
+**La llave de Maps es la excepción:** después de ponerla o cambiarla hay que recompilar, porque va dentro del build:
+
+```bash
+npx expo prebuild --clean
+npx expo run:android
+```
+
+Si solo reinicias Metro con la llave nueva y no recompilas, la app cree que hay mapa pero el build no tiene la llave, y se cierra al abrir *Explorar*.
+
+## 5. Comandos
 
 | Comando | Qué hace |
 |---|---|
-| `npx expo start` | Servidor de desarrollo (Expo Go). `-c` limpia la caché, `--tunnel` usa túnel. |
-| `npm run android` / `npm run ios` | Abre en emulador Android / simulador iOS. |
-| `npm run web` | Abre la versión web en el navegador. |
-| `npx expo lint` (o `npm run lint`) | Revisa el código con ESLint (`eslint-config-expo`). |
-| `npx tsc --noEmit` | Chequeo de tipos. |
-| `npx expo-doctor` | Diagnóstico de dependencias y configuración. |
+| `npx expo run:android` (o `npm run android`) | Compila e instala el development build en el emulador |
+| `npx expo prebuild --clean` | Regenera `android/` desde `app.config.ts` (antes de `run:android` tras un cambio nativo) |
+| `npx expo start` (o `npm start`) | Servidor de desarrollo para el build ya instalado. `-c` limpia la caché |
+| `npm test` | Pruebas (Jest con `jest-expo`) |
+| `npx expo lint` (o `npm run lint`) | ESLint |
+| `npx tsc --noEmit` (o `npm run typecheck`) | Chequeo de tipos. Los tipos de las rutas se generan al correr `npx expo start` una vez |
+| `npx expo-doctor` | Diagnóstico de dependencias y configuración |
 
-## Cómo verificar que funciona
-
-1. `npx expo start` y abre la app en Expo Go: debe verse **DiNNo** grande, en azul y centrado sobre
-   fondo gris claro. Si el texto se ve negro y pequeño, NativeWind no se está aplicando
-   (reinicia con `npx expo start -c`).
-2. Debajo del título se muestra la URL de la API configurada.
-3. Con el backend corriendo, abre en el **navegador del celular** `http://<IP-del-computador>:3000/v1/health`:
-   debe responder `{"status":"ok"}`. Si no responde, el celular no alcanza al backend
-   (revisa la IP, la red o el firewall del computador).
-4. `npx tsc --noEmit` y `npx expo lint` deben terminar sin errores.
-
-## Estilos con NativeWind
-
-Se usa **NativeWind v4** (versión estable compatible con Expo SDK 57), que funciona con
-**Tailwind CSS v3**. Las clases se escriben con `className`:
-
-```tsx
-<View className="flex-1 items-center justify-center bg-slate-50">
-  <Text className="text-5xl font-bold text-blue-600">DiNNo</Text>
-</View>
-```
-
-Archivos de configuración: `tailwind.config.js`, `babel.config.js`, `metro.config.js`,
-`src/global.css` (importado en `src/app/_layout.tsx`) y `nativewind-env.d.ts` (tipos de `className`).
-
-## Estructura
+## 6. Estructura
 
 ```
+app.config.ts          # Configuración nativa (paquete, ícono, splash). Reemplaza a app.json
 src/
-├── app/            # Pantallas y layouts (Expo Router). Solo rutas aquí.
-│   ├── _layout.tsx
-│   └── index.tsx
-├── config/
-│   └── env.ts      # Lectura y validación de EXPO_PUBLIC_API_URL
-└── global.css      # Directivas de Tailwind
+├── app/               # Pantallas (Expo Router). Solo rutas aquí
+│   ├── (auth)/        # login · crear-cuenta · verificar-correo · cuenta-restaurante
+│   ├── (app)/(tabs)/  # index (Explorar) · perfil
+│   └── (app)/restaurante/[id].tsx
+├── components/ui/     # Kit móvil (solo tokens del manual)
+├── config/env.ts      # Variables de entorno
+├── features/          # Lógica por dominio: search, account…
+├── lib/               # Cliente HTTP, formato, utilidades
+└── theme/             # Tokens del manual (16.5), variables de color y tema claro/oscuro
 ```
 
-El código que no sea una pantalla (componentes, hooks, servicios) va fuera de `src/app/`.
+## 7. Estilos
+
+Tailwind **solo conoce los tokens del manual**: no existen `bg-slate-50`, `text-blue-600`,
+`rounded-lg` ni `text-5xl`. Las clases tienen los mismos nombres que en la web:
+`bg-surface text-fg border-line rounded-card`, `text-accent-text`, `bg-ok/15`. El texto siempre va con
+el componente `Text` del kit (`variant` = `h1`, `body`, `sec`, `label`…), que aplica la tipografía
+Plus Jakarta Sans con su peso. Los valores están en [`src/theme/tokens.ts`](src/theme/tokens.ts).
