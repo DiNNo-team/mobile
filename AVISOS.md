@@ -4,6 +4,25 @@
 
 ---
 
+## 20 oct 2026 · Jacobo · Crear cuenta, verificar correo y recuperar contraseña
+
+**No hay que recompilar** ni hay dependencias nuevas: después del pull basta con `npm install`.
+
+Estas tres pantallas **ya no son provisionales**:
+- **`/crear-cuenta`:** nombre, correo y contraseña (mínimo 8). Al crearla se envía el correo de verificación y la app pasa sola a `/verificar-correo`. El nombre se envía a `POST /diners/me`.
+- **`/verificar-correo`:** «Ya lo verifiqué», «Reenviar correo» y «Cerrar sesión», igual que en la web.
+- **`/recuperar-contrasena`:** envía el enlace de Firebase. La confirmación no dice si la cuenta existe.
+
+La lógica de Firebase está en `src/features/session/account-actions.ts`. Con `EXPO_PUBLIC_USE_MOCKS=true`:
+- Crear cuenta pasa a la verificación con `sinverificar@dinno.test`.
+- Reenviar y recuperar responden como si hubieran funcionado.
+
+**Pruebas:** `auth-screens.test.tsx` renderiza pantallas con `react-test-renderer` (ya viene con jest-expo). Mockea reanimated, worklets y lucide en el mismo archivo, sin tocar la configuración de jest.
+
+**Recorrido de la demo, paso 11 (crear cuenta → verificación):** listo para probar. «Continuar con Google» sigue pendiente (Jacobo).
+
+---
+
 ## 17 oct 2026 (noche) · Sebastián · Revisión del recorrido de la demo, hallazgos y APK para QA
 
 **APK para QA:** ya se puede probar la app sin montar el proyecto ni tener Metro corriendo.
