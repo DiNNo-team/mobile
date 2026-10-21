@@ -8,12 +8,25 @@ Construida con **React Native + Expo (SDK 57)**, **Expo Router**, **TypeScript**
 > Google Sign-In y Google Maps necesitan código nativo propio de la app (paquete `com.dinno.app`),
 > que Expo Go no trae.
 
+Las reglas del equipo están en [`CLAUDE.md`](CLAUDE.md) y los cambios del día en [`AVISOS.md`](AVISOS.md).
+
+## Inicio rápido
+
+1. Instala los requisitos de la sección 1 (una sola vez por computador).
+2. `npm ci` y `cp .env.example .env` (sección 2).
+3. Completa `.env` según el modo en que vas a trabajar (sección 4): con datos de ejemplo, contra Render o contra tu backend local.
+4. Enciende el emulador y corre `npx expo run:android` (sección 3). La primera vez tarda varios minutos.
+5. Simula la ubicación en la Calle 72: `adb emu geo fix -74.0567 4.6576`.
+6. Entra con una cuenta de comensal de prueba (pídela por privado a Elizabeth) y toca «Usar mi ubicación». Debe aparecer Casa 72, si está en su horario (lunes a jueves de 11:00 a 23:00, viernes y sábado de 11:00 a 2:00 del día siguiente y domingo de 11:00 a 21:00). Fuera de ese horario no aparece ningún restaurante: no es un error.
+
+Si algo falla, revisa la sección 8, «Problemas comunes».
+
 ## 1. Requisitos (una sola vez por computador)
 
 | Qué | Cómo |
 |---|---|
 | **Node.js 24** | Fijado en `.nvmrc` y `engines`. Con nvm: `nvm use` |
-| **JDK 17** | macOS: `brew install --cask zulu@17`. Windows: `choco install -y microsoft-openjdk17` (o el instalador de Microsoft OpenJDK 17) |
+| **JDK 17** | **Opción principal: el JDK que trae Android Studio** (carpeta `jbr`), sin instalar nada más. Alternativa: un JDK 17 aparte. macOS: `brew install --cask zulu@17`. Windows: `choco install -y microsoft-openjdk17` (o el instalador de Microsoft OpenJDK 17) |
 | **Android Studio** | https://developer.android.com/studio · instalación **Standard** |
 | **SDK de Android** | Android Studio → *Settings → Languages & Frameworks → Android SDK*. En *SDK Platforms*: **Android 16 (Baklava) → Android SDK Platform 36**. En *SDK Tools*: Build-Tools, Emulator y Platform-Tools |
 | **Emulador** | *More Actions → Virtual Device Manager → Create virtual device* → un **Pixel** reciente con imagen **«Google Play»** (sin Google Play no funcionan Maps ni Google Sign-In) |
@@ -21,7 +34,8 @@ Construida con **React Native + Expo (SDK 57)**, **Expo Router**, **TypeScript**
 **Variables de entorno.** macOS (`~/.zshrc`):
 
 ```bash
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"   # JDK de Android Studio
+# export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home   # alternativa: JDK 17 aparte
 export ANDROID_HOME=$HOME/Library/Android/sdk
 export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools
 ```
@@ -29,6 +43,7 @@ export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools
 Windows (Configuración → *Variables de entorno* del usuario):
 `JAVA_HOME` = la carpeta del JDK 17 (por ejemplo `C:\Program Files\Microsoft\jdk-17…`), `ANDROID_HOME = %LOCALAPPDATA%\Android\Sdk`
 y agrega `%ANDROID_HOME%\platform-tools` y `%ANDROID_HOME%\emulator` al `Path`.
+Si usas el JDK de Android Studio, `JAVA_HOME` es la carpeta `jbr` de su instalación (por defecto `C:\Program Files\Android\Android Studio\jbr`).
 
 Verifica en una terminal nueva: `java -version` (debe decir 17), `adb version` y `emulator -list-avds`.
 
@@ -134,18 +149,17 @@ Con `EXPO_PUBLIC_USE_MOCKS=false`, la app abre un WebSocket con Render al inicia
 4. Sin internet (`adb shell cmd connectivity airplane-mode enable`), la lista se conserva con «No pudimos conectarnos…» e «Intentar de nuevo». Al volver la conexión (`disable`), se actualiza sola.
 5. Para ver una red lenta: `adb emu network delay 6000` hace aparecer «Conectando con DiNNo…»; `adb emu network delay none` lo quita.
 
-### El emulador tiene internet pero la app dice «No pudimos conectarnos»
-
-A veces el emulador no resuelve nombres (DNS). Ciérralo y ábrelo con DNS fijos:
-
-```bash
-emulator -avd Pixel_9a -dns-server 8.8.8.8,1.1.1.1
-```
-
 ## 4. Variables de entorno
 
 Se leen solo en [`src/config/env.ts`](src/config/env.ts); en el resto del código usa `env`, nunca `process.env`.
 
+| Variable | Obligatoria | Descripción | Ejemplo |
+|---|---|---|---|
+| `EXPO_PUBLIC_API_URL` | Sí (sin ella la app no arranca) | Origen del backend, **sin `/v1` y sin `/` final**. Backend local desde el emulador: `10.0.2.2` (`localhost` en el emulador es el propio emulador) | `https://dinno-backend.onrender.com` o `http://10.0.2.2:3000` |
+| `EXPO_PUBLIC_USE_MOCKS` | No | `true` usa datos de ejemplo en memoria con la forma del contrato (restaurantes alrededor de la Calle 72, 20 zonas) y una sesión de ejemplo sin Firebase: cualquier correo entra como comensal; `restaurante@dinno.test`, `sinverificar@dinno.test` y `sinconexion@dinno.test` muestran sus pantallas; la contraseña `incorrecta` siempre falla | `false` |
+| `EXPO_PUBLIC_DEV_USER_ID` | No | Solo backend local: UUID de un usuario para la cabecera `x-dev-user-id` cuando no hay sesión de Firebase | vacío |
+| `EXPO_PUBLIC_FIREBASE_API_KEY` · `_AUTH_DOMAIN` · `_PROJECT_ID` | Sí, salvo con datos de ejemplo | Configuración pública de Firebase (la misma de la web; no es secreta) | `your-firebase-api-key` · `your-project.firebaseapp.com` · `your-firebase-project-id` |
+| `GOOGLE_MAPS_ANDROID_API_KEY` | No | Llave de Android de Google Maps (la tiene Sebastián, que la recibió del equipo de Google Cloud: pídesela por privado). **Sin `EXPO_PUBLIC_`**: la lee `app.config.ts` al compilar y va a la configuración nativa, no al JavaScript. Sin ella la app funciona, pero muestra solo la lista | vacío |
 | Variable | Descripción |
 |---|---|
 | `EXPO_PUBLIC_API_URL` | Origen del backend, **sin `/v1` y sin `/` final**. Render: `https://dinno-backend.onrender.com`. Backend local desde el emulador: `http://10.0.2.2:3000` (`localhost` en el emulador es el propio emulador) |
@@ -156,6 +170,16 @@ Se leen solo en [`src/config/env.ts`](src/config/env.ts); en el resto del códig
 | `GOOGLE_MAPS_ANDROID_API_KEY` | Llave de Android de Google Maps (la entrega el equipo de Google Cloud por un canal privado). **Sin `EXPO_PUBLIC_`**: la lee `app.config.ts` al compilar y va a la configuración nativa, no al JavaScript. Sin ella la app funciona, pero muestra solo la lista |
 
 `.env` no se versiona. Después de cambiarlo: `npx expo start -c`.
+
+**Los valores reales nunca van en el repo.** Se piden por privado: las variables de Firebase y las cuentas de prueba del backend, a Elizabeth; la llave de Maps, a Sebastián.
+
+### Tres formas de correr la app
+
+| Modo | `.env` | Notas |
+|---|---|---|
+| **Datos de ejemplo** | `EXPO_PUBLIC_USE_MOCKS=true` | Sin backend ni Firebase. No hay tiempo real (no hay socket) |
+| **Backend en Render** (por defecto) | `EXPO_PUBLIC_API_URL=https://dinno-backend.onrender.com` · `EXPO_PUBLIC_USE_MOCKS=false` · las tres `EXPO_PUBLIC_FIREBASE_*` | Si Render está dormido, abre primero `https://dinno-backend.onrender.com/v1/health` en el navegador |
+| **Backend local** | `EXPO_PUBLIC_API_URL=http://10.0.2.2:3000` · `EXPO_PUBLIC_USE_MOCKS=false` | Corre el backend en tu computador (ver su README). Para probar sin Firebase: `DEV_USER_ENABLED=true` en el backend y el UUID de un usuario de prueba en `EXPO_PUBLIC_DEV_USER_ID` |
 
 **La llave de Maps es la excepción:** después de ponerla o cambiarla hay que recompilar, porque va dentro del build:
 
@@ -173,6 +197,7 @@ Si solo reinicias Metro con la llave nueva y no recompilas, la app cree que hay 
 | Comando | Qué hace |
 |---|---|
 | `npx expo run:android` (o `npm run android`) | Compila e instala el development build en el emulador |
+| `npm run android:release` | Compila el APK de *release* para QA (ver «APK para QA») |
 | `npx expo prebuild --clean` | Regenera `android/` desde `app.config.ts` (antes de `run:android` tras un cambio nativo) |
 | `npx expo start` (o `npm start`) | Servidor de desarrollo para el build ya instalado. `-c` limpia la caché |
 | `npm test` | Pruebas (Jest con `jest-expo`) |
@@ -180,18 +205,20 @@ Si solo reinicias Metro con la llave nueva y no recompilas, la app cree que hay 
 | `npx tsc --noEmit` (o `npm run typecheck`) | Chequeo de tipos. Los tipos de las rutas se generan al correr `npx expo start` una vez |
 | `npx expo-doctor` | Diagnóstico de dependencias y configuración |
 
+**Antes de abrir un PR:** `npx expo lint`, `npx tsc --noEmit` y `npm test` sin errores (hoy `tsc` tiene un error conocido: ver la sección 8). La app se prueba solo en Android: los scripts `ios` y `web` existen, pero el equipo no los usa.
+
 ## 6. Estructura
 
 ```
 app.config.ts          # Configuración nativa (paquete, ícono, splash). Reemplaza a app.json
 src/
 ├── app/               # Pantallas (Expo Router). Solo rutas aquí
-│   ├── (auth)/        # login · crear-cuenta · verificar-correo · cuenta-restaurante
+│   ├── (auth)/        # login · crear-cuenta · verificar-correo · recuperar-contrasena · cuenta-restaurante · sin-conexion · conectando
 │   ├── (app)/(tabs)/  # index (Explorar) · perfil
 │   └── (app)/restaurante/[id].tsx
 ├── components/ui/     # Kit móvil (solo tokens del manual)
 ├── config/env.ts      # Variables de entorno
-├── features/          # Lógica por dominio: search, account…
+├── features/          # Lógica por dominio: session, account, search, location, realtime
 ├── lib/               # Cliente HTTP, formato, utilidades
 └── theme/             # Tokens del manual (16.5), variables de color y tema claro/oscuro
 ```
@@ -203,3 +230,19 @@ Tailwind **solo conoce los tokens del manual**: no existen `bg-slate-50`, `text-
 `bg-surface text-fg border-line rounded-card`, `text-accent-text`, `bg-ok/15`. El texto siempre va con
 el componente `Text` del kit (`variant` = `h1`, `body`, `sec`, `label`…), que aplica la tipografía
 Plus Jakarta Sans con su peso. Los valores están en [`src/theme/tokens.ts`](src/theme/tokens.ts).
+
+## 8. Problemas comunes
+
+| Síntoma | Causa y solución |
+|---|---|
+| Al abrir la app sale el error «Falta EXPO_PUBLIC_API_URL…» | No hay `.env` o le falta la variable. `cp .env.example .env`, complétala y reinicia con `npx expo start -c` |
+| Sale el error «Faltan EXPO_PUBLIC_FIREBASE_API_KEY, EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN o EXPO_PUBLIC_FIREBASE_PROJECT_ID…» | Faltan las variables de Firebase (pídelas por privado a Elizabeth), o usa `EXPO_PUBLIC_USE_MOCKS=true` para trabajar sin Firebase |
+| El emulador tiene internet pero la app dice «No pudimos conectarnos» | A veces el emulador no resuelve nombres (DNS). Ciérralo y ábrelo con DNS fijos: `emulator -avd Pixel_9a -dns-server 8.8.8.8,1.1.1.1` |
+| La app no llega a mi backend local | En el emulador `localhost` es el propio emulador: usa `EXPO_PUBLIC_API_URL=http://10.0.2.2:3000` y reinicia con `npx expo start -c` |
+| La primera petición tarda mucho o aparece «Conectando con DiNNo…» | Render estaba dormido. Abre `https://dinno-backend.onrender.com/v1/health` y espera `{ "status": "ok" }` |
+| «No pudimos encontrar tu ubicación a tiempo» | No enviaste una posición al emulador (arranca en California) o el aviso *Location Accuracy* quedó abierto más de 10 s. Envía `adb emu geo fix -74.0567 4.6576` y vuelve a intentarlo |
+| La app se cierra al abrir *Explorar* después de poner la llave de Maps | Se reinició Metro sin recompilar: la llave va dentro del build. `npx expo prebuild --clean` y `npx expo run:android` |
+| Cambié `tailwind.config.js` o `.env` y no se nota | Reinicia limpiando la caché: `npx expo start -c` |
+| Windows: Gradle falla con rutas largas o archivos bloqueados | El repo está dentro de OneDrive o en una ruta larga. Muévelo a una ruta corta fuera de OneDrive, por ejemplo `C:\dev\dinno\mobile` |
+| `npx jest`, `npx tsc` o `npx expo` descargan paquetes y fallan con errores raros | Falta `node_modules`, así que `npx` baja otras versiones que no son las del proyecto. Corre `npm ci` y usa `npm test`, `npm run lint` y `npm run typecheck` |
+| **Error conocido:** `npx tsc --noEmit` falla con `src/app/_layout.tsx(1,8): error TS2882: Cannot find module or type declarations for side-effect import of '../global.css'` | Ya existe en `develop` y no lo causa tu cambio: TypeScript 6 revisa los imports de efecto secundario y `nativewind/types` no declara los `*.css`. Revisa que sea el único error. Esta fila se quita cuando Sebastián lo arregle |

@@ -4,6 +4,27 @@
 
 ---
 
+## 20 oct 2026 (noche) · Sergio · README y AGENTS.md al día
+
+**Después del pull:** solo cambia documentación: no hay dependencias nuevas ni hay que recompilar.
+
+**Qué quedó listo**
+- **`README.md`** (sobre la versión de Sebastián, sin quitar nada):
+  - «Inicio rápido» de 6 pasos.
+  - JDK: el de Android Studio (`jbr`) como opción principal y un JDK 17 aparte como alternativa.
+  - La tabla de variables, con si son obligatorias y un ejemplo.
+  - Tres formas de correr la app (datos de ejemplo, Render y backend local con `10.0.2.2`).
+  - Sección 8, «Problemas comunes», donde ahora está también lo del DNS del emulador.
+- **Error conocido:** `npx tsc --noEmit` falla en `develop` por `import '../global.css'` (TS2882). Está en la sección 8 del README y esa fila se quita cuando se arregle.
+- **`AGENTS.md`:** en español y alineado con el `CLAUDE.md`: development build con Android Studio (nunca Expo Go), `app.config.ts`, solo npm y nada de EAS sin pedirlo. Antes era la plantilla genérica de Expo.
+- **Credenciales, siempre por privado y nunca en el repo:** Firebase y cuentas de prueba del backend → Elizabeth · llave de Maps → Sebastián.
+
+**Para quién**
+- **Sebastián:** revisa que el README siga diciendo lo mismo que tus notas, y el arreglo de `global.css` (cuando esté, se quita la fila de la sección 8).
+- **Todos:** si alguien nuevo levanta la app, que siga solo el README.
+
+**Rama / PR**
+- `docs/sprint2-readme-agents` → `develop`.
 ## 20 oct 2026 · Jacobo · Iniciar sesión con Google
 
 **Después del pull hay que recompilar** (Google Sign-In es código nativo):
