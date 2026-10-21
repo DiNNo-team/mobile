@@ -4,6 +4,28 @@
 
 ---
 
+## 20 oct 2026 · Sergio · Pestaña Perfil del comensal
+
+**Después del pull:** no hay dependencias nuevas ni cambios nativos: no hay que recompilar.
+
+**Qué quedó listo** (`src/app/(app)/(tabs)/perfil.tsx`):
+- Nombre y correo de `GET /me` en una `Card` (sin nombre, la parte del correo antes de `@`), el selector de tema, «Cerrar sesión» con el `Dialog` «¿Cerrar sesión?» del kit y «Versión 1.0.0» (de `expo-constants`).
+- **Carga, error y modo oscuro:** skeleton después de 300 ms; si no hay datos, `ErrorState` «No pudimos cargar tu perfil» con «Intentar de nuevo»; si falla una recarga, se quedan los datos con un `Alert`. Con un 401, el proveedor cierra la sesión y el login muestra «Tu sesión terminó. Inicia sesión de nuevo.».
+- **Cerrar sesión** usa `useAuth().signOut()` (Firebase, caché, filtros y socket) y la app vuelve sola al login con `Stack.Protected`: el botón atrás no regresa a Perfil. Si falla, se cierra el diálogo y aparece el toast «No pudimos cerrar sesión. Intenta de nuevo.».
+- Resuelve el hallazgo 5 de la revisión del 17 oct (Perfil provisional).
+- **Para leer el perfil en otra pantalla:** `useMeQuery()` de `@/features/account/queries` (query key `['me']`). Se borra con la caché al cerrar sesión. `getDisplayName(profile)` de `@/features/account/profile-display` da el nombre que se muestra.
+
+**Sebastián:**
+- **Falta `Avatar` en el kit** (ya te lo pedí). Propuesta: `<Avatar name="Laura" imageUrl? size="lg" />`, con la inicial en mayúscula, fondo y texto de tokens, en claro y oscuro, y `accessible={false}` (el nombre ya se lee al lado). Cuando lo publiques, se agrega en `ProfileCard` (`perfil.tsx`) antes del nombre: `<Avatar name={getDisplayName(profile)} />`, y el `View` del nombre y el correo pasa a fila.
+- **`npx tsc --noEmit` falla en `develop` (ya existía, no lo causa este cambio):** `src/app/_layout.tsx(1,8): error TS2882: Cannot find module or type declarations for side-effect import of '../global.css'`. TypeScript 6 revisa los imports de efecto secundario y `nativewind/types.d.ts` no declara los `*.css`. Te lo reporté aparte; el arreglo va en `nativewind-env.d.ts` o en `tsconfig.json`.
+
+**Jacobo:** cuando agregues Google Sign-In nativo, registra `onSignOut(() => GoogleSignin.signOut())` (de `@/features/session/SessionProvider`). Si no, después de «Cerrar sesión» el selector de Google vuelve a entrar solo con la cuenta anterior.
+
+**Rama / PR**
+- `feat/sprint2-diner-profile` → `develop`.
+
+---
+
 ## 17 oct 2026 (noche) · Sebastián · Revisión del recorrido de la demo, hallazgos y APK para QA
 
 **APK para QA:** ya se puede probar la app sin montar el proyecto ni tener Metro corriendo.
