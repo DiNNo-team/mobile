@@ -1,11 +1,15 @@
 import { router } from 'expo-router';
 import { Lock, Mail } from 'lucide-react-native';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { useRef, useState } from 'react';
 import { View, type TextInput } from 'react-native';
 
 import { Alert, Button, Text, TextField } from '@/components/ui';
 import { env } from '@/config/env';
+import { getFirebaseGoogleSignInErrorMessage } from '@/features/session/auth-errors';
 import { AuthScreen } from '@/features/session/components/AuthScreen';
+import { getFirebaseAuth } from '@/features/session/firebase';
+import { MOCK_GOOGLE_EMAIL, requestGoogleIdToken } from '@/features/session/google';
 import { useAuth } from '@/features/session/SessionProvider';
 import { MOCK_ACCOUNTS } from '@/features/session/session.mock';
 import { validateEmail, validateSignInPassword } from '@/features/session/validation';
@@ -16,12 +20,14 @@ interface FieldErrors {
 }
 
 export default function LoginScreen() {
-  const { signInWithEmail, notice, clearNotice } = useAuth();
+  const { signInWithEmail, signInWithFirebase, notice, clearNotice } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [googleSigningIn, setGoogleSigningIn] = useState(false);
+  const busy = submitting || googleSigningIn;
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
 
@@ -39,6 +45,32 @@ export default function LoginScreen() {
     setSubmitting(false);
     // On success the session guards open Explorar (or the screen of the account), nothing to do here.
     if (!result.ok) setFormError(result.message);
+  };
+
+  const continueWithGoogle = async () => {
+    setFormError(null);
+    clearNotice();
+    setGoogleSigningIn(true);
+    const result = await signInWithGoogle();
+    setGoogleSigningIn(false);
+    if (result) setFormError(result);
+  };
+
+  /** Returns the message to show, or null when it worked or the person closed the Google window. */
+  const signInWithGoogle = async (): Promise<string | null> => {
+    // Example data never calls Google: it signs in as an example diner.
+    if (env.useMocks) {
+      const result = await signInWithEmail(MOCK_GOOGLE_EMAIL, 'google');
+      return result.ok ? null : result.message;
+    }
+    const token = await requestGoogleIdToken();
+    if (token.kind === 'cancelled') return null;
+    if (token.kind === 'error') return token.message;
+    const result = await signInWithFirebase(
+      () => signInWithCredential(getFirebaseAuth(), GoogleAuthProvider.credential(token.idToken)),
+      { errorMessage: getFirebaseGoogleSignInErrorMessage },
+    );
+    return result.ok ? null : result.message;
   };
 
   return (
@@ -79,7 +111,7 @@ export default function LoginScreen() {
           returnKeyType="next"
           submitBehavior="submit"
           onSubmitEditing={() => passwordRef.current?.focus()}
-          disabled={submitting}
+          disabled={busy}
         />
         <View className="gap-1">
           <TextField
@@ -94,29 +126,44 @@ export default function LoginScreen() {
             textContentType="password"
             returnKeyType="done"
             onSubmitEditing={submit}
-            disabled={submitting}
+            disabled={busy}
           />
           <Button
             variant="ghost"
             size="sm"
             label="¿Olvidaste tu contraseña?"
             onPress={() => router.push('/recuperar-contrasena')}
-            disabled={submitting}
+            disabled={busy}
             className="-ml-4"
           />
         </View>
       </View>
 
       <View className="gap-3">
-        <Button label="Iniciar sesión" loading={submitting} loadingLabel="Iniciando sesión…" fullWidth onPress={submit} />
-        {/* Jacobo: the "Continuar con Google" button (variant outline) goes right here, with useAuth().signInWithFirebase. */}
+        <Button
+          label="Iniciar sesión"
+          loading={submitting}
+          loadingLabel="Iniciando sesión…"
+          disabled={googleSigningIn}
+          fullWidth
+          onPress={submit}
+        />
+        <Button
+          variant="outline"
+          label="Continuar con Google"
+          loading={googleSigningIn}
+          loadingLabel="Conectando con Google…"
+          disabled={submitting}
+          fullWidth
+          onPress={continueWithGoogle}
+        />
       </View>
 
       <View className="flex-row flex-wrap items-center justify-center">
         <Text variant="sec" tone="secondary">
           ¿No tienes cuenta?
         </Text>
-        <Button variant="ghost" size="sm" label="Crea tu cuenta" onPress={() => router.push('/crear-cuenta')} disabled={submitting} />
+        <Button variant="ghost" size="sm" label="Crea tu cuenta" onPress={() => router.push('/crear-cuenta')} disabled={busy} />
       </View>
     </AuthScreen>
   );
