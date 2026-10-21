@@ -39,6 +39,13 @@ export function getFirebaseSignInErrorMessage(error: unknown): string {
   }
 }
 
+export const GOOGLE_SIGN_IN_FAILED_MESSAGE = 'No pudimos iniciar sesión con Google. Intenta de nuevo.';
+
+/** Firebase step of "Continuar con Google" (same texts as the web). */
+export function getFirebaseGoogleSignInErrorMessage(error: unknown): string {
+  return getFirebaseActionErrorMessage(error, GOOGLE_SIGN_IN_FAILED_MESSAGE);
+}
+
 /** Sign-up (Jacobo's screen). */
 export function getFirebaseSignUpErrorMessage(error: unknown): string {
   switch (getFirebaseErrorCode(error)) {

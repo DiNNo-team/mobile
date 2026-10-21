@@ -74,6 +74,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ['react-native-maps', { androidGoogleMapsApiKey: googleMapsAndroidApiKey }],
+    // @react-native-google-signin/google-signin is not listed on purpose: its plugin only sets up Firebase native
+    // files (google-services.json, which we do not use: Firebase is the JS SDK) or, with options, the iOS URL
+    // scheme (`iosUrlScheme`, required by the plugin). On Android the native module needs no config: autolinking
+    // adds it and the OAuth client is matched by package + SHA-1. Add it with `iosUrlScheme` when iOS is built.
   ],
   extra: {
     ...config.extra,

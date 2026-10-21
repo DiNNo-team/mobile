@@ -25,6 +25,29 @@
 
 **Rama / PR**
 - `docs/sprint2-readme-agents` → `develop`.
+## 20 oct 2026 · Jacobo · Iniciar sesión con Google
+
+**Después del pull hay que recompilar** (Google Sign-In es código nativo):
+
+```bash
+npm install
+npx expo prebuild --clean
+npx expo run:android
+```
+
+**Dependencia nueva:** `@react-native-google-signin/google-signin` 16 (API gratuita, «Original»). Su plugin **no** está en `app.config.ts`: en Android solo configura `google-services.json` (no lo usamos) y con opciones exige `iosUrlScheme`, que es de iOS. El módulo entra por autolinking. Si algún día se compila iOS, hay que agregar el plugin con `iosUrlScheme`.
+
+**Variable nueva: `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`** (pública). Es el ID de cliente **web** de OAuth del proyecto de Firebase. Cópiala a tu `.env` desde `.env.example`; los pasos están en el README.
+- Sin ella, el botón dice «Por ahora no puedes continuar con Google…» y el resto funciona.
+- Además, en Google Cloud tiene que existir un **cliente OAuth de Android** con `com.dinno.app` + el SHA-1 del README. Si falta, Google falla siempre. **Equipo de Google Cloud:** ¿ya está creado? El APK de QA (release) tiene otro SHA-1 y necesita su propio cliente.
+
+**Qué hace:**
+- «Continuar con Google» (borde) está debajo de «Iniciar sesión». El idToken de Google pasa a `signInWithFirebase` y el flujo único hace el resto. El nombre de Google llega solo a `POST /diners/me`.
+- Si la persona cierra la ventana de Google, no se muestra nada. Los demás errores salen en un `Alert` con un texto claro.
+- **Cerrar sesión** también cierra la sesión de Google (`onSignOut`, en `src/features/session/google.ts`), así que el selector vuelve a preguntar la cuenta. Si eso falla, se reintenta antes del siguiente inicio con Google.
+- Con `EXPO_PUBLIC_USE_MOCKS=true` no se llama a Google: entra como `google@dinno.test`.
+
+**Recorrido de la demo, paso 1 (entrar con Google):** listo para probar cuando estén la variable y el cliente de Android.
 
 ---
 

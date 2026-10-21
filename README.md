@@ -160,6 +160,14 @@ Se leen solo en [`src/config/env.ts`](src/config/env.ts); en el resto del códig
 | `EXPO_PUBLIC_DEV_USER_ID` | No | Solo backend local: UUID de un usuario para la cabecera `x-dev-user-id` cuando no hay sesión de Firebase | vacío |
 | `EXPO_PUBLIC_FIREBASE_API_KEY` · `_AUTH_DOMAIN` · `_PROJECT_ID` | Sí, salvo con datos de ejemplo | Configuración pública de Firebase (la misma de la web; no es secreta) | `your-firebase-api-key` · `your-project.firebaseapp.com` · `your-firebase-project-id` |
 | `GOOGLE_MAPS_ANDROID_API_KEY` | No | Llave de Android de Google Maps (la tiene Sebastián, que la recibió del equipo de Google Cloud: pídesela por privado). **Sin `EXPO_PUBLIC_`**: la lee `app.config.ts` al compilar y va a la configuración nativa, no al JavaScript. Sin ella la app funciona, pero muestra solo la lista | vacío |
+| Variable | Descripción |
+|---|---|
+| `EXPO_PUBLIC_API_URL` | Origen del backend, **sin `/v1` y sin `/` final**. Render: `https://dinno-backend.onrender.com`. Backend local desde el emulador: `http://10.0.2.2:3000` (`localhost` en el emulador es el propio emulador) |
+| `EXPO_PUBLIC_USE_MOCKS` | `true` usa datos de ejemplo en memoria con la forma del contrato (restaurantes alrededor de la Calle 72, 20 zonas) y una sesión de ejemplo sin Firebase: cualquier correo entra como comensal; `restaurante@dinno.test`, `sinverificar@dinno.test` y `sinconexion@dinno.test` muestran sus pantallas; la contraseña `incorrecta` siempre falla |
+| `EXPO_PUBLIC_DEV_USER_ID` | Solo backend local: UUID de un usuario para la cabecera `x-dev-user-id` cuando no hay sesión de Firebase |
+| `EXPO_PUBLIC_FIREBASE_*` | Configuración pública de Firebase (la misma de la web) |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | ID de cliente **web** de OAuth del proyecto de Firebase, para «Continuar con Google» (público). Además, en Google Cloud debe existir un cliente OAuth de **Android** con `com.dinno.app` y el SHA-1 de la sección 3; si falta, Google responde `DEVELOPER_ERROR` y el botón siempre falla. Con `EXPO_PUBLIC_USE_MOCKS=true` el botón no llama a Google: entra como `google@dinno.test` |
+| `GOOGLE_MAPS_ANDROID_API_KEY` | Llave de Android de Google Maps (la entrega el equipo de Google Cloud por un canal privado). **Sin `EXPO_PUBLIC_`**: la lee `app.config.ts` al compilar y va a la configuración nativa, no al JavaScript. Sin ella la app funciona, pero muestra solo la lista |
 
 `.env` no se versiona. Después de cambiarlo: `npx expo start -c`.
 
@@ -181,6 +189,8 @@ npx expo run:android
 ```
 
 Si solo reinicias Metro con la llave nueva y no recompilas, la app cree que hay mapa pero el build no tiene la llave, y se cierra al abrir *Explorar*.
+
+**Google Sign-In** (`@react-native-google-signin/google-signin`) es código nativo: la primera vez, después del pull que lo agrega, hay que recompilar con los mismos dos comandos. El ID de cliente web, en cambio, es JavaScript: si solo cambias `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, basta con `npx expo start -c`.
 
 ## 5. Comandos
 
