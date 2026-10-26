@@ -9,9 +9,44 @@ import { getMapStyle, getRegion } from '../map';
 import type { Coordinates, RestaurantSummary } from '../types';
 
 const CAMERA_MS = 300;
+/**
+ * A new pin draws its view for this long and then freezes (tracksViewChanges off). Freezing at once can catch
+ * the view before it is laid out, and Android then shows Google's generic red pin, which the manual forbids.
+ */
+const MARKER_SETTLE_MS = 500;
 const CENTER_ANCHOR = { x: 0.5, y: 0.5 };
 /** Room around the pins when the map fits them (dp); the bottom one leaves the cards visible. */
 const FIT_PADDING = 48;
+
+interface RestaurantMarkerProps {
+  restaurant: RestaurantSummary;
+  selected: boolean;
+  onSelect: (restaurant: RestaurantSummary) => void;
+}
+
+/** Pin of one restaurant: availability shape inside a badge; it tracks its view only while it settles. */
+function RestaurantMarker({ restaurant, selected, onSelect }: RestaurantMarkerProps) {
+  const [settling, setSettling] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSettling(false), MARKER_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Marker
+      identifier={restaurant.id}
+      coordinate={{ latitude: restaurant.latitude, longitude: restaurant.longitude }}
+      anchor={CENTER_ANCHOR}
+      zIndex={selected ? 2 : 1}
+      tracksViewChanges={settling}
+      onPress={() => onSelect(restaurant)}
+      accessibilityLabel={restaurant.name}
+    >
+      <AvailabilityMarker availability={restaurant.availability} selected={selected} />
+    </Marker>
+  );
+}
 
 export interface ResultsMapHandle {
   /** Brings a restaurant's pin into view (the diner moved to its card). */
@@ -33,13 +68,13 @@ interface ResultsMapProps {
 }
 
 /**
- * Google map of the results (Reparto: PROVIDER_GOOGLE, custom markers with tracksViewChanges={false}).
+ * Google map of the results (Reparto: PROVIDER_GOOGLE, custom markers that stop tracking view changes once drawn).
  * No `mapPadding`: react-native-maps 1.27 crashes on Android when it arrives before the map is ready; the
  * room for the cards comes from `edgePadding` when fitting the pins.
  * Pins use the availability shape and color; the selected one grows with the orange border.
  */
 export function ResultsMap({ ref, restaurants, selectedId, onSelect, center, radiusKm, userLocation, bottomInset }: ResultsMapProps) {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const map = useRef<MapView>(null);
   const [ready, setReady] = useState(false);
   const mapStyle = useMemo(() => getMapStyle(colors), [colors]);
@@ -93,19 +128,13 @@ export function ResultsMap({ ref, restaurants, selectedId, onSelect, center, rad
       {restaurants.map((restaurant) => {
         const selected = restaurant.id === selectedId;
         return (
-          <Marker
-            // A new key redraws the pin when it is selected or its availability changes (tracksViewChanges is off).
-            key={`${restaurant.id}-${restaurant.availability}-${selected}`}
-            identifier={restaurant.id}
-            coordinate={{ latitude: restaurant.latitude, longitude: restaurant.longitude }}
-            anchor={CENTER_ANCHOR}
-            zIndex={selected ? 2 : 1}
-            tracksViewChanges={false}
-            onPress={() => onSelect(restaurant)}
-            accessibilityLabel={restaurant.name}
-          >
-            <AvailabilityMarker availability={restaurant.availability} selected={selected} />
-          </Marker>
+          <RestaurantMarker
+            // A new key draws the pin again when it is selected, its availability changes or the theme changes.
+            key={`${restaurant.id}-${restaurant.availability}-${selected}-${scheme}`}
+            restaurant={restaurant}
+            selected={selected}
+            onSelect={onSelect}
+          />
         );
       })}
     </MapView>
