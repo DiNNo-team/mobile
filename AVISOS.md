@@ -4,6 +4,38 @@
 
 ---
 
+## 26 oct 2026 · Elizabeth · Búsqueda por dirección: `GET /v1/geocode` para comensales
+
+**Para Sebastián (PBI 2.2, «dirección o zona»).** El cambio del backend está en la rama `docs/sprint2-cierre-contrato`, todavía sin fusionar; cuando llegue a `develop` se avisa. Responde a tu nota del 16 oct: no hizo falta un endpoint nuevo, porque `/geocode` ahora acepta comensales. La búsqueda no recibe `address`.
+
+**Flujo en la app**
+1. `GET /v1/geocode?address=<texto>`, con el mismo token de Firebase. `address` va recortada, de 3 a 255 caracteres; si no cumple, `400` con `message` en lista. Valídalo antes de enviar.
+2. `200 { latitude, longitude, formattedAddress }` → muestra «Resultados cerca de: `formattedAddress`». **Muéstralo siempre:** Google puede ubicar algo distinto a lo que el comensal pensó. Por ejemplo, una dirección que existe en Bogotá se acepta aunque fuera de otra ciudad, y un texto sin sentido puede caer en una dirección real.
+3. `GET /v1/search/restaurants?lat=<latitude>&lng=<longitude>` con el `radiusKm`, `category` y `partySize` de siempre. Para el detalle, usa el mismo punto como `lat`/`lng`.
+
+**Errores (decide por `errorCode`, con tu propio texto)**
+- **`404 ADDRESS_NOT_FOUND`:** no hay un resultado dentro de Bogotá. Por ejemplo: «No encontramos esa dirección en Bogotá. Revisa la dirección o busca por zona.».
+- **`503 GEOCODING_UNAVAILABLE`:** Google no respondió. Por ejemplo: «No pudimos ubicar la dirección en este momento. Busca por zona o con tu ubicación.».
+- **`403 PROFILE_REQUIRED`:** igual que en el resto de rutas de comensal: llama a `POST /v1/diners/me` y reintenta. No lo muestres.
+- **`401`:** la sesión terminó, como siempre.
+- **El `message` del backend es neutro** y no está pensado para la app: no lo muestres tal cual.
+
+**Contrato:** `CLAUDE.md` §10 (fila de `/geocode`, «Ambos roles» y «Búsqueda por dirección (app)»), idéntica en los tres repos.
+
+---
+
+## 26 oct 2026 · Elizabeth · Backend del Sprint 2 cerrado
+
+- **El backend del Sprint 2 está cerrado:** todo está en `develop` y desplegado en Render. Se probó el 26 oct con tokens reales de Firebase: búsqueda, filtros, detalle y WebSocket responden igual en Render y en local. No cambió ninguna ruta, respuesta ni evento.
+- **Seed en Render:** además de Casa 72 están los 15 restaurantes reales de Santiago, con horarios y mesas que cubren `available`, `few`, `none` y restaurantes cerrados. Por ejemplo, Pesquera Jaramillo está cerrado a mano y su detalle responde `closed`. Sus dueños (`restaurante-XX@dinno.test`) son solo datos, sin inicio de sesión.
+- **Casa 72** tiene como dueño `dinnoteam2026+casa72@gmail.com`, y con esa cuenta se cambian sus mesas desde la web para ver el tiempo real en la app. Su cuenta de Firebase ya existe y está verificada, así que el paso 8 ya se puede hacer. El 26 oct se probó en Render: cada cambio de Casa 72 llegó como `availability.changed` al comensal en menos de 1 s, y repetir el mismo estado no envió nada.
+- **La geocodificación ya funciona en el backend** (llave real en Render). ~~La app no la usa: el comensal busca por zona o por ubicación.~~ Ver la entrada de arriba: desde el 26 oct el comensal también puede usarla para buscar por dirección.
+- **Credenciales:** en Discord (#usuarios-restaurante y #usuarios-comensal), nunca en el repo. Una cuenta nueva usa un alias `dinnoteam2026+algo@gmail.com`.
+- **Contrato:** `CLAUDE.md`, sección 10, idéntica en los tres repos. Hoy cambió el apartado «Cuentas de prueba» y la tabla «Cuándo está listo cada contrato en `develop`».
+- **Resueltos de la revisión del 17 oct:** #3 (en Render ya no aparece solo Casa 72) y #6 (la cuenta de la web de Casa 72 es `dinnoteam2026+casa72@gmail.com`).
+
+---
+
 ## 25 oct 2026 (noche) · Sebastián · El mapa de la app ya funciona con la llave real
 
 **Después del pull:** `npm install`. No hay dependencias nuevas. Para ver el mapa necesitas `GOOGLE_MAPS_ANDROID_API_KEY` en tu `.env` (pídesela a Santiago por privado) y después `npx expo prebuild --clean` y `npx expo run:android`.
@@ -178,10 +210,10 @@ La lógica de Firebase está en `src/features/session/account-actions.ts`. Con `
 |---|---|---|---|
 | 1 | Al entrar, el skeleton se quitaba un instante entre «Buscando tu ubicación…» y los resultados | Sebastián | Corregido en este PR |
 | 2 | Sin llave de Maps no hay mapa (la app muestra solo la lista); cuando llegue, verificar pines y sincronía | Equipo de Google Cloud → Sebastián | Pendiente |
-| 3 | En Render solo aparece Casa 72: no se pueden mostrar los tres niveles de disponibilidad ni varios pines | Santiago (JSON) + Elizabeth (seed) | Pendiente |
+| 3 | En Render solo aparece Casa 72: no se pueden mostrar los tres niveles de disponibilidad ni varios pines | Santiago (JSON) + Elizabeth (seed) | Resuelto (26 oct): el seed ya está en Neon |
 | 4 | Google Sign-In, crear cuenta, verificar correo y recuperar contraseña siguen como pantallas provisionales | Jacobo | Pendiente |
 | 5 | Perfil provisional: faltan los datos de `GET /me`, la confirmación al cerrar sesión y la versión de la app (el selector de tema ya está) | Sergio | Pendiente |
-| 6 | ¿Qué cuenta entra a la web como Casa 72 para el paso 8? | Elizabeth | Pendiente |
+| 6 | ¿Qué cuenta entra a la web como Casa 72 para el paso 8? | Elizabeth | Resuelto (26 oct): `dinnoteam2026+casa72@gmail.com` (credenciales en Discord) |
 | 7 | En modo oscuro el botón secundario (petróleo, «Cómo llegar») casi se confunde con el fondo, porque en el manual `brand` y `surface` son el mismo color en oscuro | Sebastián (revisar con el manual) | Menor, abierto |
 | 8 | La ubicación del restaurante en la web pasa a «todo Google» (mapa de Google + Geocoding, el dueño confirma el pin) | Santiago + Elizabeth | En curso |
 
@@ -221,7 +253,7 @@ Falta ver un evento real: hay que cambiar mesas de Casa 72 desde la web mientras
 
 **Sergio (QA de C10 y C11):** los casos de disponibilidad en vivo, sin conexión y backend lento se pueden repetir con los comandos del README.
 
-**Elizabeth:** para el recorrido del Día 6 confirmen qué cuenta entra a la web como Casa 72. El seed asegura `dinnoteam2026@gmail.com` como restaurante; ¿es la dueña de Casa 72?
+**Elizabeth:** para el recorrido del Día 6 confirmen qué cuenta entra a la web como Casa 72. El seed asegura `dinnoteam2026@gmail.com` como restaurante; ¿es la dueña de Casa 72? **Respuesta (Elizabeth, 26 oct):** no, `dinnoteam2026@gmail.com` es la dueña de Casa16. Casa 72 es de `dinnoteam2026+casa72@gmail.com` (ver la entrada del 26 oct).
 
 ---
 
