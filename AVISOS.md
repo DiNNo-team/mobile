@@ -4,6 +4,29 @@
 
 ---
 
+## 25 oct 2026 (noche) · Sebastián · El mapa de la app ya funciona con la llave real
+
+**Después del pull:** `npm install`. No hay dependencias nuevas. Para ver el mapa necesitas `GOOGLE_MAPS_ANDROID_API_KEY` en tu `.env` (pídesela a Santiago por privado) y después `npx expo prebuild --clean` y `npx expo run:android`.
+
+**Probado en el emulador:**
+- **Contra Render:** el mapa carga con los colores del manual, tu posición con el radar y los restaurantes del seed (por ejemplo, Andrés D.C.). A las 9:45 a. m. de un domingo solo hay uno abierto: los demás abren a mediodía, así que es lo correcto.
+- **Con datos de ejemplo** (13 restaurantes):
+  - Los pines tienen la forma y el color de cada estado.
+  - Tocar un pin mueve las tarjetas a la suya, y deslizar una tarjeta lleva el mapa a su pin.
+  - Funciona en claro y en oscuro.
+
+**Corregido:** al cambiar de tema, el pin seleccionado se volvía el pin rojo genérico de Google (prohibido por el manual).
+- Ahora cada pin se dibuja durante su primer medio segundo antes de congelarse.
+- Los pines se vuelven a crear cuando cambia el tema.
+
+**APK de QA nuevo, con mapa** (contra Render). Pídemelo por privado: Sergio, Santiago y Jacobo para la matriz.
+
+**Sergio (matriz):** **T2.5** (disponibilidad en el mapa) y la parte de mapa de **C6** ya no están bloqueados.
+
+**Web, para quien maneje Vercel:** el mapa del formulario necesita `VITE_GOOGLE_MAPS_API_KEY` **y** `VITE_GOOGLE_MAPS_MAP_ID`. Sin el Map ID no se muestra (`LocationMap.tsx` exige los dos).
+
+---
+
 ## 25 oct 2026 · Sebastián · `npm run typecheck` ya no da errores falsos y el SHA-1 es uno solo
 
 **Después del pull:** `npm install`. No hay dependencias nuevas ni hay que recompilar.
