@@ -11,9 +11,9 @@ export function LocationIntro({ onUseLocation, onChooseZone }: { onUseLocation: 
   return (
     <EmptyState
       title="Encuentra mesa cerca de ti"
-      description="Usamos tu ubicación solo para mostrarte restaurantes con mesa a tu alrededor. Si prefieres, elige una zona de Bogotá."
+      description="Usamos tu ubicación solo para mostrarte restaurantes con mesa a tu alrededor. Si prefieres, busca por dirección o zona."
       action={<Button icon={LocateFixed} label="Usar mi ubicación" onPress={onUseLocation} />}
-      secondaryActions={<Button variant="ghost" label="Elegir una zona" onPress={onChooseZone} />}
+      secondaryActions={<Button variant="ghost" label="Buscar por dirección o zona" onPress={onChooseZone} />}
     />
   );
 }
@@ -41,8 +41,8 @@ export function ZonePrompt({ failure, onChooseZone, onUseLocation }: ZonePromptP
       ) : null}
       <EmptyState
         title="Elige dónde buscar"
-        description="Escoge una zona de Bogotá para ver los restaurantes con mesa cerca de ella."
-        action={<Button icon={MapIcon} label="Elegir zona" onPress={onChooseZone} />}
+        description="Escribe una dirección o escoge una zona de Bogotá para ver los restaurantes con mesa cerca."
+        action={<Button icon={MapIcon} label="Buscar dirección o zona" onPress={onChooseZone} />}
         secondaryActions={<Button variant="ghost" icon={LocateFixed} label="Usar mi ubicación" onPress={onUseLocation} />}
       />
     </View>

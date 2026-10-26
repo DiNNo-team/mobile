@@ -17,7 +17,8 @@ import { ResultsMap, type ResultsMapHandle } from '@/features/search/components/
 import { LocationIntro, NoResults, ZonePrompt } from '@/features/search/components/SearchStates';
 import { removeFilter } from '@/features/search/filters';
 import { getZoneName, useRestaurantSearch, useZones } from '@/features/search/queries';
-import { getNextRadius, getOriginCoordinates, useSearchStore } from '@/features/search/store';
+import type { LocatedAddress } from '@/features/search/components/AddressSearch';
+import { getNextRadius, getOriginCoordinates, getUserLocation, useSearchStore } from '@/features/search/store';
 import type { Coordinates, RestaurantSummary } from '@/features/search/types';
 import { getErrorMessage } from '@/lib/api/errors';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -37,7 +38,7 @@ function resultsLabel(count: number): string {
 }
 
 /**
- * Explorar: where to search (position or zone), filters and the results on a map synced with the cards, or
+ * Explorar: where to search (position, typed address or zone), filters and the results on a map synced with the cards, or
  * as a list, nearest first (PBI 2.1, 2.2, 2.3, 3.1, 4.1 and 4.2). Without the Maps key it shows only the list.
  */
 export default function ExploreScreen() {
@@ -48,6 +49,7 @@ export default function ExploreScreen() {
   const filters = useSearchStore((state) => state.filters);
   const setLocation = useSearchStore((state) => state.setLocation);
   const setZone = useSearchStore((state) => state.setZone);
+  const setAddress = useSearchStore((state) => state.setAddress);
   const setRadius = useSearchStore((state) => state.setRadius);
   const setFilters = useSearchStore((state) => state.setFilters);
   const clearFilters = useSearchStore((state) => state.clearFilters);
@@ -82,9 +84,11 @@ export default function ExploreScreen() {
   // On the map one card is always the current one: the chosen restaurant, or the nearest.
   const activeId = results.some((restaurant) => restaurant.id === selectedId) ? selectedId : showMap ? (results[0]?.id ?? null) : null;
 
-  const userLocation = getOriginCoordinates(origin);
+  // The orange dot is the diner's own position (GPS only); a typed address is just the center of the search.
+  const userLocation = getUserLocation(origin);
   const zone = origin?.type === 'zone' ? zones.data?.find((item) => item.id === origin.zoneId) : undefined;
-  const center = userLocation ?? (zone ? { latitude: zone.latitude, longitude: zone.longitude } : (results[0] ?? BOGOTA));
+  const center =
+    getOriginCoordinates(origin) ?? (zone ? { latitude: zone.latitude, longitude: zone.longitude } : (results[0] ?? BOGOTA));
 
   const locateMe = () => {
     setOriginSheetOpen(false);
@@ -93,6 +97,11 @@ export default function ExploreScreen() {
   const chooseZone = (zoneId: string) => {
     location.cancel();
     setZone(zoneId);
+    setOriginSheetOpen(false);
+  };
+  const chooseAddress = (address: LocatedAddress) => {
+    location.cancel();
+    setAddress(address);
     setOriginSheetOpen(false);
   };
   const openZones = () => {
@@ -116,7 +125,13 @@ export default function ExploreScreen() {
     map.current?.focus(restaurant);
   };
 
-  const place = origin?.type === 'zone' ? getZoneName(zones.data, origin.zoneId) : 'Cerca de ti';
+  // An address shows what Google understood ("Cerca de: …", CLAUDE.md §10), so the diner can correct it.
+  const place =
+    origin?.type === 'zone'
+      ? getZoneName(zones.data, origin.zoneId)
+      : origin?.type === 'address'
+        ? `Cerca de: ${origin.formattedAddress}`
+        : 'Cerca de ti';
   const subtitle =
     location.step === 'locating'
       ? 'Buscando tu ubicación…'
@@ -145,7 +160,9 @@ export default function ExploreScreen() {
     }
     return (
       <NoResults
-        place={origin.type === 'zone' ? `de ${place}` : 'de tu ubicación'}
+        place={
+          origin.type === 'zone' ? `de ${place}` : origin.type === 'address' ? `de ${origin.formattedAddress}` : 'de tu ubicación'
+        }
         radiusKm={filters.radiusKm}
         nextRadiusKm={getNextRadius(filters.radiusKm)}
         filtered={!!filters.category || !!filters.partySize}
@@ -259,6 +276,7 @@ export default function ExploreScreen() {
         failure={origin ? null : location.failure}
         onUseLocation={locateMe}
         onSelectZone={chooseZone}
+        onSelectAddress={chooseAddress}
       />
       <FiltersSheet
         key={filtersSheetKey}

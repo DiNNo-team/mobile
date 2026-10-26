@@ -4,6 +4,37 @@
 
 ---
 
+## 26 oct 2026 (tarde) · Sebastián · Búsqueda por dirección, logo de Google y cierre del Sprint 2
+
+**Después del pull:** `npm install`. No hay dependencias nuevas ni hay que recompilar: solo cambia JavaScript y una imagen.
+
+**Qué quedó listo**
+- **Búsqueda por dirección (PBI 2.2):** en «Cambiar zona» (y cuando falla la ubicación) el panel «¿Dónde buscamos?» tiene arriba **Dirección**, con el campo «Buscar por dirección» y el botón «Buscar dirección».
+  - Valida antes de enviar: «ab» dice «Escribe al menos 3 caracteres.» y no llama al backend.
+  - `200` → busca con `lat`/`lng` y el encabezado dice **«Cerca de: `formattedAddress`»** (por ejemplo, «Cerca de: Cra. 11 #72-30, Bogotá, Colombia · 2 km»). Los filtros, el mapa, el detalle (distancia desde ese punto) y el tiempo real funcionan igual. El punto naranja de «tú» solo aparece con el GPS.
+  - `404` → «No encontramos esa dirección en Bogotá. Revisa la dirección o elige una zona.»; `503` → «No pudimos ubicar la dirección en este momento. Intenta de nuevo o elige una zona.»; sin internet → el mensaje de conexión. Se decide por `errorCode`, nunca por el `message` del backend.
+  - Se vuelve a **Mi ubicación** o a una **zona** desde el mismo panel, y el campo recuerda la última dirección.
+- **Cupo de Geocoding (punto 6 del cierre):** se llama solo al confirmar, el botón queda en «Buscando…» y no se puede tocar dos veces, y la misma dirección (con otros espacios o mayúsculas) no se vuelve a pedir mientras la app esté abierta. Las pruebas simulan `/geocode`; con `EXPO_PUBLIC_USE_MOCKS=true` hay respuestas de ejemplo (Medellín o una calle mayor a 200 → 404; «sin servicio» → 503).
+- **«Continuar con Google» con la «G» oficial** de las guías de marca de Google, sacada del paquete oficial sin redibujarla (`assets/images/google-g*.png`). El kit tiene `GoogleLogo` y `Button` acepta `leading` para logos que no son de Lucide.
+- **`.gitattributes`** con `* text=auto eol=lf`, sin `--renormalize`. `git status` no cambia: no había archivos con finales de línea de Windows.
+
+**Probado contra Render** con la cuenta de comensal de prueba:
+- `Cra. 11 #72-30` → Calle 72 (Crepes & Waffles, Casa 72…).
+- `Calle 118 #5-41` → Usaquén (Abasto Usaquén).
+- `Calle 10 #43A-30, Medellín` → mensaje de 404.
+- `ab` → validación local.
+- El mapa real ya muestra los tres niveles de disponibilidad con el seed.
+
+**Para quién**
+- **Jacobo:** el botón de Google de `login.tsx` ahora lleva `leading={<GoogleLogo />}`; la lógica no cambió.
+- **Sergio (matriz):** agrega a **C5** (buscar por zona) la variante «buscar por dirección», con los casos de la tabla de Elizabeth (`docs/qa/matriz-sprint2.md` de la web).
+- **Todos:** borren de su `.env` la línea suelta con tres comillas invertidas si la tienen (aviso de Elizabeth); no afecta la app, pero no es una variable.
+
+**Rama / PR**
+- `feat/sprint2-busqueda-direccion` → `develop`.
+
+---
+
 ## 26 oct 2026 · Elizabeth · Búsqueda por dirección: `GET /v1/geocode` para comensales
 
 **Para Sebastián (PBI 2.2, «dirección o zona»).** El cambio del backend está en la rama `docs/sprint2-cierre-contrato`, todavía sin fusionar; cuando llegue a `develop` se avisa. Responde a tu nota del 16 oct: no hizo falta un endpoint nuevo, porque `/geocode` ahora acepta comensales. La búsqueda no recibe `address`.
