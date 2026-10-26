@@ -28,12 +28,12 @@ npx expo prebuild --clean    # regenera android/ tras un cambio nativo
 npx expo start               # servidor de desarrollo para el build instalado (-c limpia caché)
 npx expo install <paquete>   # SIEMPRE para agregar librerías, y solo después de preguntar
 npx expo lint                # lint
-npx tsc --noEmit             # chequeo de tipos
+npm run typecheck            # chequeo de tipos (regenera los tipos de Expo y corre tsc)
 npm test                     # pruebas (jest-expo)
 npx expo-doctor              # diagnóstico de dependencias
 ```
 
-Antes de dar una tarea por terminada: `npx expo lint`, `npx tsc --noEmit` y `npm test` sin errores. Hoy `tsc` tiene un error conocido de `global.css` (README, sección 8).
+Antes de dar una tarea por terminada: `npx expo lint`, `npm run typecheck` y `npm test` sin errores.
 
 ## Estructura actual
 

@@ -248,11 +248,11 @@ npx expo run:android         # compila e instala el development build
 npx expo start               # servidor de desarrollo para el build instalado (-c limpia caché)
 npx expo install <paquete>   # SIEMPRE para agregar librerías (elige versiones compatibles con el SDK)
 npx expo lint                # lint
-npx tsc --noEmit             # chequeo de tipos
+npm run typecheck            # chequeo de tipos (regenera los tipos de Expo y corre tsc)
 npm test                     # pruebas (jest-expo)
 npx expo-doctor              # diagnóstico de dependencias
 ```
-**Antes de dar una tarea por terminada:** `npx expo lint`, `npx tsc --noEmit` y `npm test` sin errores.
+**Antes de dar una tarea por terminada:** `npx expo lint`, `npm run typecheck` y `npm test` sin errores. Usa `npm run typecheck` y no `npx tsc --noEmit` suelto: `.expo/types/router.d.ts` y `expo-env.d.ts` se generan y no están en git, y si están viejos o faltan, `tsc` da errores falsos de rutas o de `global.css`.
 Nunca agregues paquetes con `npm install <paquete>`; siempre con `npx expo install`, y solo después de preguntar.
 
 ### Estructura
