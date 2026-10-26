@@ -90,9 +90,9 @@ export async function locateDevice({ ask }: { ask: boolean }): Promise<LocationR
 
 /** What happened + what to do (manual 14). The screen then offers the zones. */
 export const LOCATION_FAILURE_MESSAGES: Record<LocationFailure, string> = {
-  denied: 'No usaremos tu ubicación. Elige una zona para ver restaurantes cerca de ella.',
-  blocked: 'DiNNo no tiene permiso para usar tu ubicación. Actívalo en los ajustes del teléfono o elige una zona.',
-  'services-off': 'La ubicación del teléfono está apagada. Actívala e intenta de nuevo, o elige una zona.',
-  timeout: 'No pudimos encontrar tu ubicación a tiempo. Intenta de nuevo o elige una zona.',
-  unavailable: 'No pudimos encontrar tu ubicación. Intenta de nuevo o elige una zona.',
+  denied: 'No usaremos tu ubicación. Busca por dirección o elige una zona para ver restaurantes cerca.',
+  blocked: 'DiNNo no tiene permiso para usar tu ubicación. Actívalo en los ajustes del teléfono o busca por dirección o zona.',
+  'services-off': 'La ubicación del teléfono está apagada. Actívala e intenta de nuevo, o busca por dirección o zona.',
+  timeout: 'No pudimos encontrar tu ubicación a tiempo. Intenta de nuevo o busca por dirección o zona.',
+  unavailable: 'No pudimos encontrar tu ubicación. Intenta de nuevo o busca por dirección o zona.',
 };

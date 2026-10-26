@@ -4,7 +4,7 @@ import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { useRef, useState } from 'react';
 import { View, type TextInput } from 'react-native';
 
-import { Alert, Button, Text, TextField } from '@/components/ui';
+import { Alert, Button, GoogleLogo, Text, TextField } from '@/components/ui';
 import { env } from '@/config/env';
 import { getFirebaseGoogleSignInErrorMessage } from '@/features/session/auth-errors';
 import { AuthScreen } from '@/features/session/components/AuthScreen';
@@ -150,6 +150,7 @@ export default function LoginScreen() {
         />
         <Button
           variant="outline"
+          leading={<GoogleLogo />}
           label="Continuar con Google"
           loading={googleSigningIn}
           loadingLabel="Conectando con Google…"

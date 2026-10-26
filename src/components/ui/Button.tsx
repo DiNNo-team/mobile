@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, View, type PressableProps } from 'react-native';
 
 import { cn } from '@/lib/cn';
@@ -37,6 +37,8 @@ export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> 
   size?: ButtonSize;
   /** Optional icon on the left (20). */
   icon?: LucideIcon;
+  /** Something on the left that is not a Lucide icon, such as a third-party logo (`<GoogleLogo />`). */
+  leading?: ReactNode;
   /** While true: spinner + `loadingLabel`, same width, cannot be pressed again. */
   loading?: boolean;
   /** Gerund shown while loading: "Guardando…", "Creando cuenta…". */
@@ -55,6 +57,7 @@ export function Button({
   variant = 'primary',
   size = 'md',
   icon,
+  leading,
   loading = false,
   loadingLabel,
   fullWidth = false,
@@ -88,7 +91,7 @@ export function Button({
             disabled && 'opacity-45',
           )}
         >
-          {loading ? <Spinner color={tone.icon} /> : icon ? <Icon icon={icon} color={tone.icon} /> : null}
+          {loading ? <Spinner color={tone.icon} /> : icon ? <Icon icon={icon} color={tone.icon} /> : leading}
           <Text variant="button" tone={tone.text} numberOfLines={1}>
             {loading ? (loadingLabel ?? label) : label}
           </Text>

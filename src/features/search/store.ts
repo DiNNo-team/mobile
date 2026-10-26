@@ -10,6 +10,8 @@ interface SearchState {
   filters: SearchFilters;
   setLocation: (coordinates: Coordinates) => void;
   setZone: (zoneId: string) => void;
+  /** An address already located by GET /geocode (point + what Google understood + what the diner typed). */
+  setAddress: (address: { latitude: number; longitude: number; formattedAddress: string; query: string }) => void;
   setRadius: (radiusKm: RadiusKm) => void;
   setCategory: (category: RestaurantCategory | undefined) => void;
   setPartySize: (partySize: number | undefined) => void;
@@ -32,6 +34,7 @@ export const useSearchStore = create<SearchState>()((set) => ({
   filters: DEFAULT_FILTERS,
   setLocation: ({ latitude, longitude }) => set({ origin: { type: 'location', latitude, longitude } }),
   setZone: (zoneId) => set({ origin: { type: 'zone', zoneId } }),
+  setAddress: (address) => set({ origin: { type: 'address', ...address } }),
   setRadius: (radiusKm) => set((state) => ({ filters: { ...state.filters, radiusKm } })),
   setCategory: (category) => set((state) => ({ filters: { ...state.filters, category } })),
   setPartySize: (partySize) => set((state) => ({ filters: { ...state.filters, partySize } })),
@@ -48,7 +51,15 @@ export function getNextRadius(radiusKm: RadiusKm): RadiusKm | null {
   return RADIUS_OPTIONS_KM[index + 1] ?? null;
 }
 
-/** Coordinates to send to the detail (`distanceKm`), only when the search uses the phone's position. */
+/**
+ * Point of the search, to send to the detail (`distanceKm`): the phone's position or the typed address. A zone
+ * has no point of its own (CLAUDE.md §10: lat/lng only when the search has them).
+ */
 export function getOriginCoordinates(origin: SearchOrigin | null): Coordinates | undefined {
+  return origin && origin.type !== 'zone' ? { latitude: origin.latitude, longitude: origin.longitude } : undefined;
+}
+
+/** The diner's own position (the orange dot on the map), only when the search uses the phone's GPS. */
+export function getUserLocation(origin: SearchOrigin | null): Coordinates | undefined {
   return origin?.type === 'location' ? { latitude: origin.latitude, longitude: origin.longitude } : undefined;
 }

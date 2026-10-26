@@ -59,7 +59,19 @@ export interface Zone {
 /** Where the search is centered: the phone's GPS or one zone of the closed list (never both). */
 export type SearchOrigin =
   | { type: 'location'; latitude: number; longitude: number }
-  | { type: 'zone'; zoneId: string };
+  | { type: 'zone'; zoneId: string }
+  /**
+   * An address the diner typed, already turned into a point by GET /geocode. `formattedAddress` is what Google
+   * understood (shown as "Cerca de: …", CLAUDE.md §10); `query` is what the diner typed, to show it again.
+   */
+  | { type: 'address'; latitude: number; longitude: number; formattedAddress: string; query: string };
+
+/** 200 of GET /geocode: always inside Bogotá. */
+export interface GeocodeResult {
+  latitude: number;
+  longitude: number;
+  formattedAddress: string;
+}
 
 export interface SearchFilters {
   radiusKm: RadiusKm;
@@ -113,4 +125,6 @@ export interface SearchApi {
   getZones(): Promise<Zone[]>;
   searchRestaurants(origin: SearchOrigin, filters: SearchFilters): Promise<RestaurantSummary[]>;
   getRestaurant(id: string, from?: Coordinates): Promise<RestaurantDetail>;
+  /** GET /geocode: 404 ADDRESS_NOT_FOUND outside Bogotá, 503 GEOCODING_UNAVAILABLE when Google fails. */
+  geocode(address: string): Promise<GeocodeResult>;
 }
