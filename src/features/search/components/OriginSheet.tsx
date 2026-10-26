@@ -8,6 +8,8 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { useZones } from '../queries';
 import type { SearchOrigin } from '../types';
 
+import { AddressSearch, type LocatedAddress } from './AddressSearch';
+
 const SKELETON_CHIPS = 8;
 
 interface OriginSheetProps {
@@ -18,10 +20,11 @@ interface OriginSheetProps {
   failure: LocationFailure | null;
   onUseLocation: () => void;
   onSelectZone: (zoneId: string) => void;
+  onSelectAddress: (address: LocatedAddress) => void;
 }
 
-/** "¿Dónde buscamos?": the phone's position or one zone of the closed list (GET /search/zones). */
-export function OriginSheet({ visible, onClose, origin, failure, onUseLocation, onSelectZone }: OriginSheetProps) {
+/** "¿Dónde buscamos?": a typed address, the phone's position or one zone of the closed list (GET /search/zones). */
+export function OriginSheet({ visible, onClose, origin, failure, onUseLocation, onSelectZone, onSelectAddress }: OriginSheetProps) {
   const zones = useZones();
 
   return (
@@ -37,6 +40,8 @@ export function OriginSheet({ visible, onClose, origin, failure, onUseLocation, 
           }
         />
       ) : null}
+
+      <AddressSearch initialQuery={origin?.type === 'address' ? origin.query : ''} onLocated={onSelectAddress} />
 
       <View className="gap-3">
         <Text variant="label" tone="secondary">

@@ -4,6 +4,205 @@
 
 ---
 
+## 26 oct 2026 (tarde) · Sebastián · Búsqueda por dirección, logo de Google y cierre del Sprint 2
+
+**Después del pull:** `npm install`. No hay dependencias nuevas ni hay que recompilar: solo cambia JavaScript y una imagen.
+
+**Qué quedó listo**
+- **Búsqueda por dirección (PBI 2.2):** en «Cambiar zona» (y cuando falla la ubicación) el panel «¿Dónde buscamos?» tiene arriba **Dirección**, con el campo «Buscar por dirección» y el botón «Buscar dirección».
+  - Valida antes de enviar: «ab» dice «Escribe al menos 3 caracteres.» y no llama al backend.
+  - `200` → busca con `lat`/`lng` y el encabezado dice **«Cerca de: `formattedAddress`»** (por ejemplo, «Cerca de: Cra. 11 #72-30, Bogotá, Colombia · 2 km»). Los filtros, el mapa, el detalle (distancia desde ese punto) y el tiempo real funcionan igual. El punto naranja de «tú» solo aparece con el GPS.
+  - `404` → «No encontramos esa dirección en Bogotá. Revisa la dirección o elige una zona.»; `503` → «No pudimos ubicar la dirección en este momento. Intenta de nuevo o elige una zona.»; sin internet → el mensaje de conexión. Se decide por `errorCode`, nunca por el `message` del backend.
+  - Se vuelve a **Mi ubicación** o a una **zona** desde el mismo panel, y el campo recuerda la última dirección.
+- **Cupo de Geocoding (punto 6 del cierre):** se llama solo al confirmar, el botón queda en «Buscando…» y no se puede tocar dos veces, y la misma dirección (con otros espacios o mayúsculas) no se vuelve a pedir mientras la app esté abierta. Las pruebas simulan `/geocode`; con `EXPO_PUBLIC_USE_MOCKS=true` hay respuestas de ejemplo (Medellín o una calle mayor a 200 → 404; «sin servicio» → 503).
+- **«Continuar con Google» con la «G» oficial** de las guías de marca de Google, sacada del paquete oficial sin redibujarla (`assets/images/google-g*.png`). El kit tiene `GoogleLogo` y `Button` acepta `leading` para logos que no son de Lucide.
+- **`.gitattributes`** con `* text=auto eol=lf`, sin `--renormalize`. `git status` no cambia: no había archivos con finales de línea de Windows.
+
+**Probado contra Render** con la cuenta de comensal de prueba:
+- `Cra. 11 #72-30` → Calle 72 (Crepes & Waffles, Casa 72…).
+- `Calle 118 #5-41` → Usaquén (Abasto Usaquén).
+- `Calle 10 #43A-30, Medellín` → mensaje de 404.
+- `ab` → validación local.
+- El mapa real ya muestra los tres niveles de disponibilidad con el seed.
+
+**Para quién**
+- **Jacobo:** el botón de Google de `login.tsx` ahora lleva `leading={<GoogleLogo />}`; la lógica no cambió.
+- **Sergio (matriz):** agrega a **C5** (buscar por zona) la variante «buscar por dirección», con los casos de la tabla de Elizabeth (`docs/qa/matriz-sprint2.md` de la web).
+- **Todos:** borren de su `.env` la línea suelta con tres comillas invertidas si la tienen (aviso de Elizabeth); no afecta la app, pero no es una variable.
+
+**Rama / PR**
+- `feat/sprint2-busqueda-direccion` → `develop`.
+
+---
+
+## 26 oct 2026 · Elizabeth · Búsqueda por dirección: `GET /v1/geocode` para comensales
+
+**Para Sebastián (PBI 2.2, «dirección o zona»).** El cambio del backend está en la rama `docs/sprint2-cierre-contrato`, todavía sin fusionar; cuando llegue a `develop` se avisa. Responde a tu nota del 16 oct: no hizo falta un endpoint nuevo, porque `/geocode` ahora acepta comensales. La búsqueda no recibe `address`.
+
+**Flujo en la app**
+1. `GET /v1/geocode?address=<texto>`, con el mismo token de Firebase. `address` va recortada, de 3 a 255 caracteres; si no cumple, `400` con `message` en lista. Valídalo antes de enviar.
+2. `200 { latitude, longitude, formattedAddress }` → muestra «Resultados cerca de: `formattedAddress`». **Muéstralo siempre:** Google puede ubicar algo distinto a lo que el comensal pensó. Por ejemplo, una dirección que existe en Bogotá se acepta aunque fuera de otra ciudad, y un texto sin sentido puede caer en una dirección real.
+3. `GET /v1/search/restaurants?lat=<latitude>&lng=<longitude>` con el `radiusKm`, `category` y `partySize` de siempre. Para el detalle, usa el mismo punto como `lat`/`lng`.
+
+**Errores (decide por `errorCode`, con tu propio texto)**
+- **`404 ADDRESS_NOT_FOUND`:** no hay un resultado dentro de Bogotá. Por ejemplo: «No encontramos esa dirección en Bogotá. Revisa la dirección o busca por zona.».
+- **`503 GEOCODING_UNAVAILABLE`:** Google no respondió. Por ejemplo: «No pudimos ubicar la dirección en este momento. Busca por zona o con tu ubicación.».
+- **`403 PROFILE_REQUIRED`:** igual que en el resto de rutas de comensal: llama a `POST /v1/diners/me` y reintenta. No lo muestres.
+- **`401`:** la sesión terminó, como siempre.
+- **El `message` del backend es neutro** y no está pensado para la app: no lo muestres tal cual.
+
+**Contrato:** `CLAUDE.md` §10 (fila de `/geocode`, «Ambos roles» y «Búsqueda por dirección (app)»), idéntica en los tres repos.
+
+---
+
+## 26 oct 2026 · Elizabeth · Backend del Sprint 2 cerrado
+
+- **El backend del Sprint 2 está cerrado:** todo está en `develop` y desplegado en Render. Se probó el 26 oct con tokens reales de Firebase: búsqueda, filtros, detalle y WebSocket responden igual en Render y en local. No cambió ninguna ruta, respuesta ni evento.
+- **Seed en Render:** además de Casa 72 están los 15 restaurantes reales de Santiago, con horarios y mesas que cubren `available`, `few`, `none` y restaurantes cerrados. Por ejemplo, Pesquera Jaramillo está cerrado a mano y su detalle responde `closed`. Sus dueños (`restaurante-XX@dinno.test`) son solo datos, sin inicio de sesión.
+- **Casa 72** tiene como dueño `dinnoteam2026+casa72@gmail.com`, y con esa cuenta se cambian sus mesas desde la web para ver el tiempo real en la app. Su cuenta de Firebase ya existe y está verificada, así que el paso 8 ya se puede hacer. El 26 oct se probó en Render: cada cambio de Casa 72 llegó como `availability.changed` al comensal en menos de 1 s, y repetir el mismo estado no envió nada.
+- **La geocodificación ya funciona en el backend** (llave real en Render). ~~La app no la usa: el comensal busca por zona o por ubicación.~~ Ver la entrada de arriba: desde el 26 oct el comensal también puede usarla para buscar por dirección.
+- **Credenciales:** en Discord (#usuarios-restaurante y #usuarios-comensal), nunca en el repo. Una cuenta nueva usa un alias `dinnoteam2026+algo@gmail.com`.
+- **Contrato:** `CLAUDE.md`, sección 10, idéntica en los tres repos. Hoy cambió el apartado «Cuentas de prueba» y la tabla «Cuándo está listo cada contrato en `develop`».
+- **Resueltos de la revisión del 17 oct:** #3 (en Render ya no aparece solo Casa 72) y #6 (la cuenta de la web de Casa 72 es `dinnoteam2026+casa72@gmail.com`).
+
+---
+
+## 25 oct 2026 (noche) · Sebastián · El mapa de la app ya funciona con la llave real
+
+**Después del pull:** `npm install`. No hay dependencias nuevas. Para ver el mapa necesitas `GOOGLE_MAPS_ANDROID_API_KEY` en tu `.env` (pídesela a Santiago por privado) y después `npx expo prebuild --clean` y `npx expo run:android`.
+
+**Probado en el emulador:**
+- **Contra Render:** el mapa carga con los colores del manual, tu posición con el radar y los restaurantes del seed (por ejemplo, Andrés D.C.). A las 9:45 a. m. de un domingo solo hay uno abierto: los demás abren a mediodía, así que es lo correcto.
+- **Con datos de ejemplo** (13 restaurantes):
+  - Los pines tienen la forma y el color de cada estado.
+  - Tocar un pin mueve las tarjetas a la suya, y deslizar una tarjeta lleva el mapa a su pin.
+  - Funciona en claro y en oscuro.
+
+**Corregido:** al cambiar de tema, el pin seleccionado se volvía el pin rojo genérico de Google (prohibido por el manual).
+- Ahora cada pin se dibuja durante su primer medio segundo antes de congelarse.
+- Los pines se vuelven a crear cuando cambia el tema.
+
+**APK de QA nuevo, con mapa** (contra Render). Pídemelo por privado: Sergio, Santiago y Jacobo para la matriz.
+
+**Sergio (matriz):** **T2.5** (disponibilidad en el mapa) y la parte de mapa de **C6** ya no están bloqueados.
+
+**Web, para quien maneje Vercel:** el mapa del formulario necesita `VITE_GOOGLE_MAPS_API_KEY` **y** `VITE_GOOGLE_MAPS_MAP_ID`. Sin el Map ID no se muestra (`LocationMap.tsx` exige los dos).
+
+---
+
+## 25 oct 2026 · Sebastián · `npm run typecheck` ya no da errores falsos y el SHA-1 es uno solo
+
+**Después del pull:** `npm install`. No hay dependencias nuevas ni hay que recompilar.
+
+**Qué pasaba:** `tsc` usa dos archivos que genera Expo y que no están en git: `.expo/types/router.d.ts` (las rutas) y `expo-env.d.ts` (tipos de Expo, entre ellos los `*.css`).
+- Si el primero era viejo, por ejemplo del 29 sep, salían los `TS2322`/`TS2345` de `/crear-cuenta`, `/recuperar-contrasena`, `/kit` y `/restaurante/[id]`.
+- Si faltaba el segundo, salía el `TS2882` de `global.css` que estaba como «error conocido».
+
+No era un error del código: dependía de cuándo había corrido cada uno `npx expo start`.
+
+**Arreglo:** `npm run typecheck` ahora corre primero `expo customize tsconfig.json`, que regenera los dos archivos sin abrir Metro y sin cambiar `tsconfig.json`, y después `tsc --noEmit`.
+- **Usen siempre `npm run typecheck`**, no `npx tsc --noEmit` suelto.
+- Se quitó la fila de «error conocido» del README. `CLAUDE.md`, `AGENTS.md` y el README ya dicen el comando nuevo.
+
+**SHA-1 (para Santiago y Jacobo):** el `debug.keystore` lo pone la plantilla de Expo al hacer `prebuild`, así que **es el mismo en todos los computadores**. El APK de QA (release) también va firmado con él (lo verifiqué con `apksigner`). No hay que agregar un SHA-1 por computador ni un cliente aparte para el APK. Es este:
+- Paquete: `com.dinno.app`
+- SHA-1: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
+
+**La llave de Maps en tu `.env`:**
+- El nombre de la variable debe ser exactamente `GOOGLE_MAPS_ANDROID_API_KEY`, en una línea `GOOGLE_MAPS_ANDROID_API_KEY=<llave>`, sin comillas ni espacios.
+- Un nombre como `dinno-android=` (el nombre que tiene la llave en la consola) no lo lee la app, y el mapa no aparece.
+- Después de ponerla: `npx expo prebuild --clean` y `npx expo run:android`.
+
+---
+
+## 20 oct 2026 (noche) · Sergio · README y AGENTS.md al día
+
+**Después del pull:** solo cambia documentación: no hay dependencias nuevas ni hay que recompilar.
+
+**Qué quedó listo**
+- **`README.md`** (sobre la versión de Sebastián, sin quitar nada):
+  - «Inicio rápido» de 6 pasos.
+  - JDK: el de Android Studio (`jbr`) como opción principal y un JDK 17 aparte como alternativa.
+  - La tabla de variables, con si son obligatorias y un ejemplo.
+  - Tres formas de correr la app (datos de ejemplo, Render y backend local con `10.0.2.2`).
+  - Sección 8, «Problemas comunes», donde ahora está también lo del DNS del emulador.
+- **Error conocido:** `npx tsc --noEmit` falla en `develop` por `import '../global.css'` (TS2882). Está en la sección 8 del README y esa fila se quita cuando se arregle.
+- **`AGENTS.md`:** en español y alineado con el `CLAUDE.md`: development build con Android Studio (nunca Expo Go), `app.config.ts`, solo npm y nada de EAS sin pedirlo. Antes era la plantilla genérica de Expo.
+- **Credenciales, siempre por privado y nunca en el repo:** Firebase y cuentas de prueba del backend → Elizabeth · llave de Maps → Sebastián.
+
+**Para quién**
+- **Sebastián:** revisa que el README siga diciendo lo mismo que tus notas, y el arreglo de `global.css` (cuando esté, se quita la fila de la sección 8).
+- **Todos:** si alguien nuevo levanta la app, que siga solo el README.
+
+**Rama / PR**
+- `docs/sprint2-readme-agents` → `develop`.
+## 20 oct 2026 · Jacobo · Iniciar sesión con Google
+
+**Después del pull hay que recompilar** (Google Sign-In es código nativo):
+
+```bash
+npm install
+npx expo prebuild --clean
+npx expo run:android
+```
+
+**Dependencia nueva:** `@react-native-google-signin/google-signin` 16 (API gratuita, «Original»). Su plugin **no** está en `app.config.ts`: en Android solo configura `google-services.json` (no lo usamos) y con opciones exige `iosUrlScheme`, que es de iOS. El módulo entra por autolinking. Si algún día se compila iOS, hay que agregar el plugin con `iosUrlScheme`.
+
+**Variable nueva: `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`** (pública). Es el ID de cliente **web** de OAuth del proyecto de Firebase. Cópiala a tu `.env` desde `.env.example`; los pasos están en el README.
+- Sin ella, el botón dice «Por ahora no puedes continuar con Google…» y el resto funciona.
+- Además, en Google Cloud tiene que existir un **cliente OAuth de Android** con `com.dinno.app` + el SHA-1 del README. Si falta, Google falla siempre. **Equipo de Google Cloud:** ¿ya está creado? El APK de QA (release) tiene otro SHA-1 y necesita su propio cliente.
+
+**Qué hace:**
+- «Continuar con Google» (borde) está debajo de «Iniciar sesión». El idToken de Google pasa a `signInWithFirebase` y el flujo único hace el resto. El nombre de Google llega solo a `POST /diners/me`.
+- Si la persona cierra la ventana de Google, no se muestra nada. Los demás errores salen en un `Alert` con un texto claro.
+- **Cerrar sesión** también cierra la sesión de Google (`onSignOut`, en `src/features/session/google.ts`), así que el selector vuelve a preguntar la cuenta. Si eso falla, se reintenta antes del siguiente inicio con Google.
+- Con `EXPO_PUBLIC_USE_MOCKS=true` no se llama a Google: entra como `google@dinno.test`.
+
+**Recorrido de la demo, paso 1 (entrar con Google):** listo para probar cuando estén la variable y el cliente de Android.
+
+---
+
+## 20 oct 2026 · Jacobo · Crear cuenta, verificar correo y recuperar contraseña
+
+**No hay que recompilar** ni hay dependencias nuevas: después del pull basta con `npm install`.
+
+Estas tres pantallas **ya no son provisionales**:
+- **`/crear-cuenta`:** nombre, correo y contraseña (mínimo 8). Al crearla se envía el correo de verificación y la app pasa sola a `/verificar-correo`. El nombre se envía a `POST /diners/me`.
+- **`/verificar-correo`:** «Ya lo verifiqué», «Reenviar correo» y «Cerrar sesión», igual que en la web.
+- **`/recuperar-contrasena`:** envía el enlace de Firebase. La confirmación no dice si la cuenta existe.
+
+La lógica de Firebase está en `src/features/session/account-actions.ts`. Con `EXPO_PUBLIC_USE_MOCKS=true`:
+- Crear cuenta pasa a la verificación con `sinverificar@dinno.test`.
+- Reenviar y recuperar responden como si hubieran funcionado.
+
+**Pruebas:** `auth-screens.test.tsx` renderiza pantallas con `react-test-renderer` (ya viene con jest-expo). Mockea reanimated, worklets y lucide en el mismo archivo, sin tocar la configuración de jest.
+
+**Recorrido de la demo, paso 11 (crear cuenta → verificación):** listo para probar. «Continuar con Google» sigue pendiente (Jacobo).
+
+---
+
+## 20 oct 2026 · Sergio · Pestaña Perfil del comensal
+
+**Después del pull:** no hay dependencias nuevas ni cambios nativos: no hay que recompilar.
+
+**Qué quedó listo** (`src/app/(app)/(tabs)/perfil.tsx`):
+- Nombre y correo de `GET /me` en una `Card` (sin nombre, la parte del correo antes de `@`), el selector de tema, «Cerrar sesión» con el `Dialog` «¿Cerrar sesión?» del kit y «Versión 1.0.0» (de `expo-constants`).
+- **Carga, error y modo oscuro:** skeleton después de 300 ms; si no hay datos, `ErrorState` «No pudimos cargar tu perfil» con «Intentar de nuevo»; si falla una recarga, se quedan los datos con un `Alert`. Con un 401, el proveedor cierra la sesión y el login muestra «Tu sesión terminó. Inicia sesión de nuevo.».
+- **Cerrar sesión** usa `useAuth().signOut()` (Firebase, caché, filtros y socket) y la app vuelve sola al login con `Stack.Protected`: el botón atrás no regresa a Perfil. Si falla, se cierra el diálogo y aparece el toast «No pudimos cerrar sesión. Intenta de nuevo.».
+- Resuelve el hallazgo 5 de la revisión del 17 oct (Perfil provisional).
+- **Para leer el perfil en otra pantalla:** `useMeQuery()` de `@/features/account/queries` (query key `['me']`). Se borra con la caché al cerrar sesión. `getDisplayName(profile)` de `@/features/account/profile-display` da el nombre que se muestra.
+
+**Sebastián:**
+- **Falta `Avatar` en el kit** (ya te lo pedí). Propuesta: `<Avatar name="Laura" imageUrl? size="lg" />`, con la inicial en mayúscula, fondo y texto de tokens, en claro y oscuro, y `accessible={false}` (el nombre ya se lee al lado). Cuando lo publiques, se agrega en `ProfileCard` (`perfil.tsx`) antes del nombre: `<Avatar name={getDisplayName(profile)} />`, y el `View` del nombre y el correo pasa a fila.
+- **`npx tsc --noEmit` falla en `develop` (ya existía, no lo causa este cambio):** `src/app/_layout.tsx(1,8): error TS2882: Cannot find module or type declarations for side-effect import of '../global.css'`. TypeScript 6 revisa los imports de efecto secundario y `nativewind/types.d.ts` no declara los `*.css`. Te lo reporté aparte; el arreglo va en `nativewind-env.d.ts` o en `tsconfig.json`.
+
+**Jacobo:** cuando agregues Google Sign-In nativo, registra `onSignOut(() => GoogleSignin.signOut())` (de `@/features/session/SessionProvider`). Si no, después de «Cerrar sesión» el selector de Google vuelve a entrar solo con la cuenta anterior.
+
+**Rama / PR**
+- `feat/sprint2-diner-profile` → `develop`.
+
+---
+
 ## 17 oct 2026 (noche) · Sebastián · Revisión del recorrido de la demo, hallazgos y APK para QA
 
 **APK para QA:** ya se puede probar la app sin montar el proyecto ni tener Metro corriendo.
@@ -42,10 +241,10 @@
 |---|---|---|---|
 | 1 | Al entrar, el skeleton se quitaba un instante entre «Buscando tu ubicación…» y los resultados | Sebastián | Corregido en este PR |
 | 2 | Sin llave de Maps no hay mapa (la app muestra solo la lista); cuando llegue, verificar pines y sincronía | Equipo de Google Cloud → Sebastián | Pendiente |
-| 3 | En Render solo aparece Casa 72: no se pueden mostrar los tres niveles de disponibilidad ni varios pines | Santiago (JSON) + Elizabeth (seed) | Pendiente |
+| 3 | En Render solo aparece Casa 72: no se pueden mostrar los tres niveles de disponibilidad ni varios pines | Santiago (JSON) + Elizabeth (seed) | Resuelto (26 oct): el seed ya está en Neon |
 | 4 | Google Sign-In, crear cuenta, verificar correo y recuperar contraseña siguen como pantallas provisionales | Jacobo | Pendiente |
 | 5 | Perfil provisional: faltan los datos de `GET /me`, la confirmación al cerrar sesión y la versión de la app (el selector de tema ya está) | Sergio | Pendiente |
-| 6 | ¿Qué cuenta entra a la web como Casa 72 para el paso 8? | Elizabeth | Pendiente |
+| 6 | ¿Qué cuenta entra a la web como Casa 72 para el paso 8? | Elizabeth | Resuelto (26 oct): `dinnoteam2026+casa72@gmail.com` (credenciales en Discord) |
 | 7 | En modo oscuro el botón secundario (petróleo, «Cómo llegar») casi se confunde con el fondo, porque en el manual `brand` y `surface` son el mismo color en oscuro | Sebastián (revisar con el manual) | Menor, abierto |
 | 8 | La ubicación del restaurante en la web pasa a «todo Google» (mapa de Google + Geocoding, el dueño confirma el pin) | Santiago + Elizabeth | En curso |
 
@@ -85,7 +284,7 @@ Falta ver un evento real: hay que cambiar mesas de Casa 72 desde la web mientras
 
 **Sergio (QA de C10 y C11):** los casos de disponibilidad en vivo, sin conexión y backend lento se pueden repetir con los comandos del README.
 
-**Elizabeth:** para el recorrido del Día 6 confirmen qué cuenta entra a la web como Casa 72. El seed asegura `dinnoteam2026@gmail.com` como restaurante; ¿es la dueña de Casa 72?
+**Elizabeth:** para el recorrido del Día 6 confirmen qué cuenta entra a la web como Casa 72. El seed asegura `dinnoteam2026@gmail.com` como restaurante; ¿es la dueña de Casa 72? **Respuesta (Elizabeth, 26 oct):** no, `dinnoteam2026@gmail.com` es la dueña de Casa16. Casa 72 es de `dinnoteam2026+casa72@gmail.com` (ver la entrada del 26 oct).
 
 ---
 

@@ -4,6 +4,10 @@ export const ErrorCode = {
   ProfileRequired: 'PROFILE_REQUIRED',
   RestaurantAccount: 'RESTAURANT_ACCOUNT',
   RestaurantNotFound: 'RESTAURANT_NOT_FOUND',
+  /** GET /geocode: no result inside Bogotá. */
+  AddressNotFound: 'ADDRESS_NOT_FOUND',
+  /** GET /geocode: Google did not answer or the daily quota ran out. */
+  GeocodingUnavailable: 'GEOCODING_UNAVAILABLE',
 } as const;
 
 export type ApiErrorKind = 'http' | 'network' | 'timeout';

@@ -35,6 +35,11 @@ export const env = {
   /** Public Firebase web config (not secret). Null until the three variables are set. */
   firebase: readFirebaseConfig(),
   /**
+   * OAuth web client ID of the Firebase project (public, not secret). Google Sign-In asks for an idToken for this
+   * client, which Firebase accepts. Null until set: the "Continuar con Google" button then shows an error.
+   */
+  googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() || null,
+  /**
    * True when the build has the Google Maps key (GOOGLE_MAPS_ANDROID_API_KEY in app.config.ts). The key itself
    * never reaches JavaScript. After adding it: `npx expo prebuild --clean` + `npx expo run:android`.
    */

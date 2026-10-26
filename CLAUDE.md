@@ -23,7 +23,7 @@
 | Jacobo | Autenticación (login y control de acceso); pantalla del restaurante |
 | Sergio | Estado abierto/cerrado del restaurante y bitácora de cambios de mesas |
 
-**Sprint 2 (actual): Búsqueda y disponibilidad para el comensal (15–21 oct). Sprint 1 cerrado: Restaurante operativo.** Un restaurante puede iniciar sesión, registrar y editar sus datos, crear y administrar mesas, cambiar su estado, marcarse como abierto o cerrado y ver la bitácora, todo en el ambiente desplegado.
+**Sprint 2 (actual, en cierre): Búsqueda y disponibilidad para el comensal. Planeado del 15 al 21 oct; sigue abierto mientras se cierran las pruebas con cuentas reales en el ambiente desplegado (26 oct). Sprint 1 cerrado: Restaurante operativo.** Un restaurante puede iniciar sesión, registrar y editar sus datos, crear y administrar mesas, cambiar su estado, marcarse como abierto o cerrado y ver la bitácora, todo en el ambiente desplegado.
 
 ---
 
@@ -144,7 +144,8 @@ Una tarea está lista solo si:
 
 ### Cuentas y roles
 - Roles posibles: `restaurant_admin` (solo web) y `diner` (solo app). Cada cuenta tiene **un solo rol**.
-- **Lista de restaurantes habilitados** = filas de `users` con rol `restaurant_admin`. Para habilitar un correo se inserta una fila (ver `docs/database.md` del backend). No hay registro público de restaurantes. Por ahora el único correo real habilitado es `dinnoteam2026@gmail.com`.
+- **Lista de restaurantes habilitados** = filas de `users` con rol `restaurant_admin`. Para habilitar un correo se inserta una fila (ver `docs/database.md` del backend). No hay registro público de restaurantes.
+- **Cuentas de prueba (Firebase, correo verificable):** `dinnoteam2026@gmail.com` (restaurante Casa16), `dinnoteam2026+casa72@gmail.com` (restaurante Casa 72) y `dinnoteam2026+comensal@gmail.com` (comensal). Las credenciales están en Discord (#usuarios-restaurante y #usuarios-comensal), **nunca** en el repo. Una cuenta nueva usa un alias `dinnoteam2026+algo@gmail.com` (llega a la misma bandeja). Los dueños de los 15 restaurantes reales del seed (`restaurante-XX@dinno.test`) son solo datos: no tienen cuenta de Firebase ni inician sesión.
 - **El backend ya no crea usuarios automáticamente.** El único endpoint que crea un usuario es `POST /v1/diners/me`, y siempre lo crea con el rol `diner`.
 - Resolución del usuario en cada petición: token válido → se busca por `firebase_uid` → si no aparece y el correo está verificado, se busca por correo y se vincula el UID (igual que en el Sprint 1) → si no existe, la cuenta queda **sin perfil**.
 
@@ -160,9 +161,9 @@ Una tarea está lista solo si:
 | Restaurante en endpoint de comensal | 403 | `RESTAURANT_ACCOUNT` | Esta es una cuenta de restaurante. Administra tu restaurante desde la web. |
 | Restaurante habilitado sin restaurante registrado | 403 | `RESTAURANT_REQUIRED` | Primero registra tu restaurante. *(sin cambios)* |
 
-- **Endpoints de restaurante:** todos los del Sprint 1 (`/v1/restaurants`, `/v1/restaurants/me*`, `/v1/tables*`, `/v1/table-logs`) y `/v1/geocode`.
+- **Endpoints de restaurante:** todos los del Sprint 1 (`/v1/restaurants`, `/v1/restaurants/me*`, `/v1/tables*`, `/v1/table-logs`).
 - **Endpoints de comensal:** `/v1/search/*` y `/v1/restaurants/:id/public`.
-- **Ambos roles:** `GET /v1/me`.
+- **Ambos roles:** `GET /v1/me` y `GET /v1/geocode` (una cuenta sin perfil recibe `PROFILE_REQUIRED` en los dos).
 - La forma del error no cambia: `{ statusCode, message, error, errorCode? }`. Los clientes deciden por `errorCode`, nunca por el texto.
 
 ### Endpoints nuevos o modificados
@@ -175,7 +176,7 @@ Todos bajo `/v1`, con `Authorization: Bearer <token de Firebase>`.
 | GET | `/search/zones` | diner | — | 200 `[{ id, name, latitude, longitude }]` |
 | GET | `/search/restaurants` | diner | `lat` + `lng` **o** `zone` · `radiusKm` ∈ {1, 2, 5, 10} (por defecto 2) · `category?` · `partySize?` (1–20) | 200 `[{ id, name, category, address, latitude, longitude, distanceKm, availability }]`, ordenado por distancia, máximo 50 |
 | GET | `/restaurants/:id/public` | diner | `lat?` + `lng?` (juntos o ninguno) | 200 `{ id, name, category, address, latitude, longitude, schedules[], isOpenNow, availability, distanceKm? }` · 404 `RESTAURANT_NOT_FOUND` |
-| GET | `/geocode` | restaurant_admin | `address` (3–255 caracteres) | 200 `{ latitude, longitude, formattedAddress }` · 404 `ADDRESS_NOT_FOUND` · 503 `GEOCODING_UNAVAILABLE` |
+| GET | `/geocode` | ambos (el restaurante no necesita tener restaurante registrado) | `address` (3–255 caracteres) | 200 `{ latitude, longitude, formattedAddress }` · 404 `ADDRESS_NOT_FOUND` «No encontramos esa dirección en Bogotá.» · 503 `GEOCODING_UNAVAILABLE` «No pudimos ubicar la dirección en este momento.» · sin perfil → 403 `PROFILE_REQUIRED`. Los mensajes son neutros: cada cliente muestra su propio texto según el `errorCode` |
 | POST | `/restaurants` | restaurant_admin | agrega `latitude?`, `longitude?` | la respuesta agrega `latitude`, `longitude` (number \| null) |
 | PATCH | `/restaurants/me` | restaurant_admin | agrega `latitude?`, `longitude?` | igual que arriba |
 | GET | `/restaurants/me` | restaurant_admin | — | agrega `latitude`, `longitude` (number \| null) |
@@ -183,6 +184,7 @@ Todos bajo `/v1`, con `Authorization: Bearer <token de Firebase>`.
 **Reglas de los campos:**
 - `latitude` y `longitude` son `number` en JSON, con hasta 6 decimales. Se aceptan con más de 6: el backend las **redondea** a 6 antes de guardar (no es un error), y las respuestas traen el valor redondeado. Se envían **los dos o ninguno** (si llega solo uno → 400). Deben estar dentro de Bogotá: latitud entre 4.45 y 4.85, longitud entre -74.25 y -73.95 (fuera → 400). En el backend las coordenadas son opcionales para no romper la web actual; la obligatoriedad al registrar la impone el formulario web.
 - Búsqueda: `lat`/`lng` y `zone` son excluyentes (los dos o ninguno → 400). `lat`/`lng` pueden estar fuera de Bogotá (simplemente no habrá resultados). Una `zone` desconocida, una `category` inválida, un `radiusKm` fuera de la lista o un `partySize` fuera de rango → 400 con un mensaje en español.
+- **Búsqueda por dirección (app):** la búsqueda no recibe `address`. La app llama a `GET /geocode?address=…`, muestra «Resultados cerca de: `formattedAddress`» y busca con `GET /search/restaurants?lat=…&lng=…` usando `latitude` y `longitude`. Con `404` o `503` la app muestra su propio texto y ofrece buscar por zona o por ubicación. Una dirección que existe en Bogotá se acepta aunque el comensal pensara en otra ciudad (las direcciones colombianas se repiten entre ciudades): por eso se muestra `formattedAddress`.
 - `distanceKm`: número en km con 2 decimales. El formato para mostrar («a 650 m», «a 1,4 km») lo hace la app.
 - `category`: `colombian`, `italian`, `mexican`, `asian`, `grill`, `fast_food`, `healthy`, `seafood`, `cafe`, `other` (los mismos del Sprint 1).
 - `schedules[]` del detalle: el mismo formato que `GET /restaurants/me`: `{ dayOfWeek (1 = lunes … 7 = domingo), isOpen24h, opensAt: "HH:MM" | null, closesAt: "HH:MM" | null }`. Si `closesAt < opensAt`, el horario cierra al día siguiente. Los días cerrados no aparecen.
@@ -222,6 +224,9 @@ Todos bajo `/v1`, con `Authorization: Bearer <token de Firebase>`.
 | Búsqueda, zonas, disponibilidad, filtros y detalle público | 15 oct (PR #37) |
 | `GET /geocode` y coordenadas en POST/PATCH | 15 oct (PR #38) |
 | WebSocket `availability.changed` | 15 oct (PR #40) |
+| Seed con los 15 restaurantes reales en Neon y Casa 72 con dueño `dinnoteam2026+casa72@gmail.com` | 24 oct (PR #44) |
+| Llave real de Google Geocoding en local y en Render: `GET /geocode` ya no responde siempre `503` | 26 oct |
+| `GET /geocode` para comensales (búsqueda por dirección) y mensajes neutros en 404 y 503 | pendiente: rama `docs/sprint2-cierre-contrato`, 26 oct |
 
 ---
 
@@ -248,11 +253,11 @@ npx expo run:android         # compila e instala el development build
 npx expo start               # servidor de desarrollo para el build instalado (-c limpia caché)
 npx expo install <paquete>   # SIEMPRE para agregar librerías (elige versiones compatibles con el SDK)
 npx expo lint                # lint
-npx tsc --noEmit             # chequeo de tipos
+npm run typecheck            # chequeo de tipos (regenera los tipos de Expo y corre tsc)
 npm test                     # pruebas (jest-expo)
 npx expo-doctor              # diagnóstico de dependencias
 ```
-**Antes de dar una tarea por terminada:** `npx expo lint`, `npx tsc --noEmit` y `npm test` sin errores.
+**Antes de dar una tarea por terminada:** `npx expo lint`, `npm run typecheck` y `npm test` sin errores. Usa `npm run typecheck` y no `npx tsc --noEmit` suelto: `.expo/types/router.d.ts` y `expo-env.d.ts` se generan y no están en git, y si están viejos o faltan, `tsc` da errores falsos de rutas o de `global.css`.
 Nunca agregues paquetes con `npm install <paquete>`; siempre con `npx expo install`, y solo después de preguntar.
 
 ### Estructura
@@ -278,9 +283,11 @@ Nunca agregues paquetes con `npm install <paquete>`; siempre con `npx expo insta
 - La URL del backend sale **solo de `src/config/env.ts`** (`env.apiUrl`) más el prefijo `/v1`. Nunca uses `process.env` en otra parte.
 - `EXPO_PUBLIC_API_URL` es el origen **sin `/v1` y sin `/` final**. Las variables `EXPO_PUBLIC_*` quedan dentro de la app: **nunca pongas secretos en ellas.**
 - Sesión: `useAuth()` de `src/features/session/SessionProvider.tsx` (Firebase JS SDK con persistencia). Un solo flujo tras cualquier inicio de sesión (`GET /me` → `PROFILE_REQUIRED` → `POST /diners/me`). Las rutas se abren por `status` con `Stack.Protected`: no redirijas a mano.
+- Perfil: para mostrar los datos de la cuenta con carga y error propios, usa `useMeQuery()` (`src/features/account/queries.ts`, query key `['me']`; se borra con la caché al cerrar sesión) y `getDisplayName(profile)` (`src/features/account/profile-display.ts`: `displayName` o la parte del correo antes de `@`). No llames a `GET /me` por tu cuenta.
 - Toda llamada pasa por `src/lib/api/client.ts` (`apiRequest`): token de Firebase, timeout de 60 s y errores normalizados (`ApiError` con `status`, `errorCode`, `kind`). Los textos para el usuario salen de `getErrorMessage`, nunca del `message` del backend.
-- Búsqueda: lo que eligió el comensal (origen: ubicación **o** zona, radio, categoría, personas) vive en `useSearchStore` (`src/features/search/store.ts`, zustand) y se borra al cerrar sesión; los datos del servidor, en TanStack Query (`src/features/search/queries.ts`). La ubicación sale solo del GPS con `expo-location` (`src/features/location/`): permiso en primer plano, máximo 10 s y, si falla, la app pasa a zona.
+- Búsqueda: lo que eligió el comensal (origen: ubicación, dirección **o** zona, radio, categoría, personas) vive en `useSearchStore` (`src/features/search/store.ts`, zustand) y se borra al cerrar sesión; los datos del servidor, en TanStack Query (`src/features/search/queries.ts`). La ubicación sale solo del GPS con `expo-location` (`src/features/location/`): permiso en primer plano, máximo 10 s y, si falla, la app pasa a zona.
 - Tiempo real: `useAvailabilityRealtime` (`src/features/realtime/`) abre Socket.IO solo con sesión de comensal (montado en `(app)/_layout.tsx`; con datos de ejemplo no hay socket). Cada `availability.changed` actualiza la caché de búsquedas y detalles al instante y luego vuelve a consultar lo que está en pantalla. Respaldo: `refetchInterval` de 60 s en búsqueda y detalle, y nueva consulta al volver a la app y al recuperar internet (`connectQueryLifecycle` en `src/lib/query-client.ts`, con `AppState` y NetInfo). Si una petición tarda más de 5 s aparece «Conectando con DiNNo…» (`SlowConnectionNotice`).
+- Búsqueda por dirección: `src/features/search/address.ts` llama a `GET /geocode` **solo al confirmar** (botón o tecla de búsqueda), valida 3–255 caracteres antes y recuerda las respuestas mientras la app esté abierta (incluido el 404). El cupo de Geocoding se comparte con la web: nunca la llames mientras el usuario escribe ni en pruebas contra el backend real (simula `geocode` en los tests). Con la dirección, la búsqueda usa `lat`/`lng` y el encabezado muestra «Cerca de: `formattedAddress`».
 - Mapa: `react-native-maps` con `PROVIDER_GOOGLE`. La llave (`GOOGLE_MAPS_ANDROID_API_KEY`, sin `EXPO_PUBLIC_`) se lee en `app.config.ts` al compilar; `env.mapsEnabled` dice si el build la tiene (sin llave, solo lista). Pines con `tracksViewChanges={false}` y una `key` que cambia con la selección y la disponibilidad. No uses `mapPadding` (react-native-maps 1.27 se cae en Android). Lo que flota sobre el mapa usa el respaldo sólido del vidrio (manual 7): en Android el desenfoque no puede leer la superficie del mapa.
 - `localhost` no funciona desde el emulador: el backend local es `http://10.0.2.2:3000`. Después de cambiar `.env`, reinicia con `npx expo start -c`.
 
