@@ -202,10 +202,10 @@ Si solo reinicias Metro con la llave nueva y no recompilas, la app cree que hay 
 | `npx expo start` (o `npm start`) | Servidor de desarrollo para el build ya instalado. `-c` limpia la caché |
 | `npm test` | Pruebas (Jest con `jest-expo`) |
 | `npx expo lint` (o `npm run lint`) | ESLint |
-| `npx tsc --noEmit` (o `npm run typecheck`) | Chequeo de tipos. Los tipos de las rutas se generan al correr `npx expo start` una vez |
+| `npm run typecheck` | Chequeo de tipos. Primero regenera los tipos que crea Expo (`.expo/types/router.d.ts` y `expo-env.d.ts`, fuera de git) y luego corre `tsc` |
 | `npx expo-doctor` | Diagnóstico de dependencias y configuración |
 
-**Antes de abrir un PR:** `npx expo lint`, `npx tsc --noEmit` y `npm test` sin errores (hoy `tsc` tiene un error conocido: ver la sección 8). La app se prueba solo en Android: los scripts `ios` y `web` existen, pero el equipo no los usa.
+**Antes de abrir un PR:** `npx expo lint`, `npm run typecheck` y `npm test` sin errores. La app se prueba solo en Android: los scripts `ios` y `web` existen, pero el equipo no los usa.
 
 ## 6. Estructura
 
@@ -244,5 +244,5 @@ Plus Jakarta Sans con su peso. Los valores están en [`src/theme/tokens.ts`](src
 | La app se cierra al abrir *Explorar* después de poner la llave de Maps | Se reinició Metro sin recompilar: la llave va dentro del build. `npx expo prebuild --clean` y `npx expo run:android` |
 | Cambié `tailwind.config.js` o `.env` y no se nota | Reinicia limpiando la caché: `npx expo start -c` |
 | Windows: Gradle falla con rutas largas o archivos bloqueados | El repo está dentro de OneDrive o en una ruta larga. Muévelo a una ruta corta fuera de OneDrive, por ejemplo `C:\dev\dinno\mobile` |
+| `tsc` dice que `/crear-cuenta`, `/kit` u otra ruta no existe, o `TS2882` con `global.css` | Los tipos generados por Expo están viejos o faltan. Usa `npm run typecheck`, que los regenera, en vez de `npx tsc --noEmit` |
 | `npx jest`, `npx tsc` o `npx expo` descargan paquetes y fallan con errores raros | Falta `node_modules`, así que `npx` baja otras versiones que no son las del proyecto. Corre `npm ci` y usa `npm test`, `npm run lint` y `npm run typecheck` |
-| **Error conocido:** `npx tsc --noEmit` falla con `src/app/_layout.tsx(1,8): error TS2882: Cannot find module or type declarations for side-effect import of '../global.css'` | Ya existe en `develop` y no lo causa tu cambio: TypeScript 6 revisa los imports de efecto secundario y `nativewind/types` no declara los `*.css`. Revisa que sea el único error. Esta fila se quita cuando Sebastián lo arregle |

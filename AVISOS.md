@@ -4,6 +4,31 @@
 
 ---
 
+## 25 oct 2026 · Sebastián · `npm run typecheck` ya no da errores falsos y el SHA-1 es uno solo
+
+**Después del pull:** `npm install`. No hay dependencias nuevas ni hay que recompilar.
+
+**Qué pasaba:** `tsc` usa dos archivos que genera Expo y que no están en git: `.expo/types/router.d.ts` (las rutas) y `expo-env.d.ts` (tipos de Expo, entre ellos los `*.css`).
+- Si el primero era viejo, por ejemplo del 29 sep, salían los `TS2322`/`TS2345` de `/crear-cuenta`, `/recuperar-contrasena`, `/kit` y `/restaurante/[id]`.
+- Si faltaba el segundo, salía el `TS2882` de `global.css` que estaba como «error conocido».
+
+No era un error del código: dependía de cuándo había corrido cada uno `npx expo start`.
+
+**Arreglo:** `npm run typecheck` ahora corre primero `expo customize tsconfig.json`, que regenera los dos archivos sin abrir Metro y sin cambiar `tsconfig.json`, y después `tsc --noEmit`.
+- **Usen siempre `npm run typecheck`**, no `npx tsc --noEmit` suelto.
+- Se quitó la fila de «error conocido» del README. `CLAUDE.md`, `AGENTS.md` y el README ya dicen el comando nuevo.
+
+**SHA-1 (para Santiago y Jacobo):** el `debug.keystore` lo pone la plantilla de Expo al hacer `prebuild`, así que **es el mismo en todos los computadores**. El APK de QA (release) también va firmado con él (lo verifiqué con `apksigner`). No hay que agregar un SHA-1 por computador ni un cliente aparte para el APK. Es este:
+- Paquete: `com.dinno.app`
+- SHA-1: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
+
+**La llave de Maps en tu `.env`:**
+- El nombre de la variable debe ser exactamente `GOOGLE_MAPS_ANDROID_API_KEY`, en una línea `GOOGLE_MAPS_ANDROID_API_KEY=<llave>`, sin comillas ni espacios.
+- Un nombre como `dinno-android=` (el nombre que tiene la llave en la consola) no lo lee la app, y el mapa no aparece.
+- Después de ponerla: `npx expo prebuild --clean` y `npx expo run:android`.
+
+---
+
 ## 20 oct 2026 (noche) · Sergio · README y AGENTS.md al día
 
 **Después del pull:** solo cambia documentación: no hay dependencias nuevas ni hay que recompilar.
