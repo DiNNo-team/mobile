@@ -14,10 +14,12 @@ import {
   RETRY_LABEL,
   ScreenHeader,
   Skeleton,
+  StatusShape,
   Text,
   useDelayedLoading,
   useToast,
 } from '@/components/ui';
+import { RestaurantMapPreview } from '@/features/search/components/RestaurantMapPreview';
 import { WeekSchedule } from '@/features/search/components/WeekSchedule';
 import { getDirectionsUrl } from '@/features/search/filters';
 import { useRestaurantDetail } from '@/features/search/queries';
@@ -47,6 +49,7 @@ function InfoRow({ icon, children }: { icon: LucideIcon; children: string }) {
 function DetailSkeleton() {
   return (
     <View accessibilityLabel="Cargando restaurante" className="gap-4">
+      <Skeleton className="h-44 rounded-card" />
       <Skeleton className="h-6 w-40 rounded-chip" />
       <Skeleton className="h-12 rounded-card" />
       <Skeleton className="h-12 rounded-btn" />
@@ -71,11 +74,20 @@ function DetailContent({ restaurant }: { restaurant: RestaurantDetail }) {
 
   return (
     <View className="gap-6">
-      <View className="flex-row flex-wrap gap-2">
-        <OpenStatusChip isOpen={restaurant.isOpenNow} />
-        {/* Closed already says "Cerrado": the availability chip only adds information while it is open. */}
-        {restaurant.isOpenNow ? <AvailabilityChip availability={restaurant.availability} /> : null}
-      </View>
+      <RestaurantMapPreview restaurant={restaurant} />
+
+      {/* One status row (manual 13.11): availability leads; "Abierto" is a quiet line next to it, not a second chip. */}
+      {restaurant.isOpenNow ? (
+        <View className="flex-row flex-wrap items-center gap-3">
+          <AvailabilityChip availability={restaurant.availability} />
+          <View className="flex-row items-center gap-1.5">
+            <StatusShape shape="dot" color="ok" />
+            <Text variant="sec">Abierto ahora</Text>
+          </View>
+        </View>
+      ) : (
+        <OpenStatusChip isOpen={false} />
+      )}
 
       {restaurant.isOpenNow ? null : (
         <Alert type="info" message="Este restaurante está cerrado ahora. Revisa su horario para saber cuándo abre." />

@@ -22,10 +22,11 @@ jest.mock('@/theme/ThemeProvider', () => {
   return { useTheme: () => ({ colors: themes.light, scheme: 'light' }) };
 });
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
-jest.mock('expo-router', () => ({ router: { back: jest.fn(), push: jest.fn() } }));
+jest.mock('expo-router', () => ({ router: { back: jest.fn(), push: jest.fn() }, useFocusEffect: jest.fn() }));
 // The kit's barrel loads the animated pieces: native worklets do not exist under jest.
 jest.mock('react-native-worklets', () => jest.requireActual('react-native-worklets/lib/module/mock'));
-jest.mock('react-native-reanimated', () => jest.requireActual('react-native-reanimated/mock'));
+// The official mock lacks useReducedMotion (used by the kit's press feedback, manual 11.3).
+jest.mock('react-native-reanimated', () => ({ ...jest.requireActual('react-native-reanimated/mock'), useReducedMotion: () => false }));
 // lucide-react-native ships ESM that jest does not transform: every icon renders nothing here.
 jest.mock('lucide-react-native', () => new Proxy({}, { get: (_, name) => (name === '__esModule' ? true : () => null) }));
 

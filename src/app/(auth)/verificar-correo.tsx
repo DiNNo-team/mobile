@@ -62,7 +62,7 @@ export default function VerifyEmailScreen() {
         <Text variant="h1" accessibilityRole="header">
           Revisa tu correo
         </Text>
-        <Text variant="body" tone="secondary">
+        <Text variant="body">
           {user?.email
             ? `Te enviamos un enlace a ${user.email} para verificar tu cuenta.`
             : 'Te enviamos un enlace para verificar tu cuenta.'}{' '}

@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { FlatList, RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Alert, Button, ErrorState, RETRY_LABEL, ScreenHeader, SegmentedControl, Text, useDelayedLoading, useToast } from '@/components/ui';
+import { Alert, Button, ErrorState, FloatingSurface, RETRY_LABEL, ScreenHeader, SegmentedControl, Text, useDelayedLoading, useToast } from '@/components/ui';
 import { env } from '@/config/env';
 import { LOCATION_FAILURE_MESSAGES } from '@/features/location/location';
 import { useLocationFlow } from '@/features/location/use-location-flow';
@@ -60,6 +60,7 @@ export default function ExploreScreen() {
   const [view, setView] = useState<ResultsView>(env.mapsEnabled ? 'map' : 'list');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [carouselHeight, setCarouselHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const map = useRef<ResultsMapHandle>(null);
   const carousel = useRef<ResultsCarouselHandle>(null);
   const zones = useZones();
@@ -174,40 +175,34 @@ export default function ExploreScreen() {
     );
   };
 
-  return (
-    <View className="flex-1 bg-bg" style={{ paddingTop: insets.top + 16 }}>
-      <ScreenHeader
-        title="Explorar"
-        subtitle={subtitle}
-        className="px-4 pb-3"
-        actions={
-          origin ? (
-            <Button variant="ghost" size="sm" icon={MapIcon} label="Cambiar zona" onPress={openZones} className="-mr-4" />
-          ) : undefined
-        }
-      />
-
-      {origin ? (
-        <View className="gap-3 pb-3">
-          {env.mapsEnabled ? (
-            <SegmentedControl
-              options={VIEW_OPTIONS}
-              value={view}
-              onChange={setView}
-              accessibilityLabel="Ver resultados como"
-              className="mx-4"
-            />
-          ) : null}
-          <ActiveFilters
-            filters={filters}
-            onOpen={openFilters}
-            onRemove={(key) => setFilters(removeFilter(filters, key))}
-            onClear={clearFilters}
-          />
-        </View>
+  const changeZone = origin ? (
+    <Button variant="ghost" size="sm" icon={MapIcon} label="Cambiar zona" onPress={openZones} className="-mr-4" />
+  ) : undefined;
+  const controls = origin ? (
+    <>
+      {env.mapsEnabled ? (
+        <SegmentedControl
+          options={VIEW_OPTIONS}
+          value={view}
+          onChange={setView}
+          accessibilityLabel="Ver resultados como"
+          className="mx-4"
+        />
       ) : null}
+      <ActiveFilters filters={filters} onOpen={openFilters} onRemove={(key) => setFilters(removeFilter(filters, key))} onClear={clearFilters} />
+    </>
+  ) : null;
 
-      {search.isError && results.length > 0 ? (
+  return (
+    <View className="flex-1 bg-bg" style={showMap ? undefined : { paddingTop: insets.top + 16 }}>
+      {showMap ? null : (
+        <>
+          <ScreenHeader title="Explorar" subtitle={subtitle} className="px-4 pb-3" actions={changeZone} />
+          {controls ? <View className="gap-3 pb-3">{controls}</View> : null}
+        </>
+      )}
+
+      {!showMap && search.isError && results.length > 0 ? (
         // An error while results are on screen keeps them and says so above (the full error state is for no data).
         <Alert
           type="error"
@@ -218,6 +213,7 @@ export default function ExploreScreen() {
       ) : null}
 
       {showMap ? (
+        // The map is the product (manual 13.11): full screen, with the header floating on map glass (solid on Android).
         <View className="flex-1">
           <ResultsMap
             ref={map}
@@ -228,7 +224,39 @@ export default function ExploreScreen() {
             radiusKm={filters.radiusKm}
             userLocation={userLocation}
             bottomInset={carouselHeight}
+            topInset={headerHeight}
           />
+          <View
+            pointerEvents="box-none"
+            className="absolute inset-x-0 top-0 px-3"
+            style={{ paddingTop: insets.top + 8 }}
+            onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+          >
+            <FloatingSurface shape="bar" className="gap-3 px-0">
+              <View className="flex-row items-center justify-between px-4">
+                <View className="min-w-0 flex-1">
+                  <Text variant="h3" accessibilityRole="header" numberOfLines={1}>
+                    Explorar
+                  </Text>
+                  {subtitle ? (
+                    <Text variant="sec" numberOfLines={1}>
+                      {subtitle}
+                    </Text>
+                  ) : null}
+                </View>
+                {changeZone}
+              </View>
+              {controls}
+            </FloatingSurface>
+            {search.isError ? (
+              <Alert
+                type="error"
+                message={getErrorMessage(search.error)}
+                action={<Button size="sm" variant="outline" label={RETRY_LABEL} onPress={() => search.refetch()} />}
+                className="mt-2"
+              />
+            ) : null}
+          </View>
           <ResultsCarousel
             ref={carousel}
             restaurants={results}
