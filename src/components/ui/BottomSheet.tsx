@@ -2,7 +2,7 @@ import { X } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,6 +16,8 @@ import { usePresence } from './use-presence';
 /** Dragging further than this, or flicking down faster, closes the sheet. */
 const CLOSE_DISTANCE = 120;
 const CLOSE_VELOCITY = 800;
+/** Dragging up past the top moves the sheet a fifth of the finger: friction, not a wall (manual 11.3). */
+const OVERDRAG = 0.2;
 const MAX_HEIGHT_RATIO = 0.85;
 
 export interface BottomSheetProps {
@@ -28,8 +30,9 @@ export interface BottomSheetProps {
 }
 
 /**
- * Bottom sheet (manual 6): radius 28 on top, handle, title with close button. Closes with the back button,
- * a tap on the overlay or dragging the handle down. Content scrolls; the footer stays fixed.
+ * Bottom sheet (manual 12.2): radius 28 on top, handle, title with close button. Closes with the back button, a tap
+ * on the overlay, or dragging the handle down (by distance or by a flick). Dragging up meets friction, and it settles
+ * with a spring that keeps the gesture's velocity. Content scrolls; the footer stays fixed.
  */
 export function BottomSheet({ visible, onClose, title, children, footer }: BottomSheetProps) {
   const { colors } = useTheme();
@@ -37,16 +40,21 @@ export function BottomSheet({ visible, onClose, title, children, footer }: Botto
   const { height } = useWindowDimensions();
   const { mounted, progress } = usePresence(visible);
   const drag = useSharedValue(0);
+  const reduceMotion = useReducedMotion();
 
   const pan = Gesture.Pan()
+    .maxPointers(1)
     .onUpdate((event) => {
-      drag.value = Math.max(0, event.translationY);
+      drag.value = event.translationY > 0 ? event.translationY : event.translationY * OVERDRAG;
     })
     .onEnd((event) => {
       if (event.translationY > CLOSE_DISTANCE || event.velocityY > CLOSE_VELOCITY) {
         scheduleOnRN(onClose);
       }
-      drag.value = withTiming(0, { duration: motion.base });
+      // Back into place with a spring that keeps the finger's velocity (none with reduced motion).
+      drag.value = reduceMotion
+        ? withTiming(0, { duration: 0 })
+        : withSpring(0, { ...motion.spring.snappy, velocity: event.velocityY });
     });
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: progress.value }));

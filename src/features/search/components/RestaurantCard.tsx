@@ -28,7 +28,7 @@ export function RestaurantCard({ restaurant, onPress, selected = false, floating
     <Card
       onPress={onPress}
       selected={selected}
-      elevation={floating ? 'floating' : 'soft'}
+      elevation={floating ? 'floating' : 'resting'}
       className={className}
       accessibilityLabel={[restaurant.name, availability, meta, address].join(', ')}
       accessibilityHint="Abre el detalle del restaurante"

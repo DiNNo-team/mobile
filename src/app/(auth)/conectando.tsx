@@ -10,7 +10,7 @@ export default function ConnectingScreen() {
       <View accessibilityLiveRegion="polite" className="items-center gap-4">
         <BrandSymbol height={56} />
         <Text variant="h3">Conectando con DiNNo…</Text>
-        <Text variant="sec" tone="secondary" className="text-center">
+        <Text variant="sec" className="text-center">
           Esto puede tardar unos segundos.
         </Text>
       </View>

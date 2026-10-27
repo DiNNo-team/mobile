@@ -1,10 +1,12 @@
 import { X, type LucideIcon } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { Pressable } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { cn } from '@/lib/cn';
 
 import { Icon } from './Icon';
 import { Text } from './Text';
+import { usePressScale } from './use-press-scale';
 
 export interface FilterChipProps {
   label: string;
@@ -23,6 +25,7 @@ export interface FilterChipProps {
  */
 export function FilterChip({ label, selected = false, onPress, onRemove, icon, className }: FilterChipProps) {
   const removable = !!onRemove;
+  const press = usePressScale();
   return (
     <Pressable
       accessibilityRole={removable ? 'button' : 'checkbox'}
@@ -30,13 +33,16 @@ export function FilterChip({ label, selected = false, onPress, onRemove, icon, c
       accessibilityState={removable ? undefined : { checked: selected }}
       onPress={onRemove ?? onPress}
       hitSlop={4}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
       className={cn('self-start', className)}
     >
       {({ pressed }) => (
-        <View
+        <Animated.View
+          style={press.style}
           className={cn(
             'h-9 flex-row items-center gap-1.5 rounded-chip border-1.5 px-3',
-            selected || removable ? 'border-accent' : 'border-line',
+            selected || removable ? 'border-selection' : 'border-line',
             pressed ? 'bg-surface-2' : 'bg-surface',
           )}
         >
@@ -45,7 +51,7 @@ export function FilterChip({ label, selected = false, onPress, onRemove, icon, c
             {label}
           </Text>
           {removable ? <Icon icon={X} size={16} /> : null}
-        </View>
+        </Animated.View>
       )}
     </Pressable>
   );

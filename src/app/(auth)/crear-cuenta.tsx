@@ -60,12 +60,12 @@ export default function SignUpScreen() {
   };
 
   return (
-    <AuthScreen>
+    <AuthScreen tabs={{ active: 'signup', onSelect: () => router.back() }}>
       <View className="gap-2">
         <Text variant="h1" accessibilityRole="header">
           Crea tu cuenta
         </Text>
-        <Text variant="body" tone="secondary">
+        <Text variant="body">
           Encuentra una mesa disponible ahora y asegúrala mientras llegas.
         </Text>
       </View>
@@ -140,7 +140,7 @@ export default function SignUpScreen() {
       <Button label="Crear cuenta" loading={submitting} loadingLabel="Creando cuenta…" fullWidth onPress={submit} />
 
       <View className="flex-row flex-wrap items-center justify-center">
-        <Text variant="sec" tone="secondary">
+        <Text variant="sec">
           ¿Ya tienes cuenta?
         </Text>
         <Button variant="ghost" size="sm" label="Inicia sesión" onPress={() => router.back()} disabled={submitting} />

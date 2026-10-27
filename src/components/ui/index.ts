@@ -1,4 +1,4 @@
-// Mobile kit (manual 9). Screens import from '@/components/ui' and build only with these pieces.
+// Mobile kit (manual v2.0, section 12). Screens import from '@/components/ui' and build only with these pieces.
 export { Alert, FEEDBACK, type AlertProps, type FeedbackType } from './Alert';
 export { BottomSheet, type BottomSheetProps } from './BottomSheet';
 export { BrandSymbol, Logo } from './Brand';
@@ -8,6 +8,7 @@ export { Dialog, type DialogProps } from './Dialog';
 export { EmptyState, ErrorState, RETRY_LABEL, type EmptyStateProps, type ErrorStateProps } from './EmptyState';
 export { FilterChip, type FilterChipProps } from './FilterChip';
 export { FloatingSurface } from './FloatingSurface';
+export { GlassSurface, type GlassLevel, type GlassSurfaceProps } from './GlassSurface';
 export { GoogleLogo } from './GoogleLogo';
 export { Icon, type IconColor, type IconSize } from './Icon';
 export { IconButton, type IconButtonProps } from './IconButton';
@@ -23,3 +24,4 @@ export { StatusShape } from './StatusShape';
 export { Text, type TextProps, type TextTone, type TextVariant } from './Text';
 export { TextField, type TextFieldProps } from './TextField';
 export { ToastProvider, useToast, type ToastOptions } from './Toast';
+export { usePressScale } from './use-press-scale';
