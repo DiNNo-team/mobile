@@ -74,12 +74,12 @@ export default function LoginScreen() {
   };
 
   return (
-    <AuthScreen>
+    <AuthScreen tabs={{ active: 'signin', onSelect: () => router.push('/crear-cuenta') }}>
       <View className="gap-2">
         <Text variant="h1" accessibilityRole="header">
           Inicia sesión
         </Text>
-        <Text variant="body" tone="secondary">
+        <Text variant="body">
           Encuentra una mesa disponible ahora y asegúrala mientras llegas.
         </Text>
       </View>
@@ -161,7 +161,7 @@ export default function LoginScreen() {
       </View>
 
       <View className="flex-row flex-wrap items-center justify-center">
-        <Text variant="sec" tone="secondary">
+        <Text variant="sec">
           ¿No tienes cuenta?
         </Text>
         <Button variant="ghost" size="sm" label="Crea tu cuenta" onPress={() => router.push('/crear-cuenta')} disabled={busy} />

@@ -30,6 +30,16 @@ export const colorTokens = {
   inverse: 'inverseBg',
   'on-inverse': 'inverseText',
   'inverse-accent': 'inverseAccent',
+  // v2.0 (manual 16.6)
+  selection: 'selection',
+  'tint-ok': 'tintOk',
+  'tint-reserved': 'tintReserved',
+  'tint-busy': 'tintBusy',
+  'tint-limited': 'tintLimited',
+  'edge-ok': 'edgeOk',
+  'edge-reserved': 'edgeReserved',
+  'edge-busy': 'edgeBusy',
+  'edge-limited': 'edgeLimited',
 } as const satisfies Record<string, keyof Palette>;
 
 /** '#F46935' → '244 105 53', the format `rgb(var(--x) / <alpha-value>)` needs for `bg-ok/15`. */

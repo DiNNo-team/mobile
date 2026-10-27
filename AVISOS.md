@@ -4,6 +4,48 @@
 
 ---
 
+## 27 oct 2026 · Sebastián · `CLAUDE.md` apunta al manual v2.0 (sin PR todavía)
+
+- **`CLAUDE.md` (secciones 2 y 8, iguales en los tres repos):** el manual que manda ahora es el **v2.0** (`frontend/docs/DiNNo_Manual_Identidad_v2_0.md`); el v1.1 queda como histórico. Lo que el v2.0 todavía no implementa está en su sección 19. La sección 8 suma la decisión del plano de mesas.
+- **Sección 11 (este repo):** el vidrio va con `GlassSurface` (mapa y login), el movimiento con Reanimated (`usePressScale`, `useReducedMotion`) y la háptica solo con `src/lib/haptics.ts`.
+
+---
+
+## 26 oct 2026 (noche) · Sebastián · Manual de identidad v2.0 en la app (en curso, sin PR todavía)
+
+**Después del pull:**
+1. `npm install`.
+2. **Recompilar:** `npx expo prebuild --clean` y luego `npx expo run:android`. Hay dos dependencias nativas nuevas, aprobadas por Sebastián: `expo-blur` (vidrio del login en Android) y `expo-haptics` (toque háptico del botón principal).
+
+**Qué cambió**
+- **Tokens v2.0** (`src/theme/tokens.ts`):
+  - Títulos de 28.
+  - Etiquetas de 12 con mayúscula inicial; las variantes nuevas de `Text` son `kicker` y `metric`.
+  - Tintes y bordes de estado, vidrio de panel y curvas de motion.
+  - No cambió el valor de ningún color.
+- **Kit:**
+  - Todo lo que se toca se hunde al presionar (`usePressScale`).
+  - El botón `secondary` usa `inverse`, igual que la web (en oscuro es crema).
+  - `Card` va sin sombra en reposo; su `elevation` ahora es `resting · floating`.
+  - `GlassSurface` es nuevo, y `FloatingSurface` lo usa por dentro.
+  - La hoja inferior cierra con resorte y tiene resistencia elástica.
+- **Login y pantallas sin sesión:**
+  - Mismo mundo que el login web: crema con las dos formas de marca y la tarjeta de vidrio que sube al abrir.
+  - Pestañas Iniciar sesión / Crear cuenta con la barra naranja que se desliza.
+  - El texto sobre la tarjeta va en tinta.
+- **Explorar:** en la vista de mapa, el mapa ocupa toda la pantalla y el encabezado flota encima. La vista de lista no cambió.
+- **Detalle:** mapa estático arriba y una sola fila de estado (disponibilidad + "Abierto ahora").
+
+**Para quién**
+- **Jacobo:** crear cuenta, verificar correo y recuperar contraseña heredan el marco nuevo de `AuthScreen`. En crear cuenta se sumaron las pestañas. Quité `tone="secondary"` de los textos que quedan sobre el vidrio. La lógica no cambió.
+- **Sergio:** Perfil no cambió de estructura; solo hereda los tokens y el kit.
+- **Todos:** el manual v2.0 está en el repo `frontend` (`docs/DiNNo_Manual_Identidad_v2_0.md`).
+
+**Rama / PR**
+- `refactor/sprint2-app-v2`. Todavía sin commit ni PR.
+
+---
+
 ## 26 oct 2026 (tarde) · Sebastián · Búsqueda por dirección, logo de Google y cierre del Sprint 2
 
 **Después del pull:** `npm install`. No hay dependencias nuevas ni hay que recompilar: solo cambia JavaScript y una imagen.

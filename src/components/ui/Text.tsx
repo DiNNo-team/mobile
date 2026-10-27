@@ -1,6 +1,6 @@
 import { Text as NativeText, type TextProps as NativeTextProps } from 'react-native';
 
-/** Type scale of manual section 4; each variant carries its own Plus Jakarta Sans weight. */
+/** Type scale of manual v2.0 section 4; each variant carries its own Plus Jakarta Sans weight. */
 const variants = {
   display: 'text-display font-extrabold',
   h1: 'text-h1 font-extrabold',
@@ -8,7 +8,9 @@ const variants = {
   h3: 'text-h3 font-bold',
   body: 'text-body font-sans',
   sec: 'text-sec font-sans',
-  label: 'text-label font-bold uppercase',
+  label: 'text-label font-bold',
+  kicker: 'text-kicker font-bold uppercase',
+  metric: 'text-metric font-extrabold',
   figure: 'text-figure font-extrabold',
   button: 'text-button font-bold',
   fieldLabel: 'text-sec font-bold',

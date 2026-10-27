@@ -1,4 +1,4 @@
-// Tailwind only knows the DiNNo tokens (manual 16): the default palette, radii, shadows and text
+// Tailwind only knows the DiNNo tokens (manual v2.0, section 16): the default palette, radii, shadows and text
 // sizes are replaced, so `bg-slate-50`, `rounded-lg` or `text-5xl` do not exist in this app.
 // Colors read CSS variables that src/theme/ThemeProvider sets for light and dark
 // (values in src/theme/tokens.ts, names in src/theme/css-vars.ts; a test keeps both lists equal).
@@ -8,6 +8,8 @@ const colorNames = [
   'accent', 'accent-pressed', 'accent-text', 'on-accent', 'brand', 'on-brand',
   'ok', 'limited', 'reserved', 'busy', 'inactive', 'error', 'info',
   'inverse', 'on-inverse', 'inverse-accent',
+  // v2.0 (manual 16.6)
+  'selection', 'tint-ok', 'tint-reserved', 'tint-busy', 'tint-limited', 'edge-ok', 'edge-reserved', 'edge-busy', 'edge-limited',
 ];
 
 const colors = Object.fromEntries(colorNames.map((name) => [name, `rgb(var(--${name}) / <alpha-value>)`]));
@@ -24,12 +26,14 @@ module.exports = {
     fontWeight: {},
     fontSize: {
       display: ['48px', { lineHeight: '52px', letterSpacing: '-1.44px' }],
-      h1: ['32px', { lineHeight: '36px', letterSpacing: '-0.96px' }],
-      h2: ['24px', { lineHeight: '28px', letterSpacing: '-0.48px' }],
+      h1: ['28px', { lineHeight: '32px', letterSpacing: '-0.7px' }],
+      h2: ['22px', { lineHeight: '28px', letterSpacing: '-0.33px' }],
       h3: ['18px', { lineHeight: '24px', letterSpacing: '-0.18px' }],
       body: ['16px', { lineHeight: '24px' }],
       sec: ['14px', { lineHeight: '20px' }],
-      label: ['11px', { lineHeight: '14px', letterSpacing: '0.88px' }],
+      label: ['12px', { lineHeight: '16px', letterSpacing: '0.12px' }],
+      kicker: ['11px', { lineHeight: '14px', letterSpacing: '0.88px' }],
+      metric: ['28px', { lineHeight: '32px', letterSpacing: '-0.84px' }],
       figure: ['54px', { lineHeight: '54px', letterSpacing: '-2.16px' }],
       button: ['15px', { lineHeight: '20px' }],
       chip: ['12px', { lineHeight: '16px' }],

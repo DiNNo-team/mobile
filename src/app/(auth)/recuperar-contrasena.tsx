@@ -39,7 +39,7 @@ export default function RecoverPasswordScreen() {
         <Text variant="h1" accessibilityRole="header">
           Recupera tu contraseña
         </Text>
-        <Text variant="body" tone="secondary">
+        <Text variant="body">
           Escribe el correo de tu cuenta y te enviaremos un enlace para crear una contraseña nueva.
         </Text>
       </View>

@@ -64,6 +64,8 @@ interface ResultsMapProps {
   /** Only with the phone's position: the orange dot with the radar (decision of 15 oct). */
   userLocation?: Coordinates;
   /** Height covered by the floating cards at the bottom. */
+  /** Height of the floating header over the map, so the fit keeps the pins out from under it. */
+  topInset?: number;
   bottomInset: number;
 }
 
@@ -73,7 +75,7 @@ interface ResultsMapProps {
  * room for the cards comes from `edgePadding` when fitting the pins.
  * Pins use the availability shape and color; the selected one grows with the orange border.
  */
-export function ResultsMap({ ref, restaurants, selectedId, onSelect, center, radiusKm, userLocation, bottomInset }: ResultsMapProps) {
+export function ResultsMap({ ref, restaurants, selectedId, onSelect, center, radiusKm, userLocation, bottomInset, topInset = 0 }: ResultsMapProps) {
   const { colors, scheme } = useTheme();
   const map = useRef<MapView>(null);
   const [ready, setReady] = useState(false);
@@ -90,13 +92,13 @@ export function ResultsMap({ ref, restaurants, selectedId, onSelect, center, rad
       return;
     }
     map.current?.fitToCoordinates(points, {
-      edgePadding: { top: FIT_PADDING, right: FIT_PADDING, bottom: bottomInset + FIT_PADDING, left: FIT_PADDING },
+      edgePadding: { top: topInset + FIT_PADDING, right: FIT_PADDING, bottom: bottomInset + FIT_PADDING, left: FIT_PADDING },
       animated: true,
     });
   });
   useEffect(() => {
     if (ready) fitResults();
-  }, [ready, fitKey, bottomInset]);
+  }, [ready, fitKey, bottomInset, topInset]);
 
   useImperativeHandle(ref, () => ({
     focus: ({ latitude, longitude }) => map.current?.animateCamera({ center: { latitude, longitude } }, { duration: CAMERA_MS }),
