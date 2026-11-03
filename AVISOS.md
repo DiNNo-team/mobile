@@ -4,6 +4,36 @@
 
 ---
 
+## 3 nov 2026 · Elizabeth · Contratos del Sprint 3 publicados
+
+- **Contratos del Sprint 3 publicados en CLAUDE.md §12. Leer antes de empezar cualquier tarea del sprint.** Es la fuente de verdad para backend, web y app (microreserva, mesas con reserva activa, check-in, tiempo real y `errorCode` nuevos), y la sección es idéntica en los tres repos. Si algo no está ahí, se pregunta antes de inventarlo.
+- **Fechas del backend** (en `develop` y desplegado en Render, tabla §12.11): Día 2, `POST /v1/reservations`, `GET /v1/reservations/active` y `GET /v1/reservations/:id`; Día 3, cancelación y expiración automática; Día 4, WebSocket con salas y eventos de reserva. Mientras tanto, datos de ejemplo con exactamente las formas de §12.8, y consulta cada 30 s hasta el Día 4.
+- **Decisiones:** «Desactivar una mesa Ocupada o Reservada» queda **decidido** (§12.2): solo se desactiva una mesa `available` (es de la web; para la app no cambia nada). El adaptador de Redis para Socket.IO pasa al **Sprint 4**, con la migración a Azure (§12.7 y §12.10).
+- **Otros cambios en `CLAUDE.md`** (iguales en los tres repos): §1 marca el Sprint 3 como actual; §8 suma `source` y las entradas automáticas de la bitácora; §10 marca `GET /geocode` para comensales como fusionado (PR #46).
+
+### Por persona (Sprint 3)
+
+**Sebastián (app):**
+- **Rutas** (§12.8): `POST /v1/reservations` con `{ restaurantId, partySize }` (1 a 20; si el comensal ya filtró por personas, va precargado), `GET /v1/reservations/active` → `{ reservation: Reservation | null, serverTime }`, `GET /v1/reservations/:id` (cualquier estado, para mostrar el final) y `POST /v1/reservations/:id/cancel`.
+- **Forma de `Reservation`:** `{ id, code, status, partySize, createdAt, expiresAt, serverTime, cancelledAt, expiredAt, checkedInAt, restaurant: { id, name, address, latitude, longitude }, table: { identifier, capacity } }`. Fechas en ISO 8601 UTC; `cancelledAt`, `expiredAt` y `checkedInAt` en `null` cuando no aplican. `status`: `active`, `cancelled`, `expired` o `completed`.
+- **`code` llega en `null` cuando la reserva no está activa.** Solo se muestra con `status = active`.
+- **Temporizador con `expiresAt` y `serverTime`:** manda la hora del servidor. Calcula la diferencia entre `serverTime` y tu reloj, y cuenta hacia atrás hasta `expiresAt` con esa corrección. No uses solo el reloj del teléfono.
+- **Sala `diner:{userId}` y sus eventos:** el comensal entra a `diners` (como hoy) y a `diner:{userId}`, con el mismo handshake. Ahí llegan `reservation.cancelled`, `reservation.expired` y `reservation.checked_in` con `{ reservationId, status, tableId, at }`. `availability.changed` no cambia. Respaldo: volver a consultar al reconectar o volver a la pantalla, y la pantalla de reserva activa consulta cada 30 s.
+- **`errorCode` de reserva y sus textos** (§12.9), siempre por `errorCode`:
+  - `NO_TABLE_AVAILABLE` (409) → «Alguien acaba de tomar la última mesa. Prueba con otro restaurante.»
+  - `ACTIVE_RESERVATION_EXISTS` (409) → «Ya tienes una reserva activa» + botón *Ver mi reserva*.
+  - `RESTAURANT_CLOSED` (409) → «Este restaurante acaba de cerrar.»
+  - `RESERVATION_NOT_FOUND` (404) → la app vuelve a la búsqueda.
+  - `RESERVATION_NOT_ACTIVE` (409, al cancelar) → consulta `GET /v1/reservations/:id` y muestra el estado real.
+  - `POST /v1/reservations` responde además 404 si el restaurante no existe o no es visible, igual que el detalle público.
+
+**Sebastián (app): impacto de §12 en el código actual** (revisión de Elizabeth, 3 nov). Nada se rompe; es para tenerlo en cuenta al implementar:
+- **Un solo socket:** los eventos de reserva usan el mismo socket de `src/features/realtime/use-availability-realtime.ts`, montado en `src/app/(app)/_layout.tsx:14`. No se abre una segunda conexión.
+- **Volver a consultar la reserva activa:** al reconectar (`use-availability-realtime.ts:93`) y al volver del segundo plano (`use-availability-realtime.ts:111-113`), además de la búsqueda y el detalle, volver a consultar `GET /v1/reservations/active` (§12.7).
+- **`errorCode` de reserva:** agregar los de §12.9 a la lista cerrada de `src/lib/api/errors.ts:2-10`.
+
+---
+
 ## 27 oct 2026 · Sebastián · `CLAUDE.md` apunta al manual v2.0 (sin PR todavía)
 
 - **`CLAUDE.md` (secciones 2 y 8, iguales en los tres repos):** el manual que manda ahora es el **v2.0** (`frontend/docs/DiNNo_Manual_Identidad_v2_0.md`); el v1.1 queda como histórico. Lo que el v2.0 todavía no implementa está en su sección 19. La sección 8 suma la decisión del plano de mesas.
