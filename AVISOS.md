@@ -4,7 +4,38 @@
 
 ---
 
+## 6 nov 2026 · Elizabeth · Backend del Sprint 3: estado real y qué necesita cada cliente
+
+**Esta entrada prevalece sobre la del 3 nov** en lo que dice del estado y las fechas del backend.
+
+- **Hecho en la rama `feat/sprint3-backend`, AÚN NO en `develop` ni en Render:** crear reserva, reserva activa y por id, cancelar, expiración automática (cada 15 s y al arrancar), mesas con reserva activa protegidas, `activeReservationsCount`, check-in, lista de reservas del restaurante y bitácora con `source`.
+- **Pendiente:**
+  - Tarea 8: WebSocket con salas y eventos de reserva. Hasta entonces, consultar cada 30 s.
+  - Tarea 9: exportación anónima de datos para IA (CSV) y script `demo:reset` (planeadas, aún sin escribir).
+  - Tarea 10: cierre técnico y despliegue en Render + Neon.
+- **Mientras no esté en `develop`:** trabajar con datos de ejemplo con la forma exacta de §12, o probar contra el backend local de Elizabeth si lo coordinan con ella.
+- **§12 volvió a quedar idéntica en los tres repos** (cambió el párrafo de `GET /v1/table-logs` en §12.3). Ante cualquier duda manda §12, y se le pregunta a Elizabeth antes de inventar.
+
+### Por persona
+
+**Sebastián (app):**
+- **Cancelar** (`POST /v1/reservations/:id/cancel`): responde `200` con la reserva `cancelled`. Si la reserva ya no está activa (incluida una vencida) responde `409 RESERVATION_NOT_ACTIVE`, y la app debe consultar `GET /v1/reservations/:id` y mostrar el estado real. `404 RESERVATION_NOT_FOUND` es idéntico para «no existe» y «es de otro comensal» (mensaje «No encontramos esa reserva.»): volver a la búsqueda.
+- **`GET /v1/reservations/active`** devuelve `{ reservation: null, serverTime }` cuando no hay. Si la reserva venció, responde `null` (la vence al leer).
+- **`code`** solo viene con `status = active`; en los demás estados es `null`.
+- **Temporizador:** con `expiresAt` y `serverTime`. En 0 mostrar «Verificando…» y consultar al backend; el backend vence solo (cada 15 s), así que la consulta devolverá `expired`.
+- **Crear reserva** (`POST /v1/reservations`):
+  - Errores `NO_TABLE_AVAILABLE`, `ACTIVE_RESERVATION_EXISTS` (con el botón «Ver mi reserva») y `RESTAURANT_CLOSED`, con los textos de §12.9.
+  - `404 RESTAURANT_NOT_FOUND` si el restaurante no es visible.
+  - `400` si `partySize` no está entre 1 y 20.
+  - `400` con un UUID inválido en las rutas por id («El id de la reserva no es un UUID válido.»).
+- **Hasta que llegue el WebSocket (tarea 8):** consultar la reserva activa cada 30 s, al volver a la app y al reconectar.
+- **Para la web:** el manejo de los 409 de mesas por `errorCode` y lo del check-in está en el `AVISOS.md` de frontend; no cambia nada en la app.
+
+---
+
 ## 3 nov 2026 · Elizabeth · Contratos del Sprint 3 publicados
+
+> Reemplazada por la entrada del 6 nov (el backend aún no está en `develop` ni en Render; la bitácora se muestra según `source`).
 
 - **Contratos del Sprint 3 publicados en CLAUDE.md §12. Leer antes de empezar cualquier tarea del sprint.** Es la fuente de verdad para backend, web y app (microreserva, mesas con reserva activa, check-in, tiempo real y `errorCode` nuevos), y la sección es idéntica en los tres repos. Si algo no está ahí, se pregunta antes de inventarlo.
 - **Fechas del backend** (en `develop` y desplegado en Render, tabla §12.11): Día 2, `POST /v1/reservations`, `GET /v1/reservations/active` y `GET /v1/reservations/:id`; Día 3, cancelación y expiración automática; Día 4, WebSocket con salas y eventos de reserva. Mientras tanto, datos de ejemplo con exactamente las formas de §12.8, y consulta cada 30 s hasta el Día 4.
