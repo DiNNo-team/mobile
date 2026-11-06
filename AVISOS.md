@@ -4,15 +4,34 @@
 
 ---
 
+## 6 nov 2026 · Elizabeth · Sprint 3 backend: cierre y plan de merge
+
+**Esta entrada reemplaza la lista de «Pendiente» de la entrada de abajo («Backend del Sprint 3: estado real…», también del 6 nov), que queda tachada ahí:** el WebSocket (tarea 8), la exportación anónima de datos y `demo:reset` (tarea 9) ya están hechos en la rama.
+
+- **Estado:** tareas 1 a 10 del backend hechas en `feat/sprint3-backend`; el PR a `develop` está en proceso. **NO está desplegado aún:** ni `develop` ni Render lo tienen.
+- **Orden de merge (decidido; reemplaza cualquier orden anterior):**
+  1. PR del backend a `develop` (Render despliega solo). Hasta que Sebastián termine la web, nadie usa ni prueba la web.
+  2. PR de la web de Sebastián a `develop`: 409 de mesas por `errorCode`, bitácora por `source`, panel de reservas, check-in y cliente Socket.IO.
+  3. PR de la app a `develop`.
+  4. En la web, PR `develop` → `main` (Vercel despliega `main`; hasta entonces el trabajo no llega a la web real).
+  No hay pruebas ni demo hasta que (2) y (3) estén fusionados. Elizabeth avisa en el grupo cuando fusione el backend.
+- **Render:** variables `RESERVATION_TTL_MINUTES` (15; 3 solo durante la demo de expiración, y volver a 15 después) y `RESERVATION_EXPIRY_ENABLED` (`true`, que es el valor por defecto). `GET /v1/health` devuelve el `commit` desplegado. Una sola instancia: Socket.IO vive en la memoria del proceso; el adaptador de Redis pasa al Sprint 4.
+- **Pendientes:** (solo después de fusionar (2) y (3)) QA según §9 del plan del sprint: Jacobo (M1, M2, M3, M8, M9, T1; concurrencia M2 y M3 por HTTP en Render con 2 o más comensales), Sergio (M5, M6) y Santiago (M4, M7, M10, M11, M12, T2, y su matriz); prueba con Firebase real en web y app; prueba completa de la demo (sección 10 del plan del sprint), con `demo:reset` antes del ensayo (lo corre Elizabeth).
+- **Para Sebastián, lo que debe estar antes de la demo:**
+  - **Web:** panel de reservas (§12.8; además del socket, consulta cada 30 s), check-in (§12.6), mesas protegidas con los 409 por `errorCode` (§12.2 y §12.9), bitácora por `source` (§12.3) y cliente Socket.IO con el token del restaurante (§12.7; las salas se fijan al conectar, así que se reconecta después de registrar el restaurante).
+  - **App:** reservar (§12.1 y §12.9), reserva activa con temporizador calculado con `serverTime` y consulta cada 30 s (§12.1 y §12.7), cancelar, estados finales con `GET /v1/reservations/:id` (§12.8) y tiempo real por `diner:{userId}` (§12.7).
+- **Deuda para el Sprint 4:** paginar y ordenar el historial de reservas por más reciente; adaptador de Redis para Socket.IO; límite de peticiones y de conexiones WebSocket; mover `reservation.created` a un listener asíncrono si se nota la latencia; y el resto de la «Deuda conocida» de este archivo.
+
+---
 ## 6 nov 2026 · Elizabeth · Backend del Sprint 3: estado real y qué necesita cada cliente
 
 **Esta entrada prevalece sobre la del 3 nov** en lo que dice del estado y las fechas del backend.
 
 - **Hecho en la rama `feat/sprint3-backend`, AÚN NO en `develop` ni en Render:** crear reserva, reserva activa y por id, cancelar, expiración automática (cada 15 s y al arrancar), mesas con reserva activa protegidas, `activeReservationsCount`, check-in, lista de reservas del restaurante y bitácora con `source`.
-- **Pendiente:**
-  - Tarea 8: WebSocket con salas y eventos de reserva. Hasta entonces, consultar cada 30 s.
-  - Tarea 9: exportación anónima de datos para IA (CSV) y script `demo:reset` (planeadas, aún sin escribir).
-  - Tarea 10: cierre técnico y despliegue en Render + Neon.
+- **Pendiente (reemplazado por la entrada de cierre de arriba):**
+  - ~~Tarea 8: WebSocket con salas y eventos de reserva. Hasta entonces, consultar cada 30 s.~~ **Hecha** en la rama; la consulta cada 30 s queda como respaldo.
+  - ~~Tarea 9: exportación anónima de datos para IA (CSV) y script `demo:reset` (planeadas, aún sin escribir).~~ **Hecha** en la rama.
+  - ~~Tarea 10: cierre técnico y despliegue en Render + Neon.~~ El cierre documental está hecho; el despliegue ocurre cuando se fusione el backend a `develop`.
 - **Mientras no esté en `develop`:** trabajar con datos de ejemplo con la forma exacta de §12, o probar contra el backend local de Elizabeth si lo coordinan con ella.
 - **§12 volvió a quedar idéntica en los tres repos** (cambió el párrafo de `GET /v1/table-logs` en §12.3). Ante cualquier duda manda §12, y se le pregunta a Elizabeth antes de inventar.
 
@@ -28,7 +47,7 @@
   - `404 RESTAURANT_NOT_FOUND` si el restaurante no es visible.
   - `400` si `partySize` no está entre 1 y 20.
   - `400` con un UUID inválido en las rutas por id («El id de la reserva no es un UUID válido.»).
-- **Hasta que llegue el WebSocket (tarea 8):** consultar la reserva activa cada 30 s, al volver a la app y al reconectar.
+- **Tiempo real y respaldo:** el WebSocket ya está hecho en el backend (sala `diner:{userId}`, ver la entrada de cierre del 6 nov). Como respaldo, consulta la reserva activa cada 30 s, al volver a la app y al reconectar.
 - **Para la web:** el manejo de los 409 de mesas por `errorCode` y lo del check-in está en el `AVISOS.md` de frontend; no cambia nada en la app.
 
 ---
@@ -547,7 +566,7 @@ npx expo run:android
 - **`availability`:** `available`, `few` o `none` en la búsqueda; además `closed` en el detalle y en el WebSocket. Nunca llega un número de mesas.
 - **`distanceKm`:** número en km con 2 decimales; el formato («a 650 m», «a 1,4 km») lo hace la app. En el detalle solo viene si envías `lat` y `lng`.
 - **En el contrato, `category` y `address` pueden llegar en `null`**, tanto en la búsqueda como en el detalle (restaurantes creados antes del registro completo). Hoy `RestaurantSummary` en `src/features/search/types.ts` los tiene como no nulos; revisa también el tipo del detalle. **Hay que ajustarlos a `| null`** y mostrar un texto por defecto cuando falten.
-- **WebSocket:** `io(BASE_URL, { auth: async (cb) => cb({ token: await user.getIdToken() }) })`, con `auth` como función para que cada reconexión lleve un token vigente. Evento `availability.changed` → `{ restaurantId, availability, isOpenNow, isSearchable }`; usa `isSearchable` para quitar el restaurante o volver a consultar la búsqueda. `connect_error` trae el código en `error.message`: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_ACCOUNT` o `SERVER_ERROR`. **Socket.IO no reintenta solo una conexión rechazada:** con `SERVER_ERROR`, reintenta tú con espera creciente (por ejemplo 5 s, 15 s, 30 s) y mientras tanto sigue la consulta cada 60 s; con los demás códigos no reintentes. Respaldo: consultar al volver al primer plano, al reconectar y cada 60 s.
+- **WebSocket:** `io(BASE_URL, { auth: async (cb) => cb({ token: await user.getIdToken() }) })`, con `auth` como función para que cada reconexión lleve un token vigente. Evento `availability.changed` → `{ restaurantId, availability, isOpenNow, isSearchable }`; usa `isSearchable` para quitar el restaurante o volver a consultar la búsqueda. `connect_error` trae el código en `error.message`: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_REQUIRED` o `SERVER_ERROR` (el socket ya no envía `RESTAURANT_ACCOUNT`; sigue existiendo en HTTP). **Socket.IO no reintenta solo una conexión rechazada:** con `SERVER_ERROR`, reintenta tú con espera creciente (por ejemplo 5 s, 15 s, 30 s) y mientras tanto sigue la consulta cada 60 s; con los demás códigos no reintentes. Respaldo: consultar al volver al primer plano, al reconectar y cada 60 s.
 - **Para ver los eventos sin la app:** en el repo del backend, `node scripts/listen-availability.mjs` (README del backend, sección 6).
 
 **Jacobo (crear cuenta y verificación):**
@@ -560,7 +579,7 @@ npx expo run:android
 - **Perfil:** `GET /v1/me` → `{ id, email, displayName, role, restaurantId }`. En un comensal, `displayName` siempre trae valor; si llega `null`, muestra la parte del correo antes de `@`.
 - **Nombres exactos para la matriz:**
   - `errorCode` de HTTP: `EMAIL_NOT_VERIFIED`, `ACCOUNT_NOT_ENABLED`, `PROFILE_REQUIRED`, `DINER_ACCOUNT`, `RESTAURANT_ACCOUNT`, `RESTAURANT_REQUIRED`, `RESTAURANT_NOT_FOUND`, `ADDRESS_NOT_FOUND` y `GEOCODING_UNAVAILABLE`.
-  - Códigos del `connect_error` del WebSocket: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_ACCOUNT` y `SERVER_ERROR`.
+  - Códigos del `connect_error` del WebSocket: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_REQUIRED` y `SERVER_ERROR` (el socket ya no envía `RESTAURANT_ACCOUNT`; sigue existiendo en HTTP).
   - `availability`: `available`, `few`, `none` y `closed`.
 - **QA de tiempo real:** el script `scripts/listen-availability.mjs` vive en el repo del backend. Uso y ejemplos en el `AVISOS.md` del backend (sección de Sergio) y en su README, sección 6.
 
