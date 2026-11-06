@@ -353,7 +353,7 @@ Una microreserva dura como máximo 15 minutos y siempre termina sola (check-in, 
 - **Bitácora (`table_logs`):**
   - `user_id` pasa a ser nullable.
   - Se agrega la columna `source` (`'manual'` | `'reservation'` | `'system'`). Los registros existentes quedan con `source = 'manual'`.
-  - `GET /v1/table-logs` empieza a devolver `source` y puede traer el usuario en `null`. La web lo muestra como "Automático".
+  - `GET /v1/table-logs` empieza a devolver `source` y puede traer el usuario en `null` en dos casos: los cambios automáticos (`system`, sin usuario) y los de un comensal (`reservation`), cuyo correo nunca se le muestra al restaurante. La web muestra el texto según `source`: `manual` → el correo del admin · `reservation` con usuario en `null` → "Comensal" · `reservation` con correo (el check-in) → el correo del admin · `system` → "Automático".
 - La mesa vuelve a `available` solo si sigue en `reserved` por esa reserva. Nunca se pisa un estado que el restaurante cambió después.
 
 ### 12.4 Concurrencia (dos personas, una mesa)
