@@ -12,6 +12,7 @@ import { ActiveFilters } from '@/features/search/components/ActiveFilters';
 import { FiltersSheet } from '@/features/search/components/FiltersSheet';
 import { OriginSheet } from '@/features/search/components/OriginSheet';
 import { RestaurantCard, RestaurantListSkeleton } from '@/features/search/components/RestaurantCard';
+import { ActiveReservationBanner } from '@/features/reservations/components/ActiveReservationBanner';
 import { ResultsCarousel, type ResultsCarouselHandle } from '@/features/search/components/ResultsCarousel';
 import { ResultsMap, type ResultsMapHandle } from '@/features/search/components/ResultsMap';
 import { LocationIntro, NoResults, ZonePrompt } from '@/features/search/components/SearchStates';
@@ -198,6 +199,7 @@ export default function ExploreScreen() {
       {showMap ? null : (
         <>
           <ScreenHeader title="Explorar" subtitle={subtitle} className="px-4 pb-3" actions={changeZone} />
+          <ActiveReservationBanner className="mx-4 mb-3" />
           {controls ? <View className="gap-3 pb-3">{controls}</View> : null}
         </>
       )}
@@ -248,6 +250,7 @@ export default function ExploreScreen() {
               </View>
               {controls}
             </FloatingSurface>
+            <ActiveReservationBanner floating className="mt-2" />
             {search.isError ? (
               <Alert
                 type="error"

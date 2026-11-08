@@ -40,6 +40,8 @@ export const RESERVATION_TEXT = {
   createFailed: 'No pudimos reservar la mesa. Intenta de nuevo.',
   cancelFailed: 'No pudimos cancelar la reserva. Intenta de nuevo.',
   loadFailed: 'No pudimos cargar tu reserva.',
+  notFound: 'No encontramos esa reserva.',
+  notFoundDescription: 'Busca un restaurante con mesa disponible para reservar.',
 } as const;
 
 /** «Tu mesa queda reservada 15 minutos.» (`reservationTtlMinutes` of the detail; never fixed at 15). */

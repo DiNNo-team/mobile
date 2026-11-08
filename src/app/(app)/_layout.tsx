@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { SlowConnectionNotice } from '@/components/SlowConnectionNotice';
 import { env } from '@/config/env';
 import { useDinerSocketConnection } from '@/features/realtime/socket';
+import { useActiveReservation } from '@/features/reservations/queries';
 import { useAvailabilityRealtime } from '@/features/realtime/use-availability-realtime';
 
 /**
@@ -15,6 +16,9 @@ export default function AppLayout() {
   // One socket for the whole session (shared by availability and, from Sprint 3, the diner's reservations).
   useDinerSocketConnection(!env.useMocks);
   useAvailabilityRealtime();
+  // Sprint 3: the diner's reservation in course is read as soon as the session starts (opening the app, signing in) and
+  // again on returning to the foreground, so the detail, Explorar and the reservation screen agree from the first frame.
+  useActiveReservation();
   return (
     <View className="flex-1">
       <Stack screenOptions={{ headerShown: false }} />
