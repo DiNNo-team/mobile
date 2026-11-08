@@ -4,6 +4,21 @@
 
 ---
 
+## 8 nov 2026 · Sebastián · Reserva activa: cancelar, vencer, banner y recuperación
+
+- **Cancelar:** confirmación «¿Cancelar tu reserva? La mesa quedará libre para otra persona.» · «Sí, cancelar» / «Mantener reserva».
+  - Al cancelar, la pantalla pasa a «Cancelada», sin código.
+  - Si la reserva ya no estaba activa (`RESERVATION_NOT_ACTIVE`), se muestra su estado real.
+- **Al llegar a 0:** «Verificando…» y consulta al backend (cada 5 s hasta que confirme). Luego «Vencida» con «Buscar otra mesa».
+- **Banner en Explorar:** «Tienes una mesa reservada · 12:34», con el tiempo corriendo, en el mapa y en la lista. Lleva a la reserva y desaparece cuando deja de estar activa.
+- **Recuperación:** la reserva activa se pide al abrir la app y al iniciar sesión. El tiempo sale del servidor, así que cerrar y abrir la app lo conserva.
+- **Probado** en el emulador contra Render y con datos de ejemplo:
+  - Reservar → banner → cerrar y abrir la app (13:51, que cuadra con el tiempo real) → cancelar → «Cancelada» y el banner se va.
+  - Con el mock (3 min): llegar a 0 → «Vencida».
+- **Sin dependencias, variables ni cambios nativos.**
+
+---
+
 ## 8 nov 2026 · Sebastián · «Reservar mesa» en el detalle del restaurante
 
 - **El detalle** tiene «Reservar mesa» como acción principal.
