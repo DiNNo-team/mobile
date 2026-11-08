@@ -4,6 +4,230 @@
 
 ---
 
+## 8 nov 2026 · Sebastián · Qué le falta a cada uno para cerrar el Sprint 3
+
+**El código del Sprint 3 está completo:** el backend (Elizabeth), la web y la app (Sebastián) están en `develop`, y probamos todo de punta a punta contra Render. Ninguna tarea de código del flujo principal está pendiente. Lo que queda es probar, ensayar la demo y cerrar las tareas del reparto que no son del flujo principal.
+
+### Elizabeth
+- **Ensayo de la demo (Día 6, con Sebastián)**, siguiendo la sección 10 del reparto:
+  - Correr `demo:reset` antes de empezar.
+  - Poner `RESERVATION_TTL_MINUTES=3` en Render solo para el paso de expiración y **volver a 15 al terminar**.
+  - Despertar Render con `/v1/health`.
+- **Paso 11 de la demo:** mostrar en Swagger o en Neon la fila de `check_ins` del check-in.
+- **Vencimiento con 3 min contra Render:** el front solo lo probó con datos de ejemplo. Hay que verlo en el ensayo (la app pasa a «Vencida» y la fila sale del panel de la web).
+- **Para el Sprint 4 (no bloquea):** cuando ninguna mesa alcanza para el número de personas, el backend responde `NO_TABLE_AVAILABLE` y la app dice «Alguien acaba de tomar la última mesa…», que no describe ese caso. Propuesta: un `errorCode` distinto o un texto más general.
+- **CSV para la IA:** correr `export:data` y pasarle la carpeta a Santiago y Sergio cuando la pidan.
+
+### Jacobo
+- **QA:** M1, M2, M3, M8, M9 y T1, en la matriz de Santiago, con evidencia.
+- **Segunda cuenta de comensal:** hoy hay **una sola** (`dinnoteam2026+comensal@gmail.com`). Para M2 y M3 (dos comensales a la vez) crea otra con un alias `dinnoteam2026+algo@gmail.com` desde la app («Crear cuenta») y publica las credenciales en Discord (#usuarios-comensal), nunca en el repo.
+- **Script de concurrencia** (M2): varias peticiones `POST /v1/reservations` a la vez contra la última mesa de un restaurante → exactamente una 201 y las demás `409 NO_TABLE_AVAILABLE`. Sin credenciales en el script.
+- **Azure (PBI 7.1), según el reparto:** grupo de recursos `rg-dinno`, Container App de prueba con escala a cero, revisión de PostgreSQL y Redis (sin crearlos) y `docs/azure-migracion.md` en el backend.
+
+### Santiago
+- **QA:** M4, M7, M10, M11, M12 y T2, y consolidar la matriz.
+  - **M4:** cambiar la hora del teléfono **a mano desde Ajustes** (en el emulador no se puede por comando) y comprobar que el temporizador no cambia. Cerrar y abrir la app también debe conservar el tiempo.
+  - **M7:** probarlo cuando Render tenga `RESERVATION_TTL_MINUTES=3`, o esperar los 15 min.
+  - **M10:** web y app abiertas a la vez. Reservar, cancelar, vencer y hacer check-in deben cambiar las dos sin recargar.
+- **IA (PBI 6.1, con Sergio):** documento `docs/ia-diseno.md` y prototipo en `ai-prototype/`, en el backend.
+
+### Sergio
+- **QA:** M5 y M6 (cancelar: activa, ya cancelada, ya vencida y de otro comensal; la mesa vuelve a Disponible y la disponibilidad pública sube).
+- **IA (PBI 6.1, con Santiago).**
+- **Ajustes de dirección en la web** (prioridad baja, solo si el QA está completo). Sebastián revisa el PR.
+
+### Sebastián
+- Fusionar el PR `develop` → `main` de la web (Vercel publica `main`).
+- Mover en Azure las tareas de front, y pasar los PBIs 2.1 y 4.1 a Done cuando QA marque sus casos.
+- Ensayo con Elizabeth.
+- Ajustes visuales de la demo del Sprint 2 (después del Sprint 3).
+
+### Para todos los que prueben
+- **App:** usen el development build (`npx expo run:android`); un APK de release no lee de Metro. Corran Metro contra Render con `EXPO_PUBLIC_USE_MOCKS=false EXPO_PUBLIC_API_URL=https://dinno-backend.onrender.com npx expo start`.
+- **Render dormido:** la app muestra «Conectando con DiNNo…» y luego «Intentar de nuevo»; la web muestra skeletons. Esperen y reintenten.
+- **Después de `demo:reset`:** recarguen la web y reabran la app, porque el reset no emite eventos.
+- **Cada hallazgo** va a la matriz y a Azure (Bug), con pasos, resultado esperado, resultado obtenido, captura y a quién le corresponde.
+
+---
+
+## 8 nov 2026 · Sebastián · App del Sprint 3 completa: ya se puede hacer QA
+
+- **Toda la parte del comensal está en `develop`** (#30, #32, #33 y #34):
+  - «Reservar mesa» desde el detalle (personas y vigencia real).
+  - Reserva activa con código y temporizador del servidor.
+  - Cancelar.
+  - «Verificando…» → «Vencida».
+  - Banner en Explorar.
+  - Recuperación al abrir la app.
+  - «Cumplida» en vivo cuando el restaurante valida el código en la web.
+  
+  Con esto se cumple el paso 3 del orden de merge de Elizabeth.
+- **QA del Sprint 3:**
+  - Jacobo: M1, M2, M3, M8, M9 y T1. Para M2 y M3 hace falta **una segunda cuenta de comensal** (alias `dinnoteam2026+algo@gmail.com`); hoy hay una sola.
+  - Sergio: M5 y M6.
+  - Santiago: M4, M7, M10, M11, M12 y T2. En **M4**, cambia la hora del teléfono a mano desde Ajustes; en el emulador no se puede por comando.
+- **Cómo probar:**
+  - Usa el development build (`npx expo run:android`): un APK de release no lee de Metro.
+  - Abre Metro contra Render con `EXPO_PUBLIC_USE_MOCKS=false` y `EXPO_PUBLIC_API_URL=https://dinno-backend.onrender.com`.
+  - Si Render está dormido, la app muestra «Conectando con DiNNo…» y luego «Intentar de nuevo».
+- **Para la demo:** después de `demo:reset`, reabre la app (el reset no emite eventos). La vigencia de 3 min se ve en la hoja de reserva antes de reservar.
+
+---
+
+## 8 nov 2026 · Sebastián · Reserva en tiempo real en la app (check-in desde la web → «Cumplida»)
+
+- **La app escucha los eventos de su propia reserva** por el socket compartido: `reservation.cancelled`, `.expired` y `.checked_in`, de la sala `diner:{userId}`.
+  - Cuando el restaurante valida el código en la web, la app pasa sola a **«Cumplida · ¡Listo! Ya hiciste check-in en {restaurante}.»**, sin código y sin recargar, y lo avisa con un toast.
+  - Un vencimiento la pasa a «Vencida» con su aviso.
+  - El banner de Explorar y el botón del detalle cambian al mismo tiempo.
+- **Sin datos viejos:** al reconectar y al volver a la app se vuelve a pedir la reserva. La pantalla de la reserva sigue consultando cada 30 s como respaldo.
+- **Probado de punta a punta contra Render**, con la app en el emulador y la web local como Casa 72: reserva en la app → aparece en el panel de la web y la Mesa 04 pasa a «Reserva DiNNo» → «Validar código» con `qm8 7pb` → la web confirma y la app pasa a «Cumplida» sin recargar.
+- **Sin dependencias, variables ni cambios nativos.**
+
+---
+
+## 8 nov 2026 · Sebastián · Reserva activa: cancelar, vencer, banner y recuperación
+
+- **Cancelar:** confirmación «¿Cancelar tu reserva? La mesa quedará libre para otra persona.» · «Sí, cancelar» / «Mantener reserva».
+  - Al cancelar, la pantalla pasa a «Cancelada», sin código.
+  - Si la reserva ya no estaba activa (`RESERVATION_NOT_ACTIVE`), se muestra su estado real.
+- **Al llegar a 0:** «Verificando…» y consulta al backend (cada 5 s hasta que confirme). Luego «Vencida» con «Buscar otra mesa».
+- **Banner en Explorar:** «Tienes una mesa reservada · 12:34», con el tiempo corriendo, en el mapa y en la lista. Lleva a la reserva y desaparece cuando deja de estar activa.
+- **Recuperación:** la reserva activa se pide al abrir la app y al iniciar sesión. El tiempo sale del servidor, así que cerrar y abrir la app lo conserva.
+- **Probado** en el emulador contra Render y con datos de ejemplo:
+  - Reservar → banner → cerrar y abrir la app (13:51, que cuadra con el tiempo real) → cancelar → «Cancelada» y el banner se va.
+  - Con el mock (3 min): llegar a 0 → «Vencida».
+- **Sin dependencias, variables ni cambios nativos.**
+
+---
+
+## 8 nov 2026 · Sebastián · «Reservar mesa» en el detalle del restaurante
+
+- **El detalle** tiene «Reservar mesa» como acción principal.
+  - Está deshabilitado, con el motivo a la vista, si el restaurante está Cerrado o Sin mesas.
+  - Si el comensal ya tiene una reserva activa, el botón pasa a «Ver mi reserva».
+- **La hoja de reserva:**
+  - Personas de 1 a 20, precargadas con el filtro de la búsqueda.
+  - Resumen con la vigencia real del backend (`reservationTtlMinutes` del detalle: 15 min, o 3 en la demo).
+  - «Reservar ahora» → «Reservando…», sin doble toque.
+  - Al reservar, lleva a la pantalla de la reserva.
+  - Los errores tienen el texto exacto de §12.9. `ACTIVE_RESERVATION_EXISTS` ofrece «Ver mi reserva».
+- **Probado contra Render** con la cuenta del comensal en el emulador:
+  - Con 7 personas sale «Alguien acaba de tomar la última mesa…».
+  - Con 6 personas se crea la reserva en la Mesa 06, con código y temporizador del servidor.
+  - El detalle cambia a «Ver mi reserva».
+  - La disponibilidad sigue llegando en vivo por el socket compartido.
+- **Para probar en el emulador:** el APK de release que haya instalado no lee de Metro. Instala el development build con `npx expo run:android` (sin cambios nativos nuevos).
+- **Sin dependencias ni variables nuevas.**
+
+---
+
+## 8 nov 2026 · Sebastián · Base de reservas en la app y socket compartido
+
+- **Ruta nueva:** `src/app/(app)/reserva/[id].tsx`, la reserva del comensal.
+  - Activa: código grande, temporizador con la hora del servidor, restaurante, mesa, personas y «Cómo llegar».
+  - Estados finales: Vencida, Cancelada y Cumplida, sin código.
+  - Todavía no se llega desde el detalle: el botón «Reservar mesa» es la siguiente fase.
+- **Código nuevo:** `src/features/reservations/` (tipos de §12.8, API real y mock, textos, temporizador y consultas) y `src/lib/format/table.ts` («Mesa 04», «1 persona»).
+- **Modo mock** (`EXPO_PUBLIC_USE_MOCKS=true`): las reservas siguen las reglas del backend sobre los restaurantes de ejemplo.
+  - La reserva dura **3 minutos** para poder ver «Vencida».
+  - Restaurante cerrado → `RESTAURANT_CLOSED`. Más personas que su mesa más grande → `NO_TABLE_AVAILABLE`. Una segunda reserva → `ACTIVE_RESERVATION_EXISTS`.
+- **Tiempo real (cambio interno, mismo comportamiento):** el socket salió de `useAvailabilityRealtime` a `src/features/realtime/socket.ts`, con una conexión por sesión que comparten la disponibilidad y, desde el Sprint 3, las reservas. Para escuchar un evento nuevo usa `useDinerSocket()`; no abras otro socket.
+- **Kit:** `RESERVATION_STATUS_PRESENTATION` (Activa · Cumplida · Vencida · Cancelada), con las mismas palabras y formas de la web.
+- **Sin dependencias nuevas, sin variables de entorno y sin cambios nativos:** no hay que recompilar.
+
+---
+
+## 8 nov 2026 · Elizabeth · `reservationTtlMinutes` en el detalle público
+
+- **Qué es:** `GET /v1/restaurants/:id/public` incluye ahora `reservationTtlMinutes`: un entero entre 2 y 15 con la vigencia, en minutos, que tiene una microreserva en este momento. Es el mismo valor de `RESERVATION_TTL_MINUTES` con el que el backend crea las reservas (15 por defecto).
+- **Es aditivo:** ningún campo existente cambia ni se quita, y no hay rutas, variables ni tablas nuevas. El campo viene siempre, también si el restaurante está cerrado o sin mesas: la app decide cuándo mostrarlo.
+- **App:** puede mostrar la vigencia **antes** de reservar (el texto lo define la app). No la guardes fija en 15: en la demo de expiración el backend corre con `RESERVATION_TTL_MINUTES=3` y el valor cambia a 3.
+- **El temporizador no cambia:** la cuenta regresiva de la reserva sigue calculándose con `expiresAt` y `serverTime` de la respuesta de la reserva; `reservationTtlMinutes` es solo informativo.
+- **Despliegue:** el backend del Sprint 3 **sí** está desplegado en Render (commit `15be6cf`, PR #49); eso reemplaza el «NO está desplegado aún» de las entradas de cierre del 6 nov. El campo nuevo llega a Render cuando se fusione su PR (`feat/public-reservation-ttl`).
+
+---
+
+## 6 nov 2026 · Elizabeth · Sprint 3 backend: cierre y plan de merge
+
+**Esta entrada reemplaza la lista de «Pendiente» de la entrada de abajo («Backend del Sprint 3: estado real…», también del 6 nov), que queda tachada ahí:** el WebSocket (tarea 8), la exportación anónima de datos y `demo:reset` (tarea 9) ya están hechos en la rama.
+
+- **Estado:** tareas 1 a 10 del backend hechas en `feat/sprint3-backend`; el PR a `develop` está en proceso. ~~**NO está desplegado aún:** ni `develop` ni Render lo tienen.~~ **Ya está desplegado en Render** (commit `15be6cf`, PR #49); ver la entrada del 8 nov («`reservationTtlMinutes` en el detalle público»).
+- **Orden de merge (decidido; reemplaza cualquier orden anterior):**
+  1. PR del backend a `develop` (Render despliega solo). Hasta que Sebastián termine la web, nadie usa ni prueba la web.
+  2. PR de la web de Sebastián a `develop`: 409 de mesas por `errorCode`, bitácora por `source`, panel de reservas, check-in y cliente Socket.IO.
+  3. PR de la app a `develop`.
+  4. En la web, PR `develop` → `main` (Vercel despliega `main`; hasta entonces el trabajo no llega a la web real).
+  No hay pruebas ni demo hasta que (2) y (3) estén fusionados. Elizabeth avisa en el grupo cuando fusione el backend.
+- **Render:** variables `RESERVATION_TTL_MINUTES` (15; 3 solo durante la demo de expiración, y volver a 15 después) y `RESERVATION_EXPIRY_ENABLED` (`true`, que es el valor por defecto). `GET /v1/health` devuelve el `commit` desplegado. Una sola instancia: Socket.IO vive en la memoria del proceso; el adaptador de Redis pasa al Sprint 4.
+- **Pendientes:** (solo después de fusionar (2) y (3)) QA según §9 del plan del sprint: Jacobo (M1, M2, M3, M8, M9, T1; concurrencia M2 y M3 por HTTP en Render con 2 o más comensales), Sergio (M5, M6) y Santiago (M4, M7, M10, M11, M12, T2, y su matriz); prueba con Firebase real en web y app; prueba completa de la demo (sección 10 del plan del sprint), con `demo:reset` antes del ensayo (lo corre Elizabeth).
+- **Para Sebastián, lo que debe estar antes de la demo:**
+  - **Web:** panel de reservas (§12.8; además del socket, consulta cada 30 s), check-in (§12.6), mesas protegidas con los 409 por `errorCode` (§12.2 y §12.9), bitácora por `source` (§12.3) y cliente Socket.IO con el token del restaurante (§12.7; las salas se fijan al conectar, así que se reconecta después de registrar el restaurante).
+  - **App:** reservar (§12.1 y §12.9), reserva activa con temporizador calculado con `serverTime` y consulta cada 30 s (§12.1 y §12.7), cancelar, estados finales con `GET /v1/reservations/:id` (§12.8) y tiempo real por `diner:{userId}` (§12.7).
+- **Deuda para el Sprint 4:** paginar y ordenar el historial de reservas por más reciente; adaptador de Redis para Socket.IO; límite de peticiones y de conexiones WebSocket; mover `reservation.created` a un listener asíncrono si se nota la latencia; y el resto de la «Deuda conocida» de este archivo.
+
+---
+## 6 nov 2026 · Elizabeth · Backend del Sprint 3: estado real y qué necesita cada cliente
+
+**Esta entrada prevalece sobre la del 3 nov** en lo que dice del estado y las fechas del backend.
+
+- **Hecho en la rama `feat/sprint3-backend`, AÚN NO en `develop` ni en Render:** crear reserva, reserva activa y por id, cancelar, expiración automática (cada 15 s y al arrancar), mesas con reserva activa protegidas, `activeReservationsCount`, check-in, lista de reservas del restaurante y bitácora con `source`.
+- **Pendiente (reemplazado por la entrada de cierre de arriba):**
+  - ~~Tarea 8: WebSocket con salas y eventos de reserva. Hasta entonces, consultar cada 30 s.~~ **Hecha** en la rama; la consulta cada 30 s queda como respaldo.
+  - ~~Tarea 9: exportación anónima de datos para IA (CSV) y script `demo:reset` (planeadas, aún sin escribir).~~ **Hecha** en la rama.
+  - ~~Tarea 10: cierre técnico y despliegue en Render + Neon.~~ El cierre documental está hecho; el despliegue ocurre cuando se fusione el backend a `develop`.
+- **Mientras no esté en `develop`:** trabajar con datos de ejemplo con la forma exacta de §12, o probar contra el backend local de Elizabeth si lo coordinan con ella.
+- **§12 volvió a quedar idéntica en los tres repos** (cambió el párrafo de `GET /v1/table-logs` en §12.3). Ante cualquier duda manda §12, y se le pregunta a Elizabeth antes de inventar.
+
+### Por persona
+
+**Sebastián (app):**
+- **Cancelar** (`POST /v1/reservations/:id/cancel`): responde `200` con la reserva `cancelled`. Si la reserva ya no está activa (incluida una vencida) responde `409 RESERVATION_NOT_ACTIVE`, y la app debe consultar `GET /v1/reservations/:id` y mostrar el estado real. `404 RESERVATION_NOT_FOUND` es idéntico para «no existe» y «es de otro comensal» (mensaje «No encontramos esa reserva.»): volver a la búsqueda.
+- **`GET /v1/reservations/active`** devuelve `{ reservation: null, serverTime }` cuando no hay. Si la reserva venció, responde `null` (la vence al leer).
+- **`code`** solo viene con `status = active`; en los demás estados es `null`.
+- **Temporizador:** con `expiresAt` y `serverTime`. En 0 mostrar «Verificando…» y consultar al backend; el backend vence solo (cada 15 s), así que la consulta devolverá `expired`.
+- **Crear reserva** (`POST /v1/reservations`):
+  - Errores `NO_TABLE_AVAILABLE`, `ACTIVE_RESERVATION_EXISTS` (con el botón «Ver mi reserva») y `RESTAURANT_CLOSED`, con los textos de §12.9.
+  - `404 RESTAURANT_NOT_FOUND` si el restaurante no es visible.
+  - `400` si `partySize` no está entre 1 y 20.
+  - `400` con un UUID inválido en las rutas por id («El id de la reserva no es un UUID válido.»).
+- **Tiempo real y respaldo:** el WebSocket ya está hecho en el backend (sala `diner:{userId}`, ver la entrada de cierre del 6 nov). Como respaldo, consulta la reserva activa cada 30 s, al volver a la app y al reconectar.
+- **Para la web:** el manejo de los 409 de mesas por `errorCode` y lo del check-in está en el `AVISOS.md` de frontend; no cambia nada en la app.
+
+---
+
+## 3 nov 2026 · Elizabeth · Contratos del Sprint 3 publicados
+
+> Reemplazada por la entrada del 6 nov (el backend aún no está en `develop` ni en Render; la bitácora se muestra según `source`).
+
+- **Contratos del Sprint 3 publicados en CLAUDE.md §12. Leer antes de empezar cualquier tarea del sprint.** Es la fuente de verdad para backend, web y app (microreserva, mesas con reserva activa, check-in, tiempo real y `errorCode` nuevos), y la sección es idéntica en los tres repos. Si algo no está ahí, se pregunta antes de inventarlo.
+- **Fechas del backend** (en `develop` y desplegado en Render, tabla §12.11): Día 2, `POST /v1/reservations`, `GET /v1/reservations/active` y `GET /v1/reservations/:id`; Día 3, cancelación y expiración automática; Día 4, WebSocket con salas y eventos de reserva. Mientras tanto, datos de ejemplo con exactamente las formas de §12.8, y consulta cada 30 s hasta el Día 4.
+- **Decisiones:** «Desactivar una mesa Ocupada o Reservada» queda **decidido** (§12.2): solo se desactiva una mesa `available` (es de la web; para la app no cambia nada). El adaptador de Redis para Socket.IO pasa al **Sprint 4**, con la migración a Azure (§12.7 y §12.10).
+- **Otros cambios en `CLAUDE.md`** (iguales en los tres repos): §1 marca el Sprint 3 como actual; §8 suma `source` y las entradas automáticas de la bitácora; §10 marca `GET /geocode` para comensales como fusionado (PR #46).
+
+### Por persona (Sprint 3)
+
+**Sebastián (app):**
+- **Rutas** (§12.8): `POST /v1/reservations` con `{ restaurantId, partySize }` (1 a 20; si el comensal ya filtró por personas, va precargado), `GET /v1/reservations/active` → `{ reservation: Reservation | null, serverTime }`, `GET /v1/reservations/:id` (cualquier estado, para mostrar el final) y `POST /v1/reservations/:id/cancel`.
+- **Forma de `Reservation`:** `{ id, code, status, partySize, createdAt, expiresAt, serverTime, cancelledAt, expiredAt, checkedInAt, restaurant: { id, name, address, latitude, longitude }, table: { identifier, capacity } }`. Fechas en ISO 8601 UTC; `cancelledAt`, `expiredAt` y `checkedInAt` en `null` cuando no aplican. `status`: `active`, `cancelled`, `expired` o `completed`.
+- **`code` llega en `null` cuando la reserva no está activa.** Solo se muestra con `status = active`.
+- **Temporizador con `expiresAt` y `serverTime`:** manda la hora del servidor. Calcula la diferencia entre `serverTime` y tu reloj, y cuenta hacia atrás hasta `expiresAt` con esa corrección. No uses solo el reloj del teléfono.
+- **Sala `diner:{userId}` y sus eventos:** el comensal entra a `diners` (como hoy) y a `diner:{userId}`, con el mismo handshake. Ahí llegan `reservation.cancelled`, `reservation.expired` y `reservation.checked_in` con `{ reservationId, status, tableId, at }`. `availability.changed` no cambia. Respaldo: volver a consultar al reconectar o volver a la pantalla, y la pantalla de reserva activa consulta cada 30 s.
+- **`errorCode` de reserva y sus textos** (§12.9), siempre por `errorCode`:
+  - `NO_TABLE_AVAILABLE` (409) → «Alguien acaba de tomar la última mesa. Prueba con otro restaurante.»
+  - `ACTIVE_RESERVATION_EXISTS` (409) → «Ya tienes una reserva activa» + botón *Ver mi reserva*.
+  - `RESTAURANT_CLOSED` (409) → «Este restaurante acaba de cerrar.»
+  - `RESERVATION_NOT_FOUND` (404) → la app vuelve a la búsqueda.
+  - `RESERVATION_NOT_ACTIVE` (409, al cancelar) → consulta `GET /v1/reservations/:id` y muestra el estado real.
+  - `POST /v1/reservations` responde además 404 si el restaurante no existe o no es visible, igual que el detalle público.
+
+**Sebastián (app): impacto de §12 en el código actual** (revisión de Elizabeth, 3 nov). Nada se rompe; es para tenerlo en cuenta al implementar:
+- **Un solo socket:** los eventos de reserva usan el mismo socket de `src/features/realtime/use-availability-realtime.ts`, montado en `src/app/(app)/_layout.tsx:14`. No se abre una segunda conexión.
+- **Volver a consultar la reserva activa:** al reconectar (`use-availability-realtime.ts:93`) y al volver del segundo plano (`use-availability-realtime.ts:111-113`), además de la búsqueda y el detalle, volver a consultar `GET /v1/reservations/active` (§12.7).
+- **`errorCode` de reserva:** agregar los de §12.9 a la lista cerrada de `src/lib/api/errors.ts:2-10`.
+
+---
+
 ## 27 oct 2026 · Sebastián · `CLAUDE.md` apunta al manual v2.0 (sin PR todavía)
 
 - **`CLAUDE.md` (secciones 2 y 8, iguales en los tres repos):** el manual que manda ahora es el **v2.0** (`frontend/docs/DiNNo_Manual_Identidad_v2_0.md`); el v1.1 queda como histórico. Lo que el v2.0 todavía no implementa está en su sección 19. La sección 8 suma la decisión del plano de mesas.
@@ -486,7 +710,7 @@ npx expo run:android
 - **`availability`:** `available`, `few` o `none` en la búsqueda; además `closed` en el detalle y en el WebSocket. Nunca llega un número de mesas.
 - **`distanceKm`:** número en km con 2 decimales; el formato («a 650 m», «a 1,4 km») lo hace la app. En el detalle solo viene si envías `lat` y `lng`.
 - **En el contrato, `category` y `address` pueden llegar en `null`**, tanto en la búsqueda como en el detalle (restaurantes creados antes del registro completo). Hoy `RestaurantSummary` en `src/features/search/types.ts` los tiene como no nulos; revisa también el tipo del detalle. **Hay que ajustarlos a `| null`** y mostrar un texto por defecto cuando falten.
-- **WebSocket:** `io(BASE_URL, { auth: async (cb) => cb({ token: await user.getIdToken() }) })`, con `auth` como función para que cada reconexión lleve un token vigente. Evento `availability.changed` → `{ restaurantId, availability, isOpenNow, isSearchable }`; usa `isSearchable` para quitar el restaurante o volver a consultar la búsqueda. `connect_error` trae el código en `error.message`: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_ACCOUNT` o `SERVER_ERROR`. **Socket.IO no reintenta solo una conexión rechazada:** con `SERVER_ERROR`, reintenta tú con espera creciente (por ejemplo 5 s, 15 s, 30 s) y mientras tanto sigue la consulta cada 60 s; con los demás códigos no reintentes. Respaldo: consultar al volver al primer plano, al reconectar y cada 60 s.
+- **WebSocket:** `io(BASE_URL, { auth: async (cb) => cb({ token: await user.getIdToken() }) })`, con `auth` como función para que cada reconexión lleve un token vigente. Evento `availability.changed` → `{ restaurantId, availability, isOpenNow, isSearchable }`; usa `isSearchable` para quitar el restaurante o volver a consultar la búsqueda. `connect_error` trae el código en `error.message`: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_REQUIRED` o `SERVER_ERROR` (el socket ya no envía `RESTAURANT_ACCOUNT`; sigue existiendo en HTTP). **Socket.IO no reintenta solo una conexión rechazada:** con `SERVER_ERROR`, reintenta tú con espera creciente (por ejemplo 5 s, 15 s, 30 s) y mientras tanto sigue la consulta cada 60 s; con los demás códigos no reintentes. Respaldo: consultar al volver al primer plano, al reconectar y cada 60 s.
 - **Para ver los eventos sin la app:** en el repo del backend, `node scripts/listen-availability.mjs` (README del backend, sección 6).
 
 **Jacobo (crear cuenta y verificación):**
@@ -499,7 +723,7 @@ npx expo run:android
 - **Perfil:** `GET /v1/me` → `{ id, email, displayName, role, restaurantId }`. En un comensal, `displayName` siempre trae valor; si llega `null`, muestra la parte del correo antes de `@`.
 - **Nombres exactos para la matriz:**
   - `errorCode` de HTTP: `EMAIL_NOT_VERIFIED`, `ACCOUNT_NOT_ENABLED`, `PROFILE_REQUIRED`, `DINER_ACCOUNT`, `RESTAURANT_ACCOUNT`, `RESTAURANT_REQUIRED`, `RESTAURANT_NOT_FOUND`, `ADDRESS_NOT_FOUND` y `GEOCODING_UNAVAILABLE`.
-  - Códigos del `connect_error` del WebSocket: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_ACCOUNT` y `SERVER_ERROR`.
+  - Códigos del `connect_error` del WebSocket: `UNAUTHORIZED`, `EMAIL_NOT_VERIFIED`, `PROFILE_REQUIRED`, `RESTAURANT_REQUIRED` y `SERVER_ERROR` (el socket ya no envía `RESTAURANT_ACCOUNT`; sigue existiendo en HTTP).
   - `availability`: `available`, `few`, `none` y `closed`.
 - **QA de tiempo real:** el script `scripts/listen-availability.mjs` vive en el repo del backend. Uso y ejemplos en el `AVISOS.md` del backend (sección de Sergio) y en su README, sección 6.
 
