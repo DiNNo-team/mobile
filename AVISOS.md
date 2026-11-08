@@ -4,6 +4,22 @@
 
 ---
 
+## 8 nov 2026 · Sebastián · Base de reservas en la app y socket compartido
+
+- **Ruta nueva:** `src/app/(app)/reserva/[id].tsx`, la reserva del comensal.
+  - Activa: código grande, temporizador con la hora del servidor, restaurante, mesa, personas y «Cómo llegar».
+  - Estados finales: Vencida, Cancelada y Cumplida, sin código.
+  - Todavía no se llega desde el detalle: el botón «Reservar mesa» es la siguiente fase.
+- **Código nuevo:** `src/features/reservations/` (tipos de §12.8, API real y mock, textos, temporizador y consultas) y `src/lib/format/table.ts` («Mesa 04», «1 persona»).
+- **Modo mock** (`EXPO_PUBLIC_USE_MOCKS=true`): las reservas siguen las reglas del backend sobre los restaurantes de ejemplo.
+  - La reserva dura **3 minutos** para poder ver «Vencida».
+  - Restaurante cerrado → `RESTAURANT_CLOSED`. Más personas que su mesa más grande → `NO_TABLE_AVAILABLE`. Una segunda reserva → `ACTIVE_RESERVATION_EXISTS`.
+- **Tiempo real (cambio interno, mismo comportamiento):** el socket salió de `useAvailabilityRealtime` a `src/features/realtime/socket.ts`, con una conexión por sesión que comparten la disponibilidad y, desde el Sprint 3, las reservas. Para escuchar un evento nuevo usa `useDinerSocket()`; no abras otro socket.
+- **Kit:** `RESERVATION_STATUS_PRESENTATION` (Activa · Cumplida · Vencida · Cancelada), con las mismas palabras y formas de la web.
+- **Sin dependencias nuevas, sin variables de entorno y sin cambios nativos:** no hay que recompilar.
+
+---
+
 ## 6 nov 2026 · Elizabeth · Sprint 3 backend: cierre y plan de merge
 
 **Esta entrada reemplaza la lista de «Pendiente» de la entrada de abajo («Backend del Sprint 3: estado real…», también del 6 nov), que queda tachada ahí:** el WebSocket (tarea 8), la exportación anónima de datos y `demo:reset` (tarea 9) ya están hechos en la rama.
