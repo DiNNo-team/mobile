@@ -420,6 +420,7 @@ Todo va bajo `/v1`, con `Authorization: Bearer <token de Firebase>` y el formato
 | GET | `/v1/table-logs` | restaurant_admin | igual que hoy | ahora incluye `source`; el usuario puede venir en `null` |
 
 - Un `restaurant_admin` que llama a las rutas de diner, o un diner que llama a las de `restaurant_admin`, recibe los errores de rol que ya existen (`DINER_ACCOUNT` / `RESTAURANT_ACCOUNT`).
+- `GET /v1/restaurants/:id/public` incluye `reservationTtlMinutes` (vigencia vigente de una microreserva, en minutos; sirve para mostrarla antes de reservar; el tiempo real sigue saliendo de `expiresAt`).
 
 **`Reservation`** (la ve el comensal):
 `{ id, code, status, partySize, createdAt, expiresAt, serverTime, cancelledAt, expiredAt, checkedInAt, restaurant: { id, name, address, latitude, longitude }, table: { identifier, capacity } }`
