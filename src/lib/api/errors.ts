@@ -8,6 +8,12 @@ export const ErrorCode = {
   AddressNotFound: 'ADDRESS_NOT_FOUND',
   /** GET /geocode: Google did not answer or the daily quota ran out. */
   GeocodingUnavailable: 'GEOCODING_UNAVAILABLE',
+  // Sprint 3 (CLAUDE.md §12.9): reservations of the diner.
+  NoTableAvailable: 'NO_TABLE_AVAILABLE',
+  ActiveReservationExists: 'ACTIVE_RESERVATION_EXISTS',
+  RestaurantClosed: 'RESTAURANT_CLOSED',
+  ReservationNotFound: 'RESERVATION_NOT_FOUND',
+  ReservationNotActive: 'RESERVATION_NOT_ACTIVE',
 } as const;
 
 export type ApiErrorKind = 'http' | 'network' | 'timeout';
