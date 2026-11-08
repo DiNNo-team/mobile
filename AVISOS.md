@@ -4,6 +4,52 @@
 
 ---
 
+## 8 nov 2026 · Sebastián · Qué le falta a cada uno para cerrar el Sprint 3
+
+**El código del Sprint 3 está completo:** el backend (Elizabeth), la web y la app (Sebastián) están en `develop`, y probamos todo de punta a punta contra Render. Ninguna tarea de código del flujo principal está pendiente. Lo que queda es probar, ensayar la demo y cerrar las tareas del reparto que no son del flujo principal.
+
+### Elizabeth
+- **Ensayo de la demo (Día 6, con Sebastián)**, siguiendo la sección 10 del reparto:
+  - Correr `demo:reset` antes de empezar.
+  - Poner `RESERVATION_TTL_MINUTES=3` en Render solo para el paso de expiración y **volver a 15 al terminar**.
+  - Despertar Render con `/v1/health`.
+- **Paso 11 de la demo:** mostrar en Swagger o en Neon la fila de `check_ins` del check-in.
+- **Vencimiento con 3 min contra Render:** el front solo lo probó con datos de ejemplo. Hay que verlo en el ensayo (la app pasa a «Vencida» y la fila sale del panel de la web).
+- **Para el Sprint 4 (no bloquea):** cuando ninguna mesa alcanza para el número de personas, el backend responde `NO_TABLE_AVAILABLE` y la app dice «Alguien acaba de tomar la última mesa…», que no describe ese caso. Propuesta: un `errorCode` distinto o un texto más general.
+- **CSV para la IA:** correr `export:data` y pasarle la carpeta a Santiago y Sergio cuando la pidan.
+
+### Jacobo
+- **QA:** M1, M2, M3, M8, M9 y T1, en la matriz de Santiago, con evidencia.
+- **Segunda cuenta de comensal:** hoy hay **una sola** (`dinnoteam2026+comensal@gmail.com`). Para M2 y M3 (dos comensales a la vez) crea otra con un alias `dinnoteam2026+algo@gmail.com` desde la app («Crear cuenta») y publica las credenciales en Discord (#usuarios-comensal), nunca en el repo.
+- **Script de concurrencia** (M2): varias peticiones `POST /v1/reservations` a la vez contra la última mesa de un restaurante → exactamente una 201 y las demás `409 NO_TABLE_AVAILABLE`. Sin credenciales en el script.
+- **Azure (PBI 7.1), según el reparto:** grupo de recursos `rg-dinno`, Container App de prueba con escala a cero, revisión de PostgreSQL y Redis (sin crearlos) y `docs/azure-migracion.md` en el backend.
+
+### Santiago
+- **QA:** M4, M7, M10, M11, M12 y T2, y consolidar la matriz.
+  - **M4:** cambiar la hora del teléfono **a mano desde Ajustes** (en el emulador no se puede por comando) y comprobar que el temporizador no cambia. Cerrar y abrir la app también debe conservar el tiempo.
+  - **M7:** probarlo cuando Render tenga `RESERVATION_TTL_MINUTES=3`, o esperar los 15 min.
+  - **M10:** web y app abiertas a la vez. Reservar, cancelar, vencer y hacer check-in deben cambiar las dos sin recargar.
+- **IA (PBI 6.1, con Sergio):** documento `docs/ia-diseno.md` y prototipo en `ai-prototype/`, en el backend.
+
+### Sergio
+- **QA:** M5 y M6 (cancelar: activa, ya cancelada, ya vencida y de otro comensal; la mesa vuelve a Disponible y la disponibilidad pública sube).
+- **IA (PBI 6.1, con Santiago).**
+- **Ajustes de dirección en la web** (prioridad baja, solo si el QA está completo). Sebastián revisa el PR.
+
+### Sebastián
+- Fusionar el PR `develop` → `main` de la web (Vercel publica `main`).
+- Mover en Azure las tareas de front, y pasar los PBIs 2.1 y 4.1 a Done cuando QA marque sus casos.
+- Ensayo con Elizabeth.
+- Ajustes visuales de la demo del Sprint 2 (después del Sprint 3).
+
+### Para todos los que prueben
+- **App:** usen el development build (`npx expo run:android`); un APK de release no lee de Metro. Corran Metro contra Render con `EXPO_PUBLIC_USE_MOCKS=false EXPO_PUBLIC_API_URL=https://dinno-backend.onrender.com npx expo start`.
+- **Render dormido:** la app muestra «Conectando con DiNNo…» y luego «Intentar de nuevo»; la web muestra skeletons. Esperen y reintenten.
+- **Después de `demo:reset`:** recarguen la web y reabran la app, porque el reset no emite eventos.
+- **Cada hallazgo** va a la matriz y a Azure (Bug), con pasos, resultado esperado, resultado obtenido, captura y a quién le corresponde.
+
+---
+
 ## 8 nov 2026 · Sebastián · App del Sprint 3 completa: ya se puede hacer QA
 
 - **Toda la parte del comensal está en `develop`** (#30, #32, #33 y #34):
