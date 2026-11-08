@@ -4,6 +4,18 @@
 
 ---
 
+## 8 nov 2026 · Sebastián · Reserva en tiempo real en la app (check-in desde la web → «Cumplida»)
+
+- **La app escucha los eventos de su propia reserva** por el socket compartido: `reservation.cancelled`, `.expired` y `.checked_in`, de la sala `diner:{userId}`.
+  - Cuando el restaurante valida el código en la web, la app pasa sola a **«Cumplida · ¡Listo! Ya hiciste check-in en {restaurante}.»**, sin código y sin recargar, y lo avisa con un toast.
+  - Un vencimiento la pasa a «Vencida» con su aviso.
+  - El banner de Explorar y el botón del detalle cambian al mismo tiempo.
+- **Sin datos viejos:** al reconectar y al volver a la app se vuelve a pedir la reserva. La pantalla de la reserva sigue consultando cada 30 s como respaldo.
+- **Probado de punta a punta contra Render**, con la app en el emulador y la web local como Casa 72: reserva en la app → aparece en el panel de la web y la Mesa 04 pasa a «Reserva DiNNo» → «Validar código» con `qm8 7pb` → la web confirma y la app pasa a «Cumplida» sin recargar.
+- **Sin dependencias, variables ni cambios nativos.**
+
+---
+
 ## 8 nov 2026 · Sebastián · Reserva activa: cancelar, vencer, banner y recuperación
 
 - **Cancelar:** confirmación «¿Cancelar tu reserva? La mesa quedará libre para otra persona.» · «Sí, cancelar» / «Mantener reserva».
