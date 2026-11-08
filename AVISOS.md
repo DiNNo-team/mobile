@@ -20,11 +20,21 @@
 
 ---
 
+## 8 nov 2026 · Elizabeth · `reservationTtlMinutes` en el detalle público
+
+- **Qué es:** `GET /v1/restaurants/:id/public` incluye ahora `reservationTtlMinutes`: un entero entre 2 y 15 con la vigencia, en minutos, que tiene una microreserva en este momento. Es el mismo valor de `RESERVATION_TTL_MINUTES` con el que el backend crea las reservas (15 por defecto).
+- **Es aditivo:** ningún campo existente cambia ni se quita, y no hay rutas, variables ni tablas nuevas. El campo viene siempre, también si el restaurante está cerrado o sin mesas: la app decide cuándo mostrarlo.
+- **App:** puede mostrar la vigencia **antes** de reservar (el texto lo define la app). No la guardes fija en 15: en la demo de expiración el backend corre con `RESERVATION_TTL_MINUTES=3` y el valor cambia a 3.
+- **El temporizador no cambia:** la cuenta regresiva de la reserva sigue calculándose con `expiresAt` y `serverTime` de la respuesta de la reserva; `reservationTtlMinutes` es solo informativo.
+- **Despliegue:** el backend del Sprint 3 **sí** está desplegado en Render (commit `15be6cf`, PR #49); eso reemplaza el «NO está desplegado aún» de las entradas de cierre del 6 nov. El campo nuevo llega a Render cuando se fusione su PR (`feat/public-reservation-ttl`).
+
+---
+
 ## 6 nov 2026 · Elizabeth · Sprint 3 backend: cierre y plan de merge
 
 **Esta entrada reemplaza la lista de «Pendiente» de la entrada de abajo («Backend del Sprint 3: estado real…», también del 6 nov), que queda tachada ahí:** el WebSocket (tarea 8), la exportación anónima de datos y `demo:reset` (tarea 9) ya están hechos en la rama.
 
-- **Estado:** tareas 1 a 10 del backend hechas en `feat/sprint3-backend`; el PR a `develop` está en proceso. **NO está desplegado aún:** ni `develop` ni Render lo tienen.
+- **Estado:** tareas 1 a 10 del backend hechas en `feat/sprint3-backend`; el PR a `develop` está en proceso. ~~**NO está desplegado aún:** ni `develop` ni Render lo tienen.~~ **Ya está desplegado en Render** (commit `15be6cf`, PR #49); ver la entrada del 8 nov («`reservationTtlMinutes` en el detalle público»).
 - **Orden de merge (decidido; reemplaza cualquier orden anterior):**
   1. PR del backend a `develop` (Render despliega solo). Hasta que Sebastián termine la web, nadie usa ni prueba la web.
   2. PR de la web de Sebastián a `develop`: 409 de mesas por `errorCode`, bitácora por `source`, panel de reservas, check-in y cliente Socket.IO.
