@@ -1,10 +1,10 @@
 import { QueryClient } from '@tanstack/react-query';
 
 import { reservationKeys, storeReservation, type TimedReservation } from './queries';
+import type { Reservation } from './types';
 
 /** Without the cache's garbage-collection timer, so Jest exits at once. */
 const newClient = () => new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
-import type { Reservation } from './types';
 
 const base: Reservation = {
   id: 'r1',
