@@ -233,7 +233,7 @@ Todos bajo `/v1`, con `Authorization: Bearer <token de Firebase>`.
 
 ## 11. Este repositorio: mobile (app del comensal)
 
-> **Sprint 2:** Sebastián es dueño de la app (revisa todos los PR de mobile). Jacobo hace Google Sign-In, crear cuenta y verificación de correo; Sergio, la pestaña Perfil. No agregues funcionalidades sin un PBI asignado.
+> **Sprint 2:** Sebastián es dueño de la app (revisa todos los PR de mobile). Jacobo hace Google Sign-In, crear cuenta y verificación de correo; Sergio, la pestaña Perfil. **Sprint 3:** Sebastián hizo las microreservas del comensal (reservar, reserva activa, cancelar, estados finales y tiempo real). No agregues funcionalidades sin un PBI asignado.
 
 ### Cómo corre la app
 - **Development build en el emulador de Android Studio** (`npx expo run:android`), **nunca Expo Go**: Google Sign-In y Google Maps necesitan código nativo y el paquete propio `com.dinno.app`. Requisitos e instalación en el README.
