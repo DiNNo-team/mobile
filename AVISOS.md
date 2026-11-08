@@ -4,6 +4,27 @@
 
 ---
 
+## 8 nov 2026 · Sebastián · «Reservar mesa» en el detalle del restaurante
+
+- **El detalle** tiene «Reservar mesa» como acción principal.
+  - Está deshabilitado, con el motivo a la vista, si el restaurante está Cerrado o Sin mesas.
+  - Si el comensal ya tiene una reserva activa, el botón pasa a «Ver mi reserva».
+- **La hoja de reserva:**
+  - Personas de 1 a 20, precargadas con el filtro de la búsqueda.
+  - Resumen con la vigencia real del backend (`reservationTtlMinutes` del detalle: 15 min, o 3 en la demo).
+  - «Reservar ahora» → «Reservando…», sin doble toque.
+  - Al reservar, lleva a la pantalla de la reserva.
+  - Los errores tienen el texto exacto de §12.9. `ACTIVE_RESERVATION_EXISTS` ofrece «Ver mi reserva».
+- **Probado contra Render** con la cuenta del comensal en el emulador:
+  - Con 7 personas sale «Alguien acaba de tomar la última mesa…».
+  - Con 6 personas se crea la reserva en la Mesa 06, con código y temporizador del servidor.
+  - El detalle cambia a «Ver mi reserva».
+  - La disponibilidad sigue llegando en vivo por el socket compartido.
+- **Para probar en el emulador:** el APK de release que haya instalado no lee de Metro. Instala el development build con `npx expo run:android` (sin cambios nativos nuevos).
+- **Sin dependencias ni variables nuevas.**
+
+---
+
 ## 8 nov 2026 · Sebastián · Base de reservas en la app y socket compartido
 
 - **Ruta nueva:** `src/app/(app)/reserva/[id].tsx`, la reserva del comensal.

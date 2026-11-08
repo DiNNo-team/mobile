@@ -29,8 +29,12 @@ function toSummary(restaurant: MockRestaurant, from: Coordinates): RestaurantSum
   return { id, name, category, address, latitude, longitude, availability, distanceKm: distanceKm(from, restaurant) };
 }
 
+/** Same as the reservations mock: its reservations last 3 minutes (like the expiry demo). */
+const MOCK_RESERVATION_TTL_MINUTES = 3;
+
 function toDetail(restaurant: MockRestaurant, from?: Coordinates): RestaurantDetail {
-  const { searchable: _searchable, maxFreeCapacity: _maxFreeCapacity, ...detail } = restaurant;
+  const { searchable: _searchable, maxFreeCapacity: _maxFreeCapacity, ...rest } = restaurant;
+  const detail = { ...rest, reservationTtlMinutes: MOCK_RESERVATION_TTL_MINUTES };
   return from ? { ...detail, distanceKm: distanceKm(from, restaurant) } : detail;
 }
 

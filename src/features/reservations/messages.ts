@@ -1,3 +1,4 @@
+import type { RestaurantDetail } from '@/features/search/types';
 import { ApiError, ErrorCode, getErrorMessage } from '@/lib/api/errors';
 
 // The single map `errorCode → text` of the app for Sprint 3 (CLAUDE.md §12.9, reparto 9.2 and the decisions of the
@@ -16,8 +17,14 @@ export const RESERVATION_TEXT = {
   cancelling: 'Cancelando…',
   verifying: 'Verificando…',
   searchAnother: 'Buscar otra mesa',
-  /** H1: the TTL is not known before reserving (15 min, or 3 in the expiry demo). */
+  /** H1 fallback, when the detail does not bring `reservationTtlMinutes`. */
   validity: 'Te guardamos la mesa unos minutos. El tiempo exacto aparece al confirmar.',
+  sheetTitle: 'Reservar mesa',
+  peopleLabel: 'Personas',
+  summaryRestaurant: 'Restaurante',
+  summaryPeople: 'Personas',
+  summaryValidity: 'Vigencia',
+  activeElsewhere: 'Ya tienes una mesa reservada.',
   expired: 'Tu reserva se venció. La mesa quedó libre.',
   cancelled: 'Cancelaste tu reserva. La mesa quedó libre.',
   codeLabel: 'Tu código',
@@ -34,6 +41,17 @@ export const RESERVATION_TEXT = {
   cancelFailed: 'No pudimos cancelar la reserva. Intenta de nuevo.',
   loadFailed: 'No pudimos cargar tu reserva.',
 } as const;
+
+/** «Tu mesa queda reservada 15 minutos.» (`reservationTtlMinutes` of the detail; never fixed at 15). */
+export function validityText(ttlMinutes: number | undefined): string {
+  if (!ttlMinutes || ttlMinutes < 1) return RESERVATION_TEXT.validity;
+  return `Tu mesa queda reservada ${ttlMinutes} ${ttlMinutes === 1 ? 'minuto' : 'minutos'}. Llega antes de que se acabe el tiempo.`;
+}
+
+/** «Ya tienes una mesa en Casa 72.» when the active reservation is in another restaurant. */
+export function activeElsewhereText(restaurantName: string): string {
+  return `Ya tienes una mesa reservada en ${restaurantName}.`;
+}
 
 /** «¡Listo! Ya hiciste check-in en Casa 72.» (manual 14: «¡Listo!» only in the diner app). */
 export function completedText(restaurantName: string): string {
@@ -74,4 +92,11 @@ export function createErrorView(error: unknown): CreateErrorView {
     if (error.kind === 'http' && error.status === 400) return { message: RESERVATION_TEXT.invalidPartySize };
   }
   return { message: getErrorMessage(error, RESERVATION_TEXT.createFailed) };
+}
+
+/** Why «Reservar mesa» is off (reparto 9.2: disabled when Cerrado or Sin mesas, with the reason visible), or null. */
+export function reserveBlockedReason(restaurant: Pick<RestaurantDetail, 'isOpenNow' | 'availability'>): string | null {
+  if (!restaurant.isOpenNow || restaurant.availability === 'closed') return RESERVATION_TEXT.closedReason;
+  if (restaurant.availability === 'none') return RESERVATION_TEXT.noTablesReason;
+  return null;
 }

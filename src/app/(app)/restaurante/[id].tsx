@@ -19,6 +19,7 @@ import {
   useDelayedLoading,
   useToast,
 } from '@/components/ui';
+import { ReserveAction } from '@/features/reservations/components/ReserveAction';
 import { RestaurantMapPreview } from '@/features/search/components/RestaurantMapPreview';
 import { WeekSchedule } from '@/features/search/components/WeekSchedule';
 import { getDirectionsUrl } from '@/features/search/filters';
@@ -97,6 +98,9 @@ function DetailContent({ restaurant }: { restaurant: RestaurantDetail }) {
         <InfoRow icon={MapIcon}>{place}</InfoRow>
         {category ? <InfoRow icon={Tag}>{category}</InfoRow> : null}
       </View>
+
+      {/* Sprint 3: the screen's one primary action. */}
+      <ReserveAction restaurant={restaurant} />
 
       <Button variant="secondary" icon={ArrowRight} label="Cómo llegar" fullWidth onPress={openDirections} />
 
