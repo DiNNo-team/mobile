@@ -4,6 +4,30 @@
 
 ---
 
+## 8 nov 2026 · Sebastián · App del Sprint 3 completa: ya se puede hacer QA
+
+- **Toda la parte del comensal está en `develop`** (#30, #32, #33 y #34):
+  - «Reservar mesa» desde el detalle (personas y vigencia real).
+  - Reserva activa con código y temporizador del servidor.
+  - Cancelar.
+  - «Verificando…» → «Vencida».
+  - Banner en Explorar.
+  - Recuperación al abrir la app.
+  - «Cumplida» en vivo cuando el restaurante valida el código en la web.
+  
+  Con esto se cumple el paso 3 del orden de merge de Elizabeth.
+- **QA del Sprint 3:**
+  - Jacobo: M1, M2, M3, M8, M9 y T1. Para M2 y M3 hace falta **una segunda cuenta de comensal** (alias `dinnoteam2026+algo@gmail.com`); hoy hay una sola.
+  - Sergio: M5 y M6.
+  - Santiago: M4, M7, M10, M11, M12 y T2. En **M4**, cambia la hora del teléfono a mano desde Ajustes; en el emulador no se puede por comando.
+- **Cómo probar:**
+  - Usa el development build (`npx expo run:android`): un APK de release no lee de Metro.
+  - Abre Metro contra Render con `EXPO_PUBLIC_USE_MOCKS=false` y `EXPO_PUBLIC_API_URL=https://dinno-backend.onrender.com`.
+  - Si Render está dormido, la app muestra «Conectando con DiNNo…» y luego «Intentar de nuevo».
+- **Para la demo:** después de `demo:reset`, reabre la app (el reset no emite eventos). La vigencia de 3 min se ve en la hoja de reserva antes de reservar.
+
+---
+
 ## 8 nov 2026 · Sebastián · Reserva en tiempo real en la app (check-in desde la web → «Cumplida»)
 
 - **La app escucha los eventos de su propia reserva** por el socket compartido: `reservation.cancelled`, `.expired` y `.checked_in`, de la sala `diner:{userId}`.
