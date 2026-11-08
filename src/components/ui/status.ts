@@ -29,3 +29,14 @@ export const OPEN_STATUS_PRESENTATION: Record<'open' | 'closed', StatusPresentat
 export function getAvailabilityPresentation(availability: Availability): StatusPresentation {
   return AVAILABILITY_PRESENTATION[availability];
 }
+
+/**
+ * The four reservation states (CLAUDE.md §12.1), the same words and shapes as the web's STATUS_META:
+ * Activa = pulsing dot, Cumplida = striped square (the table ends up Ocupada), Vencida and Cancelada = dash.
+ */
+export const RESERVATION_STATUS_PRESENTATION: Record<'active' | 'completed' | 'expired' | 'cancelled', StatusPresentation> = {
+  active: { label: 'Activa', color: 'ok', shape: 'dot', live: true },
+  completed: { label: 'Cumplida', color: 'busy', shape: 'striped-square' },
+  expired: { label: 'Vencida', color: 'inactive', shape: 'dash' },
+  cancelled: { label: 'Cancelada', color: 'inactive', shape: 'dash' },
+};

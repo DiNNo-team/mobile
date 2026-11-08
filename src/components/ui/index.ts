@@ -18,7 +18,7 @@ export { ScreenHeader, type ScreenHeaderProps } from './ScreenHeader';
 export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } from './SegmentedControl';
 export { Skeleton, useDelayedLoading } from './Skeleton';
 export { Spinner } from './Spinner';
-export { AVAILABILITY_PRESENTATION, getAvailabilityPresentation, OPEN_STATUS_PRESENTATION } from './status';
+export { AVAILABILITY_PRESENTATION, getAvailabilityPresentation, OPEN_STATUS_PRESENTATION, RESERVATION_STATUS_PRESENTATION } from './status';
 export { AvailabilityChip, OpenStatusChip, StatusChip } from './StatusChip';
 export { StatusShape } from './StatusShape';
 export { Text, type TextProps, type TextTone, type TextVariant } from './Text';
