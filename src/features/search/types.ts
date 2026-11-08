@@ -114,6 +114,11 @@ export interface RestaurantDetail {
   isOpenNow: boolean;
   availability: Availability;
   distanceKm?: number;
+  /**
+   * Sprint 3: how long a reservation lasts right now, in minutes (2–15; 3 during the expiry demo). Only informative
+   * before reserving: the countdown always comes from `expiresAt` and `serverTime` of the reservation.
+   */
+  reservationTtlMinutes?: number;
 }
 
 export interface Coordinates {

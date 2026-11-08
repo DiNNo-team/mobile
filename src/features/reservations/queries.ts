@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 
 import { reservationsApi } from './api';
 import { monotonicNow } from './timer';
@@ -37,17 +38,33 @@ export function storeReservation(queryClient: QueryClient, reservation: Reservat
  * GET /reservations/active: the diner's reservation in course, or null. Read when the app opens and after signing in,
  * and again on returning to the foreground (query lifecycle). `poll` adds the 30 s backup of the reservation screen.
  */
+async function fetchActive(): Promise<TimedReservation | null> {
+  const { reservation } = await reservationsApi.getActive();
+  return reservation ? timed(reservation) : null;
+}
+
 export function useActiveReservation({ poll = false, enabled = true }: { poll?: boolean; enabled?: boolean } = {}) {
   return useQuery({
     queryKey: reservationKeys.active(),
-    queryFn: async (): Promise<TimedReservation | null> => {
-      const { reservation } = await reservationsApi.getActive();
-      return reservation ? timed(reservation) : null;
-    },
+    queryFn: fetchActive,
     refetchInterval: poll ? RESERVATION_REFRESH_MS : false,
     staleTime: 0,
     enabled,
   });
+}
+
+/**
+ * «Ver mi reserva»: opens the active reservation, asking the backend for it when the app does not know it yet (the
+ * 409 ACTIVE_RESERVATION_EXISTS of another restaurant). Resolves false when there is none anymore (it just ended).
+ */
+export function useOpenActiveReservation() {
+  const queryClient = useQueryClient();
+  return useCallback(async (): Promise<boolean> => {
+    const active = await queryClient.fetchQuery({ queryKey: reservationKeys.active(), queryFn: fetchActive, staleTime: 0 });
+    if (!active) return false;
+    router.push({ pathname: '/reserva/[id]', params: { id: active.id } });
+    return true;
+  }, [queryClient]);
 }
 
 /** GET /reservations/:id in any state (the final screens), every 30 s while it is active. */

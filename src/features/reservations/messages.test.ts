@@ -1,6 +1,6 @@
 import { ApiError } from '@/lib/api/errors';
 
-import { bannerText, completedText, createErrorView, spokenCode } from './messages';
+import { bannerText, completedText, createErrorView, reserveBlockedReason, spokenCode, validityText } from './messages';
 
 const http = (status: number, errorCode?: string) => new ApiError({ status, kind: 'http', errorCode, message: 'texto del backend' });
 
@@ -31,5 +31,20 @@ describe('texts', () => {
     expect(completedText('Casa 72')).toBe('¡Listo! Ya hiciste check-in en Casa 72.');
     expect(bannerText('12:34')).toBe('Tienes una mesa reservada · 12:34');
     expect(spokenCode('K7M4QX')).toBe('K, 7, M, 4, Q, X');
+  });
+});
+
+describe('before reserving', () => {
+  it('shows the real validity of the backend, never a fixed 15', () => {
+    expect(validityText(15)).toBe('Tu mesa queda reservada 15 minutos. Llega antes de que se acabe el tiempo.');
+    expect(validityText(3)).toBe('Tu mesa queda reservada 3 minutos. Llega antes de que se acabe el tiempo.');
+    expect(validityText(undefined)).toBe('Te guardamos la mesa unos minutos. El tiempo exacto aparece al confirmar.');
+  });
+
+  it('«Reservar mesa» is off when Cerrado or Sin mesas, with the reason', () => {
+    expect(reserveBlockedReason({ isOpenNow: false, availability: 'closed' })).toBe('Este restaurante está cerrado ahora.');
+    expect(reserveBlockedReason({ isOpenNow: true, availability: 'none' })).toBe('Ahora no tiene mesas disponibles.');
+    expect(reserveBlockedReason({ isOpenNow: true, availability: 'few' })).toBeNull();
+    expect(reserveBlockedReason({ isOpenNow: true, availability: 'available' })).toBeNull();
   });
 });
