@@ -124,6 +124,7 @@ Las decisiones y contratos del Sprint 2 están en la sección 10.
 - **Identificador de mesa:** corto ("04", "T1") y se muestra "Mesa 04"; "4", "04" y "Mesa 4" son la misma mesa; máximo 10 caracteres; en la interfaz se llama "Identificador" (manual 12.4).
 - **Bitácora de mesas:** cambiar el estado, desactivar (`available` → `inactive`; desde §12.2 solo se desactiva una mesa `available`) y reactivar (`inactive` → `available`) se registran; editar el identificador o la capacidad no. Desde el Sprint 3, cada registro lleva `source` (`manual`, `reservation` o `system`) y las entradas automáticas (`system`, el vencimiento de una reserva) tienen `user_id` en `null` (§12.3).
 - **Plano de mesas:** la posición de cada mesa vive en `tables` (`plan_x`, `plan_y`, `plan_shape`, en NULL mientras no está ubicada) y se guarda con `PUT /v1/tables/plan`, que reemplaza el plano completo (gana el último que guarda). No se registra en la bitácora ni cambia la disponibilidad.
+- **Zonas de mesas:** un restaurante agrupa sus mesas en zonas con nombre libre ("Piso 1", "Terraza"): tabla `table_areas` y `tables.area_id` (NULL = sin zona), rutas `/v1/table-areas`. Cada zona tiene su propio plano: cambiar una mesa de zona la saca del plano y borrar una zona deja sus mesas sin zona. No se registra en la bitácora ni cambia la disponibilidad.
 - Nuevas decisiones: se agregan aquí, en una línea, en el mismo PR que las aplica.
 
 ---
