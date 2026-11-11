@@ -1,12 +1,12 @@
 import { BlurTargetView } from 'expo-blur';
 import { useRef, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AmbientGround } from '@/components/AmbientGround';
 import { GlassSurface, Logo } from '@/components/ui';
 import { cn } from '@/lib/cn';
-import { useTheme } from '@/theme/ThemeProvider';
 import { motion } from '@/theme/tokens';
 
 import { AuthTabs, type AuthTab } from './AuthTabs';
@@ -15,45 +15,19 @@ export interface AuthScreenProps {
   children: ReactNode;
   /** `center`: card in the middle of the screen (messages); `top`: forms. */
   align?: 'top' | 'center';
-  /** Shows the DiNNo logo at the top of the card. */
+  /** Shows the DiNNo logo, centered at the top of the card. */
   showLogo?: boolean;
-  /** "Iniciar sesión / Crear cuenta" tabs at the top of the card (login and sign-up). */
+  /** "Iniciar sesión / Crear cuenta" tabs under the logo (login and sign-up), as in the web login. */
   tabs?: { active: AuthTab; onSelect: (tab: AuthTab) => void };
 }
 
 const enter = Easing.bezier(...motion.sheet);
 
-/** The two brand shapes in opposite corners (manual 13.9), as on the web login. Static: they never animate. */
-function BrandShapes() {
-  const { colors, scheme } = useTheme();
-  const { width } = useWindowDimensions();
-  const size = width * 1.15;
-  return (
-    <>
-      <View
-        style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, top: -size * 0.62, left: -size * 0.42, backgroundColor: colors.accent }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          bottom: -size * 0.66,
-          right: -size * 0.4,
-          // On dark the petrol shape would vanish into the ground: it takes the lighter petrol of the surfaces.
-          backgroundColor: scheme === 'dark' ? colors.surface2 : colors.brand,
-        }}
-      />
-    </>
-  );
-}
-
 /**
- * Frame of the screens without a diner session (manual 13.9): the web login's world on a phone. Cream ground with the
- * two brand shapes, and the form on a glass card that rises in (300 ms; just appears with reduced motion).
+ * Frame of the screens without a diner session (manual 13.9): the web login's world on a phone. The room light of the
+ * dashboard (`AmbientGround`), and the form on a glass card that rises in (300 ms; just appears with reduced motion).
  *
- * Performance on mid-range phones: one blur per screen, over a static target (the shapes, not the form), with
+ * Performance on mid-range phones: one blur per screen, over a static target (the light, not the form), with
  * `dimezisBlurViewSdk31Plus` (Android 11 and older get the solid fallback). "Reduce transparency" also turns it solid.
  */
 export function AuthScreen({ children, align = 'top', showLogo = true, tabs }: AuthScreenProps) {
@@ -63,9 +37,7 @@ export function AuthScreen({ children, align = 'top', showLogo = true, tabs }: A
   return (
     <View className="flex-1 bg-bg">
       <BlurTargetView ref={target} style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View className="flex-1 bg-bg">
-          <BrandShapes />
-        </View>
+        <AmbientGround />
       </BlurTargetView>
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
@@ -75,11 +47,27 @@ export function AuthScreen({ children, align = 'top', showLogo = true, tabs }: A
         >
           <Animated.View entering={FadeInDown.duration(motion.slow).easing(enter)} className="w-full max-w-toast self-center">
             <GlassSurface level="login" blurTarget={target} className="rounded-card">
-              {tabs ? <AuthTabs active={tabs.active} onSelect={tabs.onSelect} /> : null}
-              <View className="gap-6 p-6">
-                {showLogo ? <Logo width={112} /> : null}
-                {children}
-              </View>
+              {tabs ? (
+                // The web login below 768 px: centered logo, the tabs under it, then the form.
+                <>
+                  {showLogo ? (
+                    <View className="items-center pb-4 pt-8">
+                      <Logo width={96} />
+                    </View>
+                  ) : null}
+                  <AuthTabs active={tabs.active} onSelect={tabs.onSelect} />
+                  <View className="gap-5 px-6 pb-8 pt-6">{children}</View>
+                </>
+              ) : (
+                <View className="gap-6 p-6">
+                  {showLogo ? (
+                    <View className="items-center">
+                      <Logo width={96} />
+                    </View>
+                  ) : null}
+                  {children}
+                </View>
+              )}
             </GlassSurface>
           </Animated.View>
         </ScrollView>

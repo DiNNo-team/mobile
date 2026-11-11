@@ -18,8 +18,10 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style' | 'editable
   helperText?: string;
   /** What to do, not "Campo requerido": "Escribe tu correo". */
   errorText?: string;
-  /** Optional icon on the left (20). */
+  /** Optional icon (20), on the left by default. */
   icon?: LucideIcon;
+  /** `end` puts the icon on the right, as in the web login's email field. */
+  iconPosition?: 'start' | 'end';
   /** Password: hides the text and adds the eye button. */
   password?: boolean;
   disabled?: boolean;
@@ -35,6 +37,7 @@ export function TextField({
   helperText,
   errorText,
   icon,
+  iconPosition = 'start',
   password = false,
   disabled = false,
   ref,
@@ -61,7 +64,7 @@ export function TextField({
           !disabled && (hasError ? 'border-error' : focused ? 'border-accent' : 'border-line-strong'),
         )}
       >
-        {icon ? <Icon icon={icon} color="text2" /> : null}
+        {icon && iconPosition === 'start' ? <Icon icon={icon} color="text2" /> : null}
         <TextInput
           ref={ref}
           accessibilityLabel={label}
@@ -83,6 +86,7 @@ export function TextField({
           className={cn('h-full flex-1 font-sans text-body', disabled ? 'text-fg-2' : 'text-fg')}
           {...props}
         />
+        {icon && iconPosition === 'end' ? <Icon icon={icon} color="text2" /> : null}
         {password ? (
           <IconButton
             icon={hidden ? Eye : EyeOff}
