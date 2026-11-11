@@ -27,6 +27,8 @@ export const lightExtras = {
   shadowSoft:'0 1px 2px rgba(16,37,43,.05), 0 10px 28px -12px rgba(16,37,43,.18)',
   shadowFloat:'0 12px 32px -12px rgba(16,37,43,.28)',
   mapGround:'#E6E9E3', mapBlock:'#F6F4EE', mapPark:'#D3E2D3', mapWater:'#CBDFE3', mapAvenue:'#D5DCD7',
+  // Room light of the web dashboard (`--amb-warm` / `--amb-cool` in the web tokens): color + its opacity at the center.
+  ambWarm:'#F46935', ambWarmOpacity:0.55, ambCool:'#103B46', ambCoolOpacity:0.42,
 };
 export const darkExtras: typeof lightExtras = {
   overlay:'rgba(0,0,0,.6)', focusRing:'rgba(255,132,86,.55)',
@@ -35,6 +37,7 @@ export const darkExtras: typeof lightExtras = {
   shadowSoft:'0 1px 2px rgba(0,0,0,.25), 0 10px 28px -12px rgba(0,0,0,.5)',
   shadowFloat:'0 12px 32px -12px rgba(0,0,0,.6)',
   mapGround:'#0F3540', mapBlock:'#134451', mapPark:'#14463F', mapWater:'#0E4B5A', mapAvenue:'#1A5360',
+  ambWarm:'#F46935', ambWarmOpacity:0.34, ambCool:'#1C6A6E', ambCoolOpacity:0.55,
 };
 export const radius = { card:20, tile:16, btn:14, input:12, sheet:28, chip:999 };
 export const space = { 1:4, 2:8, 3:12, 4:16, 5:24, 6:32, 7:48 };

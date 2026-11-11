@@ -1,12 +1,12 @@
 import { BlurTargetView } from 'expo-blur';
 import { useRef, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AmbientGround } from '@/components/AmbientGround';
 import { GlassSurface, Logo } from '@/components/ui';
 import { cn } from '@/lib/cn';
-import { useTheme } from '@/theme/ThemeProvider';
 import { motion } from '@/theme/tokens';
 
 import { AuthTabs, type AuthTab } from './AuthTabs';
@@ -23,37 +23,11 @@ export interface AuthScreenProps {
 
 const enter = Easing.bezier(...motion.sheet);
 
-/** The two brand shapes in opposite corners (manual 13.9), as on the web login. Static: they never animate. */
-function BrandShapes() {
-  const { colors, scheme } = useTheme();
-  const { width } = useWindowDimensions();
-  const size = width * 1.15;
-  return (
-    <>
-      <View
-        style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, top: -size * 0.62, left: -size * 0.42, backgroundColor: colors.accent }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          bottom: -size * 0.66,
-          right: -size * 0.4,
-          // On dark the petrol shape would vanish into the ground: it takes the lighter petrol of the surfaces.
-          backgroundColor: scheme === 'dark' ? colors.surface2 : colors.brand,
-        }}
-      />
-    </>
-  );
-}
-
 /**
- * Frame of the screens without a diner session (manual 13.9): the web login's world on a phone. Cream ground with the
- * two brand shapes, and the form on a glass card that rises in (300 ms; just appears with reduced motion).
+ * Frame of the screens without a diner session (manual 13.9): the web login's world on a phone. The room light of the
+ * dashboard (`AmbientGround`), and the form on a glass card that rises in (300 ms; just appears with reduced motion).
  *
- * Performance on mid-range phones: one blur per screen, over a static target (the shapes, not the form), with
+ * Performance on mid-range phones: one blur per screen, over a static target (the light, not the form), with
  * `dimezisBlurViewSdk31Plus` (Android 11 and older get the solid fallback). "Reduce transparency" also turns it solid.
  */
 export function AuthScreen({ children, align = 'top', showLogo = true, tabs }: AuthScreenProps) {
@@ -63,9 +37,7 @@ export function AuthScreen({ children, align = 'top', showLogo = true, tabs }: A
   return (
     <View className="flex-1 bg-bg">
       <BlurTargetView ref={target} style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View className="flex-1 bg-bg">
-          <BrandShapes />
-        </View>
+        <AmbientGround />
       </BlurTargetView>
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
