@@ -26,6 +26,7 @@ import {
   Spinner,
   Text,
   TextField,
+  SelectedMarker,
   UserLocationMarker,
   useToast,
   type ButtonVariant,
@@ -160,10 +161,14 @@ export function KitScreen() {
         <Text variant="sec" tone="secondary">
           Pines del mapa (toca uno para seleccionarlo) y tu ubicación:
         </Text>
-        <View className="flex-row items-center gap-4 rounded-card bg-surface-2 p-4">
+        <View className="flex-row flex-wrap items-center gap-2 rounded-card bg-surface-2 p-4">
           {AVAILABILITIES.map((availability) => (
             <IconButtonLike key={availability} onPress={() => setSelectedMarker(availability)}>
-              <AvailabilityMarker availability={availability} selected={selectedMarker === availability} />
+              {selectedMarker === availability ? (
+                <SelectedMarker name="Casa 72" availability={availability} />
+              ) : (
+                <AvailabilityMarker availability={availability} />
+              )}
             </IconButtonLike>
           ))}
           <UserLocationMarker />
