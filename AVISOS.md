@@ -4,6 +4,14 @@
 
 ---
 
+## 10 nov 2026 · Sebastián · Login con la luz del salón
+
+- El fondo del login (y de crear cuenta, recuperar contraseña y las pantallas de mensaje) ya no tiene las dos formas de marca: ahora es la misma luz difuminada del dashboard web (`AmbientGround`, en `src/components/`), naranja arriba a la izquierda y petróleo abajo a la derecha.
+- El login y crear cuenta copian el login web en ancho de celular: logo centrado arriba, debajo las pestañas «Iniciar sesión / Crear cuenta» con los íconos de la web (`UserRoundCheck` y `UserRoundPlus`) y una barra naranja corta bajo la elegida, campos con el ícono a la derecha (la contraseña solo con el ojo), «¿Olvidaste tu contraseña?» a la derecha y el divisor «O inicia sesión con» antes de Google.
+- **Kit:** `TextField` suma `iconPosition` (`'start'` por defecto, `'end'` para el ícono a la derecha). No cambia ningún campo existente.
+- **Tokens:** `tokens.ts` suma `ambWarm`, `ambCool` y sus opacidades (los `--amb-warm` / `--amb-cool` de la web). No cambia ningún color existente.
+- Sin dependencias nuevas ni cambios nativos: no hace falta recompilar.
+
 ## 8 nov 2026 · Sebastián · Qué le falta a cada uno para cerrar el Sprint 3
 
 **El código del Sprint 3 está completo:** el backend (Elizabeth), la web y la app (Sebastián) están en `develop`, y probamos todo de punta a punta contra Render. Ninguna tarea de código del flujo principal está pendiente. Lo que queda es probar, ensayar la demo y cerrar las tareas del reparto que no son del flujo principal.

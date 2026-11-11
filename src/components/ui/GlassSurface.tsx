@@ -12,7 +12,7 @@ const INTENSITY: Record<GlassLevel, number> = { map: 40, panel: 50, login: 70 };
 
 export interface GlassSurfaceProps {
   children?: ReactNode;
-  /** `map`: over the map · `panel`: floating panels · `login`: the sign-in card over the brand shapes. */
+  /** `map`: over the map · `panel`: floating panels · `login`: the sign-in card over the room light. */
   level?: GlassLevel;
   /**
    * Android only blurs what is inside a `BlurTargetView`: pass its ref. Without it (or over the Google map, whose
