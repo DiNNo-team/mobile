@@ -1,14 +1,14 @@
 import { router } from 'expo-router';
-import { MapIcon } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { FlatList, RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Alert, Button, ErrorState, FloatingSurface, RETRY_LABEL, ScreenHeader, SegmentedControl, Text, useDelayedLoading, useToast } from '@/components/ui';
+import { AmbientGround } from '@/components/AmbientGround';
+import { Alert, Button, EdgeFade, ErrorState, RETRY_LABEL, Text, useDelayedLoading, useToast } from '@/components/ui';
 import { env } from '@/config/env';
 import { LOCATION_FAILURE_MESSAGES } from '@/features/location/location';
 import { useLocationFlow } from '@/features/location/use-location-flow';
-import { ActiveFilters } from '@/features/search/components/ActiveFilters';
+import { ExploreHeader, type ResultsView } from '@/features/search/components/ExploreHeader';
 import { FiltersSheet } from '@/features/search/components/FiltersSheet';
 import { OriginSheet } from '@/features/search/components/OriginSheet';
 import { RestaurantCard, RestaurantListSkeleton } from '@/features/search/components/RestaurantCard';
@@ -16,20 +16,13 @@ import { ActiveReservationBanner } from '@/features/reservations/components/Acti
 import { ResultsCarousel, type ResultsCarouselHandle } from '@/features/search/components/ResultsCarousel';
 import { ResultsMap, type ResultsMapHandle } from '@/features/search/components/ResultsMap';
 import { LocationIntro, NoResults, ZonePrompt } from '@/features/search/components/SearchStates';
-import { removeFilter } from '@/features/search/filters';
+import { getActiveFilters, removeFilter } from '@/features/search/filters';
 import { getZoneName, useRestaurantSearch, useZones } from '@/features/search/queries';
 import type { LocatedAddress } from '@/features/search/components/AddressSearch';
 import { getNextRadius, getOriginCoordinates, getUserLocation, useSearchStore } from '@/features/search/store';
 import type { Coordinates, RestaurantSummary } from '@/features/search/types';
 import { getErrorMessage } from '@/lib/api/errors';
 import { useTheme } from '@/theme/ThemeProvider';
-
-type ResultsView = 'map' | 'list';
-
-const VIEW_OPTIONS = [
-  { value: 'map', label: 'Mapa' },
-  { value: 'list', label: 'Lista' },
-] as const satisfies readonly { value: ResultsView; label: string }[];
 
 /** Center of Bogotá, only while the zone list has not loaded yet. */
 const BOGOTA: Coordinates = { latitude: 4.65, longitude: -74.06 };
@@ -53,7 +46,6 @@ export default function ExploreScreen() {
   const setAddress = useSearchStore((state) => state.setAddress);
   const setRadius = useSearchStore((state) => state.setRadius);
   const setFilters = useSearchStore((state) => state.setFilters);
-  const clearFilters = useSearchStore((state) => state.clearFilters);
   const [originSheetOpen, setOriginSheetOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   // A new key each time the filters sheet opens: its copy of the filters starts from the applied ones.
@@ -61,7 +53,6 @@ export default function ExploreScreen() {
   const [view, setView] = useState<ResultsView>(env.mapsEnabled ? 'map' : 'list');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [carouselHeight, setCarouselHeight] = useState(0);
-  const [headerHeight, setHeaderHeight] = useState(0);
   const map = useRef<ResultsMapHandle>(null);
   const carousel = useRef<ResultsCarouselHandle>(null);
   const zones = useZones();
@@ -121,27 +112,31 @@ export default function ExploreScreen() {
   const selectFromMap = (restaurant: RestaurantSummary) => {
     setSelectedId(restaurant.id);
     carousel.current?.scrollTo(restaurant.id);
+    map.current?.focus(restaurant);
   };
   const selectFromCards = (restaurant: RestaurantSummary) => {
     setSelectedId(restaurant.id);
     map.current?.focus(restaurant);
   };
 
-  // An address shows what Google understood ("Cerca de: …", CLAUDE.md §10), so the diner can correct it.
+  // The title is the zone's name, or «Cerca de ti» around the phone or a typed address. An address shows what Google
+  // understood («Cerca de: …», CLAUDE.md §10) in the search field, so the diner can correct it.
+  const title = origin?.type === 'zone' ? getZoneName(zones.data, origin.zoneId) : 'Cerca de ti';
   const place =
     origin?.type === 'zone'
       ? getZoneName(zones.data, origin.zoneId)
       : origin?.type === 'address'
         ? `Cerca de: ${origin.formattedAddress}`
-        : 'Cerca de ti';
-  const subtitle =
+        : undefined;
+  const detail =
     location.step === 'locating'
       ? 'Buscando tu ubicación…'
       : searchingAgain
-        ? 'Buscando restaurantes…'
+        ? 'Buscando…'
         : origin
-          ? `${place} · ${filters.radiusKm} km`
+          ? `· ${filters.radiusKm} km`
           : undefined;
+  const activeFilters = getActiveFilters(filters);
 
   const renderEmpty = () => {
     if (!origin) {
@@ -163,7 +158,7 @@ export default function ExploreScreen() {
     return (
       <NoResults
         place={
-          origin.type === 'zone' ? `de ${place}` : origin.type === 'address' ? `de ${origin.formattedAddress}` : 'de tu ubicación'
+          origin.type === 'zone' ? `de ${title}` : origin.type === 'address' ? `de ${origin.formattedAddress}` : 'de tu ubicación'
         }
         radiusKm={filters.radiusKm}
         nextRadiusKm={getNextRadius(filters.radiusKm)}
@@ -176,47 +171,40 @@ export default function ExploreScreen() {
     );
   };
 
-  const changeZone = origin ? (
-    <Button variant="ghost" size="sm" icon={MapIcon} label="Cambiar zona" onPress={openZones} className="-mr-4" />
-  ) : undefined;
-  const controls = origin ? (
-    <>
-      {env.mapsEnabled ? (
-        <SegmentedControl
-          options={VIEW_OPTIONS}
-          value={view}
-          onChange={setView}
-          accessibilityLabel="Ver resultados como"
-          className="mx-4"
-        />
-      ) : null}
-      <ActiveFilters filters={filters} onOpen={openFilters} onRemove={(key) => setFilters(removeFilter(filters, key))} onClear={clearFilters} />
-    </>
-  ) : null;
+  const errorAlert =
+    search.isError && results.length > 0 ? (
+      // An error while results are on screen keeps them and says so (the full error state is for no data).
+      <Alert
+        type="error"
+        message={getErrorMessage(search.error)}
+        action={<Button size="sm" variant="outline" label={RETRY_LABEL} onPress={() => search.refetch()} />}
+      />
+    ) : null;
 
   return (
-    <View className="flex-1 bg-bg" style={showMap ? undefined : { paddingTop: insets.top + 16 }}>
-      {showMap ? null : (
-        <>
-          <ScreenHeader title="Explorar" subtitle={subtitle} className="px-4 pb-3" actions={changeZone} />
-          <ActiveReservationBanner className="mx-4 mb-3" />
-          {controls ? <View className="gap-3 pb-3">{controls}</View> : null}
-        </>
-      )}
-
-      {!showMap && search.isError && results.length > 0 ? (
-        // An error while results are on screen keeps them and says so above (the full error state is for no data).
-        <Alert
-          type="error"
-          message={getErrorMessage(search.error)}
-          action={<Button size="sm" variant="outline" label={RETRY_LABEL} onPress={() => search.refetch()} />}
-          className="mx-4 mb-3"
-        />
-      ) : null}
+    <View className="flex-1" style={{ paddingTop: insets.top + 12 }}>
+      <AmbientGround variant="screen" />
+      <ExploreHeader
+        title={title}
+        detail={detail}
+        place={place}
+        view={view}
+        showViewToggle={env.mapsEnabled && results.length > 0}
+        onChangeView={setView}
+        onSearch={openZones}
+        onProfile={() => router.push('/perfil')}
+        onFilters={openFilters}
+        activeFilters={activeFilters}
+        onRemoveFilter={(key) => setFilters(removeFilter(filters, key))}
+      />
 
       {showMap ? (
-        // The map is the product (manual 13.11): full screen, with the header floating on map glass (solid on Android).
-        <View className="flex-1">
+        // The map is the product (manual 13.11), framed (mobile v3): the night map in dark, paper tones in light, with the
+        // editorial card of the selected restaurant at the bottom of the frame.
+        <View
+          className="mx-3 mt-3 flex-1 overflow-hidden rounded-frame"
+          style={{ marginBottom: insets.bottom + 14, borderWidth: 4, borderColor: colors.mapFrame, backgroundColor: colors.mapGround, boxShadow: colors.shadowMap }}
+        >
           <ResultsMap
             ref={map}
             restaurants={results}
@@ -226,39 +214,11 @@ export default function ExploreScreen() {
             radiusKm={filters.radiusKm}
             userLocation={userLocation}
             bottomInset={carouselHeight}
-            topInset={headerHeight}
           />
-          <View
-            pointerEvents="box-none"
-            className="absolute inset-x-0 top-0 px-3"
-            style={{ paddingTop: insets.top + 8 }}
-            onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
-          >
-            <FloatingSurface shape="bar" className="gap-3 px-0">
-              <View className="flex-row items-center justify-between px-4">
-                <View className="min-w-0 flex-1">
-                  <Text variant="h3" accessibilityRole="header" numberOfLines={1}>
-                    Explorar
-                  </Text>
-                  {subtitle ? (
-                    <Text variant="sec" numberOfLines={1}>
-                      {subtitle}
-                    </Text>
-                  ) : null}
-                </View>
-                {changeZone}
-              </View>
-              {controls}
-            </FloatingSurface>
-            <ActiveReservationBanner floating className="mt-2" />
-            {search.isError ? (
-              <Alert
-                type="error"
-                message={getErrorMessage(search.error)}
-                action={<Button size="sm" variant="outline" label={RETRY_LABEL} onPress={() => search.refetch()} />}
-                className="mt-2"
-              />
-            ) : null}
+          <EdgeFade color={colors.mapFade} height={120} style={{ position: 'absolute', top: 0, left: 0, right: 0 }} />
+          <View pointerEvents="box-none" className="absolute inset-x-0 top-0 gap-2 p-2.5">
+            <ActiveReservationBanner floating />
+            {errorAlert}
           </View>
           <ResultsCarousel
             ref={carousel}
@@ -271,21 +231,25 @@ export default function ExploreScreen() {
         </View>
       ) : (
         <FlatList
+          className="mt-3"
           data={results}
           keyExtractor={(restaurant) => restaurant.id}
-          renderItem={({ item }) => (
-            <RestaurantCard restaurant={item} selected={item.id === activeId} onPress={() => openDetail(item)} />
-          )}
+          renderItem={({ item }) => <RestaurantCard restaurant={item} onPress={() => openDetail(item)} />}
           ItemSeparatorComponent={() => <View className="h-3" />}
           ListHeaderComponent={
-            results.length > 0 ? (
-              <Text variant="sec" tone="secondary" className="mb-3">
-                {resultsLabel(results.length)}
-              </Text>
-            ) : null
+            <View className="gap-3 pb-3">
+              <ActiveReservationBanner />
+              {errorAlert}
+              {results.length > 0 ? (
+                <Text variant="sec" tone="caption">
+                  {resultsLabel(results.length)}
+                </Text>
+              ) : null}
+            </View>
           }
           ListEmptyComponent={renderEmpty()}
-          contentContainerClassName="px-4 pb-6"
+          contentContainerClassName="px-3"
+          contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
           refreshControl={
             origin && search.isSuccess ? (
               <RefreshControl

@@ -1,4 +1,4 @@
-import { formatDistance } from './distance';
+import { formatDistance, splitDistance } from './distance';
 
 describe('formatDistance', () => {
   it('shows meters rounded to 50 under 1 km', () => {
@@ -22,5 +22,12 @@ describe('formatDistance', () => {
     expect(formatDistance(1.42)).toBe('a 1,4 km');
     expect(formatDistance(1.45)).toBe('a 1,5 km');
     expect(formatDistance(9.96)).toBe('a 10,0 km');
+  });
+});
+
+describe('splitDistance', () => {
+  it('splits the figure from the unit for big type', () => {
+    expect(splitDistance(0.05)).toEqual({ value: '50', unit: 'm' });
+    expect(splitDistance(1.44)).toEqual({ value: '1,4', unit: 'km' });
   });
 });

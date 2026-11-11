@@ -1,38 +1,10 @@
-import { Tabs } from 'expo-router/js-tabs';
-import { CircleUserRound, Search } from 'lucide-react-native';
+import { Stack } from 'expo-router';
 
-import { useTheme } from '@/theme/ThemeProvider';
-import { textExtras } from '@/theme/tokens';
-
-const ICON_SIZE = 24;
-const ICON_STROKE = 1.75;
-
-export default function TabsLayout() {
-  const { colors } = useTheme();
-  return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.accentText,
-        tabBarInactiveTintColor: colors.text2,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-        tabBarLabelStyle: { fontFamily: textExtras.chip.fontFamily, fontSize: textExtras.chip.fontSize },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Explorar',
-          tabBarIcon: ({ color }) => <Search color={color} size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-        }}
-      />
-      <Tabs.Screen
-        name="perfil"
-        options={{
-          title: 'Perfil',
-          tabBarIcon: ({ color }) => <CircleUserRound color={color} size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-        }}
-      />
-    </Tabs>
-  );
+/**
+ * Explorar and Perfil. Mobile v3 (diseño definitivo) has no bottom bar: Explorar is the home and Perfil opens from the
+ * avatar inside its search field, with a back button. The group keeps its name so the routes (`/`, `/perfil`) do not
+ * change.
+ */
+export default function ExploreLayout() {
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

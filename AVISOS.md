@@ -4,6 +4,27 @@
 
 ---
 
+## 11 nov 2026 · Sebastián · Rediseño de la app: diseño definitivo (B + C)
+
+La app del comensal pasa al diseño definitivo que elegimos en el canvas «DiNNo Mobile · Diseño definitivo». Cambian Explorar, Restaurante y Tu reserva, en claro y en oscuro. La lógica (búsqueda, tiempo real, reservar, cancelar, temporizador) no cambia.
+
+- **Sin barra inferior.** Explorar es la pantalla de inicio y Perfil se abre desde el avatar dentro del buscador; Perfil tiene ahora botón de volver. Las rutas (`/`, `/perfil`) siguen iguales: el grupo `(tabs)` ahora es una pila (`Stack`).
+- **Explorar:** título grande («Cerca de ti · 2 km»), buscador en píldora que abre «¿Dónde buscamos?» y muestra la dirección o la zona elegida, «Filtros · N» con los filtros activos como chips debajo, y el mapa enmarcado con la cámara inclinada (noche en oscuro, tonos de papel en claro). Los restaurantes son luces: Disponible brilla, Pocas mesas brilla menos, Sin mesas queda apagado; el elegido sube en un tallo con su nombre. Abajo, la tarjeta editorial con «Ver restaurante». Tocar un pin o deslizar la tarjeta acerca la cámara.
+- **Restaurante:** mapa inclinado arriba que se funde con el fondo, estado en la línea, nombre grande, cifras (distancia · cierre de hoy · tipo de comida), dirección, horarios con hoy resaltado y una barra fija con «Cómo llegar» y «Reservar mesa».
+- **Tu reserva:** tiquete con temporizador circular, código en celdas, QR y «Cancelar reserva» solo como texto (sigue pidiendo confirmación).
+- **Reservar mesa (la hoja):** hoja de vidrio como en el dashboard: la luz ambiente adentro, el nombre del restaurante como título, «Personas» con un contador grande y la vigencia real del backend («Te guardamos la mesa · 15 min»). Es vidrio sin desenfoque (la hoja abre en su propia ventana y Android no puede desenfocar lo que hay detrás), así que se ve igual en los dos sistemas.
+- **El QR todavía no funciona:** es solo el dibujo del diseño. El check-in sigue siendo con el código de 6 caracteres. Cuando exista el check-in por QR, `ReservationQr` dibuja el código real.
+- **Luz ambiente en todas las pantallas** (`AmbientGround variant="screen"`): es un degradado, no un desenfoque, así que se ve igual en Android.
+- **Kit (afecta a quien use estas piezas):**
+  - `Button`: `shape="pill"`, variantes `soft`, `raised`, `tinted` y `quiet`, tamaños `field` (50), `lg` (56) y `xl` (58) y `trailingIcon`. Lo existente no cambia.
+  - `SegmentedControl` con `variant="pill"`; `IconButton` con `variant="raised"` y `"overMap"` (el círculo de volver de 48).
+  - `BottomSheet` con `variant="glass"` y `kicker`; `NumberStepper` con `size="lg"` y `unit`; `GlassCard` (el `glass-card` de la web, con los tokens `glassCard`, `glassEdge` y `glassSheen`).
+  - Nuevos: `StatusLabel` / `AvailabilityLabel`, `PageDots`, `StatGroup`, `CountdownRing`, `Ticket`, `TicketDivider`, `CodeCells`, `EdgeFade`, `SelectedMarker` y `LitDot`. `AvailabilityMarker` ya no recibe `selected` (el elegido es `SelectedMarker`).
+  - `Text` suma variantes de titulares y cifras (`hero`, `screen`, `title`, `timer`, `stat`, `code`…) y los tonos `caption` y `danger`.
+- **Tokens:** colores `sand` (Arena / Relieve), `caption`, `well` y `danger-text`; el mapa usa la paleta nueva (noche / papel) y hay sombras y la luz de pantalla del diseño. Los colores del manual que ya existían no cambian.
+- **Mapa:** `mapPadding` se aplica solo después de `onMapReady` (antes de eso react-native-maps 1.27 se cae en Android). Así el logo de Google queda visible sobre la tarjeta.
+- Sin dependencias nuevas ni cambios nativos: no hace falta recompilar, solo `npx expo start -c` (cambió `tailwind.config.js`).
+
 ## 10 nov 2026 · Sebastián · Login con la luz del salón
 
 - El fondo del login (y de crear cuenta, recuperar contraseña y las pantallas de mensaje) ya no tiene las dos formas de marca: ahora es la misma luz difuminada del dashboard web (`AmbientGround`, en `src/components/`), naranja arriba a la izquierda y petróleo abajo a la derecha.
