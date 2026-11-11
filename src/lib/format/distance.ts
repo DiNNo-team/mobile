@@ -9,3 +9,9 @@ export function formatDistance(km: number): string {
   const value = (Math.round(km * 10) / 10).toFixed(1).replace('.', ',');
   return `a ${value} km`;
 }
+
+/** The same distance in two parts for big type: «a 50 m» → `{ value: '50', unit: 'm' }`; «a 1,4 km» → `{ '1,4', 'km' }`. */
+export function splitDistance(km: number): { value: string; unit: string } {
+  const [, value, unit] = formatDistance(km).split(' ');
+  return { value, unit };
+}
