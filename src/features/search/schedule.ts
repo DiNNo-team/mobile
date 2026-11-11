@@ -56,3 +56,20 @@ export function getBogotaDayOfWeek(now: Date = new Date()): number {
   const day = new Date(now.getTime() + BOGOTA_OFFSET_MS).getUTCDay();
   return day === 0 ? 7 : day;
 }
+
+/** "22:00" → "10 p. m."; "22:30" → "10:30 p. m.": the short hour of a big figure (mobile v3, «Cierra hoy»). */
+export function formatShortTime12h(time: string): string {
+  return formatTime12h(time).replace(':00 ', ' ');
+}
+
+/**
+ * Today's closing for the detail's figures («10 p. m.» · «Cierra hoy»), from the Bogotá day. A schedule that ends after
+ * midnight says «Cierra» with the hour; a 24-hour day «24 horas» · «Abierto hoy»; a day without hours «Cerrado» · «Hoy».
+ */
+export function getTodayClosing(schedules: Schedule[], now: Date = new Date()): { value: string; label: string } {
+  const today = schedules.find((item) => item.dayOfWeek === getBogotaDayOfWeek(now));
+  if (!today) return { value: 'Cerrado', label: 'Hoy' };
+  if (today.isOpen24h || !today.opensAt || !today.closesAt) return { value: '24 horas', label: 'Abierto hoy' };
+  const nextDay = today.closesAt < today.opensAt;
+  return { value: formatShortTime12h(today.closesAt), label: nextDay ? 'Cierra' : 'Cierra hoy' };
+}

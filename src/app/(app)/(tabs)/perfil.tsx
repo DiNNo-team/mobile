@@ -1,8 +1,10 @@
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AmbientGround } from '@/components/AmbientGround';
 import { PlaceholderLink } from '@/components/ScreenPlaceholder';
 import {
   Alert,
@@ -30,6 +32,11 @@ const THEME_OPTIONS = [
   { value: 'light', label: 'Claro' },
   { value: 'dark', label: 'Oscuro' },
 ] as const satisfies readonly { value: ThemePreference; label: string }[];
+
+function goBack() {
+  if (router.canGoBack()) router.back();
+  else router.replace('/');
+}
 
 const SIGN_OUT_ERROR = 'No pudimos cerrar sesión. Intenta de nuevo.';
 
@@ -110,43 +117,59 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-bg"
-      contentContainerClassName="gap-6 px-4 pb-6"
-      contentContainerStyle={{ paddingTop: insets.top + 16 }}
-    >
-      <ScreenHeader title="Perfil" />
-      {renderProfile()}
+    <View className="flex-1">
+      <AmbientGround variant="screen" />
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="gap-6 px-4 pb-6"
+        contentContainerStyle={{ paddingTop: insets.top + 8 }}
+      >
+        {/* Mobile v3: no bottom bar, Perfil opens from Explorar's search field and goes back to it. */}
+        <ScreenHeader title="Perfil" showBack onBack={goBack} />
+        {renderProfile()}
 
-      <View className="gap-2">
-        <Text variant="label" tone="secondary">
-          Tema
-        </Text>
-        <SegmentedControl options={THEME_OPTIONS} value={preference} onChange={setPreference} accessibilityLabel="Tema" />
-      </View>
+        <View className="gap-2">
+          <Text variant="label" tone="secondary">
+            Tema
+          </Text>
+          <SegmentedControl options={THEME_OPTIONS} value={preference} onChange={setPreference} accessibilityLabel="Tema" />
+        </View>
 
-      <Button variant="outline" label="Cerrar sesión" fullWidth onPress={() => setConfirmingSignOut(true)} />
+        <Button variant="outline" label="Cerrar sesión" fullWidth onPress={() => setConfirmingSignOut(true)} />
 
-      {version ? (
-        <Text variant="sec" tone="secondary" className="text-center">
-          {version}
-        </Text>
-      ) : null}
-      {__DEV__ ? <PlaceholderLink href="/kit" label="Ver el kit móvil" /> : null}
+        {version ? (
+          <Text variant="sec" tone="secondary" className="text-center">
+            {version}
+          </Text>
+        ) : null}
+        {__DEV__ ? <PlaceholderLink href="/kit" label="Ver el kit móvil" /> : null}
 
-      <Dialog
-        visible={confirmingSignOut}
-        onClose={() => setConfirmingSignOut(false)}
-        busy={signingOut}
-        title="¿Cerrar sesión?"
-        description="Tendrás que iniciar sesión de nuevo para buscar mesa."
-        actions={
-          <>
-            <Button label="Cerrar sesión" fullWidth loading={signingOut} loadingLabel="Cerrando sesión…" onPress={confirmSignOut} />
-            <Button variant="outline" label="Cancelar" fullWidth disabled={signingOut} onPress={() => setConfirmingSignOut(false)} />
-          </>
-        }
-      />
-    </ScrollView>
+        <Dialog
+          visible={confirmingSignOut}
+          onClose={() => setConfirmingSignOut(false)}
+          busy={signingOut}
+          title="¿Cerrar sesión?"
+          description="Tendrás que iniciar sesión de nuevo para buscar mesa."
+          actions={
+            <>
+              <Button
+                label="Cerrar sesión"
+                fullWidth
+                loading={signingOut}
+                loadingLabel="Cerrando sesión…"
+                onPress={confirmSignOut}
+              />
+              <Button
+                variant="outline"
+                label="Cancelar"
+                fullWidth
+                disabled={signingOut}
+                onPress={() => setConfirmingSignOut(false)}
+              />
+            </>
+          }
+        />
+      </ScrollView>
+    </View>
   );
 }

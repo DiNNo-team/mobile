@@ -10,6 +10,8 @@ const colorNames = [
   'inverse', 'on-inverse', 'inverse-accent',
   // v2.0 (manual 16.6)
   'selection', 'tint-ok', 'tint-reserved', 'tint-busy', 'tint-limited', 'edge-ok', 'edge-reserved', 'edge-busy', 'edge-limited',
+  // Mobile v3 (diseño definitivo)
+  'sand', 'caption', 'well', 'danger-text',
 ];
 
 const colors = Object.fromEntries(colorNames.map((name) => [name, `rgb(var(--${name}) / <alpha-value>)`]));
@@ -21,7 +23,11 @@ module.exports = {
   darkMode: 'class',
   theme: {
     colors: { ...colors, transparent: 'transparent' },
-    borderRadius: { none: '0px', input: '12px', btn: '14px', tile: '16px', card: '20px', sheet: '28px', chip: '999px' },
+    borderRadius: {
+      none: '0px', input: '12px', btn: '14px', tile: '16px', card: '20px', sheet: '28px', chip: '999px',
+      // Mobile v3: matte pieces with radii from 24 to 36 (ficha de dirección).
+      piece: '24px', panel: '28px', ticket: '32px', frame: '36px',
+    },
     boxShadow: {},
     fontWeight: {},
     fontSize: {
@@ -37,6 +43,20 @@ module.exports = {
       figure: ['54px', { lineHeight: '54px', letterSpacing: '-2.16px' }],
       button: ['15px', { lineHeight: '20px' }],
       chip: ['12px', { lineHeight: '16px' }],
+      // Mobile v3 (diseño definitivo): big headlines, tabular figures and the ticket.
+      hero: ['56px', { lineHeight: '58px', letterSpacing: '-2.6px' }],
+      screen: ['42px', { lineHeight: '44px', letterSpacing: '-1.8px' }],
+      title: ['40px', { lineHeight: '42px', letterSpacing: '-1.7px' }],
+      timer: ['46px', { lineHeight: '50px', letterSpacing: '-1.6px' }],
+      distance: ['30px', { lineHeight: '32px', letterSpacing: '-1px' }],
+      page: ['28px', { lineHeight: '34px', letterSpacing: '-0.8px' }],
+      name: ['24px', { lineHeight: '28px', letterSpacing: '-0.6px' }],
+      stat: ['22px', { lineHeight: '28px', letterSpacing: '-0.6px' }],
+      code: ['21px', { lineHeight: '26px' }],
+      section: ['20px', { lineHeight: '26px', letterSpacing: '-0.4px' }],
+      action: ['17px', { lineHeight: '22px', letterSpacing: '-0.2px' }],
+      lead: ['15px', { lineHeight: '22px' }],
+      small: ['13px', { lineHeight: '18px' }],
     },
     extend: {
       // In `extend` because the NativeWind preset extends `sans` with the system font and would win otherwise.

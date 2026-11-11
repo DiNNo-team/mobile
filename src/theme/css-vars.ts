@@ -40,6 +40,11 @@ export const colorTokens = {
   'edge-reserved': 'edgeReserved',
   'edge-busy': 'edgeBusy',
   'edge-limited': 'edgeLimited',
+  // Mobile v3 (diseño definitivo)
+  sand: 'sand',
+  caption: 'caption',
+  well: 'well',
+  'danger-text': 'dangerText',
 } as const satisfies Record<string, keyof Palette>;
 
 /** '#F46935' → '244 105 53', the format `rgb(var(--x) / <alpha-value>)` needs for `bg-ok/15`. */

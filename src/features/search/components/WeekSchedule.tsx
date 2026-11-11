@@ -6,11 +6,14 @@ import { cn } from '@/lib/cn';
 import { getBogotaDayOfWeek, getWeekSchedule } from '../schedule';
 import type { Schedule } from '../types';
 
-/** Week hours, Monday first, with "(día siguiente)" when a day closes after midnight; today in bold. */
+/**
+ * Week hours, Monday first (mobile v3): the day in the secondary color and the hours in ink; today stands out on an
+ * Arena row in 800. «(día siguiente)» when a day closes after midnight.
+ */
 export function WeekSchedule({ schedules }: { schedules: Schedule[] }) {
   const today = getBogotaDayOfWeek();
   return (
-    <View className="gap-2">
+    <View className="gap-0.5">
       {getWeekSchedule(schedules).map((day) => {
         const isToday = day.dayOfWeek === today;
         const hours = day.closesNextDay ? `${day.hours} (día siguiente)` : day.hours;
@@ -19,13 +22,16 @@ export function WeekSchedule({ schedules }: { schedules: Schedule[] }) {
             key={day.dayOfWeek}
             accessible
             accessibilityLabel={`${isToday ? 'Hoy, ' : ''}${day.day}: ${hours}`}
-            className={cn('flex-row items-start justify-between gap-4 rounded-input px-3 py-2', isToday && 'bg-surface-2')}
+            className={cn(
+              'flex-row items-center justify-between gap-4',
+              isToday ? '-mx-3 min-h-[42px] rounded-[14px] bg-sand px-3' : 'min-h-9',
+            )}
           >
-            <Text variant={isToday ? 'fieldLabel' : 'sec'} tone={isToday ? 'default' : 'secondary'}>
+            <Text variant={isToday ? 'heavy' : 'sec'} tone={isToday ? 'default' : 'secondary'}>
               {isToday ? `Hoy · ${day.day}` : day.day}
             </Text>
             <View className="flex-1 items-end">
-              <Text variant={isToday ? 'fieldLabel' : 'sec'} tone={day.closed && !isToday ? 'secondary' : 'default'} className="text-right">
+              <Text variant={isToday ? 'heavy' : 'sec'} tone={day.closed && !isToday ? 'secondary' : 'default'} className="text-right">
                 {day.hours}
               </Text>
               {day.closesNextDay ? (
