@@ -2,12 +2,14 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { Alert, BottomSheet, Button, NumberStepper, RETRY_LABEL, Text, useToast } from '@/components/ui';
+import { Timer } from 'lucide-react-native';
+
+import { Alert, BottomSheet, Button, GlassCard, Icon, NumberStepper, RETRY_LABEL, Text, useToast } from '@/components/ui';
 import { getErrorMessage } from '@/lib/api/errors';
 import { primaryTapHaptic } from '@/lib/haptics';
 import { formatPeople } from '@/lib/format/table';
 
-import { createErrorView, RESERVATION_TEXT, validityText, type CreateErrorView } from '../messages';
+import { createErrorView, RESERVATION_TEXT, validityMinutes, validityText, type CreateErrorView } from '../messages';
 import { useCreateReservation, useOpenActiveReservation } from '../queries';
 import { PARTY_SIZE_LIMITS } from '../types';
 
@@ -24,22 +26,36 @@ export interface ReserveSheetProps {
   onUnavailable?: () => void;
 }
 
-function SummaryRow({ label, value }: { label: string; value: string }) {
+/** How long the table is kept: the backend's real validity as a big figure, or the general text without it. */
+function ValidityCard({ ttlMinutes }: { ttlMinutes?: number }) {
+  const minutes = validityMinutes(ttlMinutes);
   return (
-    <View className="flex-row items-start justify-between gap-4">
-      <Text variant="sec" tone="secondary">
-        {label}
-      </Text>
-      <Text variant="body" className="flex-1 text-right font-bold">
-        {value}
-      </Text>
-    </View>
+    <GlassCard className="flex-row items-center gap-3.5 p-4">
+      <View className="h-11 w-11 items-center justify-center rounded-chip bg-accent/15">
+        <Icon icon={Timer} size={22} color="accentText" strokeWidth={2} />
+      </View>
+      {minutes ? (
+        <View className="min-w-0 flex-1" accessible accessibilityLabel={validityText(ttlMinutes)}>
+          <Text variant="small" tone="caption">
+            {RESERVATION_TEXT.validityLabel}
+          </Text>
+          <Text variant="stat">{minutes}</Text>
+          <Text variant="sec" tone="secondary">
+            {RESERVATION_TEXT.validityHint}
+          </Text>
+        </View>
+      ) : (
+        <Text variant="sec" className="min-w-0 flex-1">
+          {validityText(ttlMinutes)}
+        </Text>
+      )}
+    </GlassCard>
   );
 }
 
 /**
- * «Reservar mesa» (Tasks 1.1.5 and 1.1.6, reparto 9.2): people (1–20, preloaded with the filter), the summary with the
- * real validity of the backend, and «Reservar ahora» → POST /reservations. The button turns «Reservando…» and cannot be
+ * «Reservar mesa» (Tasks 1.1.5 and 1.1.6, reparto 9.2) as a glass sheet (mobile v3, the dashboard's glass): the
+ * restaurant as the title, people (1–20, preloaded with the filter) and the real validity of the backend, and «Reservar ahora» → POST /reservations. The button turns «Reservando…» and cannot be
  * pressed again until the answer. 201 → the reservation screen; each errorCode shows its exact text (§12.9).
  */
 export function ReserveSheet({ visible, onClose, restaurant, initialPartySize, onUnavailable }: ReserveSheetProps) {
@@ -91,9 +107,13 @@ export function ReserveSheet({ visible, onClose, restaurant, initialPartySize, o
     <BottomSheet
       visible={visible}
       onClose={close}
-      title={RESERVATION_TEXT.sheetTitle}
+      variant="glass"
+      kicker={RESERVATION_TEXT.sheetTitle}
+      title={restaurant.name}
       footer={
         <Button
+          shape="pill"
+          size="xl"
           label={RESERVATION_TEXT.reserveNow}
           loading={create.isPending}
           loadingLabel={RESERVATION_TEXT.reserving}
@@ -103,28 +123,26 @@ export function ReserveSheet({ visible, onClose, restaurant, initialPartySize, o
         />
       }
     >
-      <View className="gap-6">
-        <View className="gap-2">
-          <Text variant="fieldLabel">{RESERVATION_TEXT.peopleLabel}</Text>
-          <NumberStepper
-            value={partySize}
-            min={PARTY_SIZE_LIMITS.min}
-            max={PARTY_SIZE_LIMITS.max}
-            onChange={(next) => {
-              setPartySize(next);
-              if (failure && !failure.showMine) setFailure(null);
-            }}
-            accessibilityLabel={RESERVATION_TEXT.peopleLabel}
-            formatValue={formatPeople}
-          />
-        </View>
-        <View className="gap-3">
-          <SummaryRow label={RESERVATION_TEXT.summaryRestaurant} value={restaurant.name} />
-          <SummaryRow label={RESERVATION_TEXT.summaryPeople} value={formatPeople(partySize)} />
-          <Text variant="sec">{validityText(restaurant.reservationTtlMinutes)}</Text>
-        </View>
-        {failure ? <Alert type="error" message={failure.message} action={failureAction} /> : null}
-      </View>
+      <GlassCard className="gap-3 px-4 pb-4 pt-3.5">
+        <Text variant="strong" tone="caption">
+          {RESERVATION_TEXT.peopleLabel}
+        </Text>
+        <NumberStepper
+          size="lg"
+          value={partySize}
+          min={PARTY_SIZE_LIMITS.min}
+          max={PARTY_SIZE_LIMITS.max}
+          onChange={(next) => {
+            setPartySize(next);
+            if (failure && !failure.showMine) setFailure(null);
+          }}
+          accessibilityLabel={RESERVATION_TEXT.peopleLabel}
+          formatValue={formatPeople}
+          unit={(value) => (value === 1 ? 'persona' : 'personas')}
+        />
+      </GlassCard>
+      <ValidityCard ttlMinutes={restaurant.reservationTtlMinutes} />
+      {failure ? <Alert type="error" message={failure.message} action={failureAction} /> : null}
     </BottomSheet>
   );
 }

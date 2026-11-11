@@ -10,6 +10,7 @@ export { EdgeFade, type EdgeFadeProps } from './EdgeFade';
 export { EmptyState, ErrorState, RETRY_LABEL, type EmptyStateProps, type ErrorStateProps } from './EmptyState';
 export { FilterChip, type FilterChipProps } from './FilterChip';
 export { FloatingSurface } from './FloatingSurface';
+export { GlassCard } from './GlassCard';
 export { GlassSurface, type GlassLevel, type GlassSurfaceProps } from './GlassSurface';
 export { GoogleLogo } from './GoogleLogo';
 export { Icon, type IconColor, type IconSize } from './Icon';

@@ -24,6 +24,8 @@ export const RESERVATION_TEXT = {
   summaryRestaurant: 'Restaurante',
   summaryPeople: 'Personas',
   summaryValidity: 'Vigencia',
+  validityLabel: 'Te guardamos la mesa',
+  validityHint: 'Llega antes de que se acabe el tiempo.',
   activeElsewhere: 'Ya tienes una mesa reservada.',
   expired: 'Tu reserva se venció. La mesa quedó libre.',
   cancelled: 'Cancelaste tu reserva. La mesa quedó libre.',
@@ -48,6 +50,11 @@ export const RESERVATION_TEXT = {
 export function validityText(ttlMinutes: number | undefined): string {
   if (!ttlMinutes || ttlMinutes < 1) return RESERVATION_TEXT.validity;
   return `Tu mesa queda reservada ${ttlMinutes} ${ttlMinutes === 1 ? 'minuto' : 'minutos'}. Llega antes de que se acabe el tiempo.`;
+}
+
+/** «15 min» for the sheet's big figure; `null` when the detail did not bring `reservationTtlMinutes`. */
+export function validityMinutes(ttlMinutes: number | undefined): string | null {
+  return ttlMinutes && ttlMinutes >= 1 ? `${ttlMinutes} min` : null;
 }
 
 /** «Ya tienes una mesa en Casa 72.» when the active reservation is in another restaurant. */

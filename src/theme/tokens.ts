@@ -49,6 +49,8 @@ export const lightExtras = {
   notchStart:'#F8EFE6', notchEnd:'#F1EFEA', ticketRule:'#E2DDD0', avatar:'#FFFFFF',
   markerBg:'#FFFFFF', markerSelectedBg:'#10252B', markerSelectedText:'#FAF7F1', markerSelectedDot:'#3FBF86',
   markerGlow:0, userDotBorder:'#FFFFFF', segmentIdle:'#44535A',
+  // Glass of the web dashboard (`--glass-card-bg`, `--glass-edge`, `--glass-sheen`): cards over the room light.
+  glassCard:'rgba(255,255,255,.72)', glassEdge:'rgba(255,255,255,.62)', glassSheen:'inset 0 1px 0 rgba(255,255,255,.7)',
   overMapBg:'#FFFFFF', overMapShadow:'0 1px 2px rgba(16,37,43,.06), 0 10px 22px -12px rgba(16,37,43,.3)',
 };
 export const darkExtras: typeof lightExtras = {
@@ -73,6 +75,7 @@ export const darkExtras: typeof lightExtras = {
   notchStart:'#10323A', notchEnd:'#0D3640', ticketRule:'#2C5F6B', avatar:'#164853',
   markerBg:'rgba(11,45,54,.9)', markerSelectedBg:'#FAF7F1', markerSelectedText:'#10252B', markerSelectedDot:'#2B8F62',
   markerGlow:1, userDotBorder:'#FAF7F1', segmentIdle:'#E6EEEE',
+  glassCard:'rgba(16,59,70,.72)', glassEdge:'rgba(255,255,255,.10)', glassSheen:'inset 0 1px 0 rgba(255,255,255,.08)',
   overMapBg:'rgba(11,45,54,.82)', overMapShadow:'inset 0 0 0 1px rgba(250,247,241,.14)',
 };
 export const radius = { card:20, tile:16, btn:14, input:12, sheet:28, chip:999, piece:24, panel:28, ticket:32, frame:36 };
