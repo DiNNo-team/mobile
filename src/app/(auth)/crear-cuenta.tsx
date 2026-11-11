@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Lock, Mail, User } from 'lucide-react-native';
+import { Mail, User } from 'lucide-react-native';
 import { useRef, useState, type RefObject } from 'react';
 import { View, type TextInput } from 'react-native';
 
@@ -65,9 +65,7 @@ export default function SignUpScreen() {
         <Text variant="h1" accessibilityRole="header">
           Crea tu cuenta
         </Text>
-        <Text variant="body">
-          Encuentra una mesa disponible ahora y asegúrala mientras llegas.
-        </Text>
+        <Text variant="sec">Encuentra una mesa disponible ahora y asegúrala mientras llegas.</Text>
       </View>
 
       {invalidFields.length > 2 ? (
@@ -87,6 +85,7 @@ export default function SignUpScreen() {
           ref={nameRef}
           label="Nombre"
           icon={User}
+          iconPosition="end"
           placeholder="Ej.: Ana María"
           value={name}
           onChangeText={setName}
@@ -105,6 +104,7 @@ export default function SignUpScreen() {
           ref={emailRef}
           label="Correo"
           icon={Mail}
+          iconPosition="end"
           placeholder="Ej.: ana@correo.com"
           value={email}
           onChangeText={setEmail}
@@ -122,7 +122,6 @@ export default function SignUpScreen() {
         <TextField
           ref={passwordRef}
           label="Contraseña"
-          icon={Lock}
           password
           helperText="Mínimo 8 caracteres."
           value={password}
@@ -143,7 +142,7 @@ export default function SignUpScreen() {
         <Text variant="sec">
           ¿Ya tienes cuenta?
         </Text>
-        <Button variant="ghost" size="sm" label="Inicia sesión" onPress={() => router.back()} disabled={submitting} />
+        <Button variant="ghost" size="sm" label="Inicia sesión" onPress={() => router.back()} disabled={submitting} className="-ml-3" />
       </View>
     </AuthScreen>
   );

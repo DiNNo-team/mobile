@@ -27,9 +27,9 @@ export interface AuthTabsProps {
 }
 
 /**
- * "Iniciar sesión / Crear cuenta" (manual 13.9), the web login's tabs on a phone: two tabs in a row, each with the web's
- * icon, and the orange bar that slides to the chosen one (300 ms, `--ease-move`) before the other screen opens, with
- * a selection tick.
+ * "Iniciar sesión / Crear cuenta" (manual 13.9), the web login's tabs on a phone: under the logo, each with its icon,
+ * and a short orange bar that slides to the chosen one (300 ms, `--ease-move`) before the other screen opens, with a
+ * selection tick.
  */
 export function AuthTabs({ active, onSelect }: AuthTabsProps) {
   const reduceMotion = useReducedMotion();
@@ -73,19 +73,24 @@ export function AuthTabs({ active, onSelect }: AuthTabsProps) {
               accessibilityRole="tab"
               accessibilityState={{ selected }}
               onPress={() => choose(tab)}
-              className="min-h-12 flex-1 flex-row items-center justify-center gap-2"
+              className="min-h-14 flex-1 flex-row items-center justify-center gap-2 px-2"
             >
-              <Icon size={18} strokeWidth={2} color={selected ? colors.accentText : colors.text2} aria-hidden />
-              <Text variant={selected ? 'button' : 'sec'}>
-                {label}
-              </Text>
+              <Icon size={20} strokeWidth={2} color={selected ? colors.accentText : colors.text} aria-hidden />
+              <Text variant={selected ? 'fieldLabel' : 'sec'}>{label}</Text>
             </Pressable>
           );
         })}
       </View>
-      <View className="h-1 bg-line">
-        {width > 0 ? <Animated.View className="h-1 rounded-chip bg-accent" style={[{ width: width / 2 }, barStyle]} /> : null}
-      </View>
+      {/* A short orange bar centered under the chosen tab, with no track (web `AuthNav`). */}
+      {width > 0 ? (
+        <Animated.View
+          pointerEvents="none"
+          className="absolute bottom-0 left-0 items-center"
+          style={[{ width: width / 2 }, barStyle]}
+        >
+          <View className="h-1 rounded-t-chip bg-accent" style={{ width: 60 }} />
+        </Animated.View>
+      ) : null}
     </View>
   );
 }

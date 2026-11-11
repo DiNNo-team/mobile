@@ -7,7 +7,8 @@
 ## 10 nov 2026 · Sebastián · Login con la luz del salón
 
 - El fondo del login (y de crear cuenta, recuperar contraseña y las pantallas de mensaje) ya no tiene las dos formas de marca: ahora es la misma luz difuminada del dashboard web (`AmbientGround`, en `src/components/`), naranja arriba a la izquierda y petróleo abajo a la derecha.
-- Las pestañas «Iniciar sesión / Crear cuenta» llevan los mismos íconos de la web (`UserRoundCheck` y `UserRoundPlus`).
+- El login y crear cuenta copian el login web en ancho de celular: logo centrado arriba, debajo las pestañas «Iniciar sesión / Crear cuenta» con los íconos de la web (`UserRoundCheck` y `UserRoundPlus`) y una barra naranja corta bajo la elegida, campos con el ícono a la derecha (la contraseña solo con el ojo), «¿Olvidaste tu contraseña?» a la derecha y el divisor «O inicia sesión con» antes de Google.
+- **Kit:** `TextField` suma `iconPosition` (`'start'` por defecto, `'end'` para el ícono a la derecha). No cambia ningún campo existente.
 - **Tokens:** `tokens.ts` suma `ambWarm`, `ambCool` y sus opacidades (los `--amb-warm` / `--amb-cool` de la web). No cambia ningún color existente.
 - Sin dependencias nuevas ni cambios nativos: no hace falta recompilar.
 

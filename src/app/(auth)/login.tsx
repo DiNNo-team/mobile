@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Lock, Mail } from 'lucide-react-native';
+import { Mail } from 'lucide-react-native';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { useRef, useState } from 'react';
 import { View, type TextInput } from 'react-native';
@@ -79,9 +79,7 @@ export default function LoginScreen() {
         <Text variant="h1" accessibilityRole="header">
           Inicia sesión
         </Text>
-        <Text variant="body">
-          Encuentra una mesa disponible ahora y asegúrala mientras llegas.
-        </Text>
+        <Text variant="sec">Encuentra una mesa disponible ahora y asegúrala mientras llegas.</Text>
       </View>
 
       {notice ? <Alert type="info" message={notice} /> : null}
@@ -99,6 +97,7 @@ export default function LoginScreen() {
           ref={emailRef}
           label="Correo"
           icon={Mail}
+          iconPosition="end"
           placeholder="Ej.: ana@correo.com"
           value={email}
           onChangeText={setEmail}
@@ -117,7 +116,6 @@ export default function LoginScreen() {
           <TextField
             ref={passwordRef}
             label="Contraseña"
-            icon={Lock}
             password
             value={password}
             onChangeText={setPassword}
@@ -134,37 +132,42 @@ export default function LoginScreen() {
             label="¿Olvidaste tu contraseña?"
             onPress={() => router.push('/recuperar-contrasena')}
             disabled={busy}
-            className="-ml-4"
+            className="-mr-4 self-end"
           />
         </View>
       </View>
 
-      <View className="gap-3">
-        <Button
-          label="Iniciar sesión"
-          loading={submitting}
-          loadingLabel="Iniciando sesión…"
-          disabled={googleSigningIn}
-          fullWidth
-          onPress={submit}
-        />
-        <Button
-          variant="outline"
-          leading={<GoogleLogo />}
-          label="Continuar con Google"
-          loading={googleSigningIn}
-          loadingLabel="Conectando con Google…"
-          disabled={submitting}
-          fullWidth
-          onPress={continueWithGoogle}
-        />
+      <Button
+        label="Iniciar sesión"
+        loading={submitting}
+        loadingLabel="Iniciando sesión…"
+        disabled={googleSigningIn}
+        fullWidth
+        onPress={submit}
+      />
+
+      <View className="flex-row items-center gap-3" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <View className="h-px flex-1 bg-line" />
+        {/* The web login's label: 11 px with 0.08 em tracking (`.glass-login .text-label`). */}
+        <Text variant="label" style={{ fontSize: 11, lineHeight: 14, letterSpacing: 0.88 }}>
+          O inicia sesión con
+        </Text>
+        <View className="h-px flex-1 bg-line" />
       </View>
+      <Button
+        variant="outline"
+        leading={<GoogleLogo />}
+        label="Continuar con Google"
+        loading={googleSigningIn}
+        loadingLabel="Conectando con Google…"
+        disabled={submitting}
+        fullWidth
+        onPress={continueWithGoogle}
+      />
 
       <View className="flex-row flex-wrap items-center justify-center">
-        <Text variant="sec">
-          ¿No tienes cuenta?
-        </Text>
-        <Button variant="ghost" size="sm" label="Crea tu cuenta" onPress={() => router.push('/crear-cuenta')} disabled={busy} />
+        <Text variant="sec">¿Aún no tienes cuenta?</Text>
+        <Button variant="ghost" size="sm" label="Crear cuenta" onPress={() => router.push('/crear-cuenta')} disabled={busy} className="-ml-3" />
       </View>
     </AuthScreen>
   );

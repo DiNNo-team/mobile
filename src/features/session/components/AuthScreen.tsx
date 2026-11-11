@@ -15,9 +15,9 @@ export interface AuthScreenProps {
   children: ReactNode;
   /** `center`: card in the middle of the screen (messages); `top`: forms. */
   align?: 'top' | 'center';
-  /** Shows the DiNNo logo at the top of the card. */
+  /** Shows the DiNNo logo, centered at the top of the card. */
   showLogo?: boolean;
-  /** "Iniciar sesión / Crear cuenta" tabs at the top of the card (login and sign-up). */
+  /** "Iniciar sesión / Crear cuenta" tabs under the logo (login and sign-up), as in the web login. */
   tabs?: { active: AuthTab; onSelect: (tab: AuthTab) => void };
 }
 
@@ -47,11 +47,27 @@ export function AuthScreen({ children, align = 'top', showLogo = true, tabs }: A
         >
           <Animated.View entering={FadeInDown.duration(motion.slow).easing(enter)} className="w-full max-w-toast self-center">
             <GlassSurface level="login" blurTarget={target} className="rounded-card">
-              {tabs ? <AuthTabs active={tabs.active} onSelect={tabs.onSelect} /> : null}
-              <View className="gap-6 p-6">
-                {showLogo ? <Logo width={112} /> : null}
-                {children}
-              </View>
+              {tabs ? (
+                // The web login below 768 px: centered logo, the tabs under it, then the form.
+                <>
+                  {showLogo ? (
+                    <View className="items-center pb-4 pt-8">
+                      <Logo width={96} />
+                    </View>
+                  ) : null}
+                  <AuthTabs active={tabs.active} onSelect={tabs.onSelect} />
+                  <View className="gap-5 px-6 pb-8 pt-6">{children}</View>
+                </>
+              ) : (
+                <View className="gap-6 p-6">
+                  {showLogo ? (
+                    <View className="items-center">
+                      <Logo width={96} />
+                    </View>
+                  ) : null}
+                  {children}
+                </View>
+              )}
             </GlassSurface>
           </Animated.View>
         </ScrollView>
