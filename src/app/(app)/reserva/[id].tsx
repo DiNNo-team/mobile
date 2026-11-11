@@ -3,7 +3,10 @@ import { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, EmptyState, ErrorState, ScreenHeader, Skeleton, useDelayedLoading } from '@/components/ui';
+import { ChevronLeft } from 'lucide-react-native';
+
+import { AmbientGround } from '@/components/AmbientGround';
+import { Button, EmptyState, ErrorState, IconButton, Skeleton, Text, useDelayedLoading } from '@/components/ui';
 import { CancelReservation } from '@/features/reservations/components/CancelReservation';
 import { ReservationView } from '@/features/reservations/components/ReservationView';
 import { RESERVATION_TEXT } from '@/features/reservations/messages';
@@ -18,11 +21,9 @@ function goBack() {
 
 function ReservationSkeleton() {
   return (
-    <View accessibilityLabel="Cargando tu reserva" className="items-center gap-4">
-      <Skeleton className="h-6 w-24 rounded-chip" />
-      <Skeleton className="h-14 w-40 rounded-card" />
-      <Skeleton className="h-16 w-64 rounded-card" />
-      <Skeleton className="h-48 w-full rounded-card" />
+    <View accessibilityLabel="Cargando tu reserva" className="gap-5">
+      <Skeleton className="h-[520px] w-full rounded-ticket" />
+      <Skeleton className="h-14 w-full rounded-chip" />
     </View>
   );
 }
@@ -79,13 +80,21 @@ export default function ReservationScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-bg"
-      contentContainerClassName="gap-6 px-4"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}
-    >
-      <ScreenHeader showBack onBack={goBack} size="h2" title="Tu reserva" />
-      {body()}
-    </ScrollView>
+    <View className="flex-1">
+      <AmbientGround variant="screen" />
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="gap-3.5 px-4"
+        contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}
+      >
+        <View className="flex-row items-center gap-3">
+          <IconButton variant="raised" icon={ChevronLeft} accessibilityLabel="Volver" onPress={goBack} />
+          <Text variant="page" accessibilityRole="header">
+            Tu reserva
+          </Text>
+        </View>
+        {body()}
+      </ScrollView>
+    </View>
   );
 }

@@ -55,7 +55,8 @@ export function CancelReservation({ reservationId, onStale }: CancelReservationP
 
   return (
     <>
-      <Button variant="outline" label={RESERVATION_TEXT.cancel} fullWidth onPress={() => setAsking(true)} />
+      {/* Mobile v3: only text, no border; the confirmation Dialog keeps it from being a one-tap mistake. */}
+      <Button variant="quiet" shape="pill" size="field" label={RESERVATION_TEXT.cancel} fullWidth onPress={() => setAsking(true)} />
       <Dialog
         visible={asking}
         onClose={close}

@@ -28,7 +28,7 @@ export const RESERVATION_TEXT = {
   expired: 'Tu reserva se venció. La mesa quedó libre.',
   cancelled: 'Cancelaste tu reserva. La mesa quedó libre.',
   codeLabel: 'Tu código',
-  codeHint: 'Muéstraselo al restaurante al llegar.',
+  codeHint: 'Muestra el QR o el código al restaurante al llegar.',
   closedReason: 'Este restaurante está cerrado ahora.',
   noTablesReason: 'Ahora no tiene mesas disponibles.',
   // createErrorText.
