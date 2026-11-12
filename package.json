@@ -36,6 +36,7 @@
     "jest-expo": "~57.0.6",
     "lucide-react-native": "^1.57.0",
     "nativewind": "^4.2.7",
+    "qrcode-generator": "^2.0.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
