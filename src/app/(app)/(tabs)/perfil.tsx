@@ -5,7 +5,6 @@ import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AmbientGround } from '@/components/AmbientGround';
-import { PlaceholderLink } from '@/components/ScreenPlaceholder';
 import {
   Alert,
   Button,
@@ -20,7 +19,7 @@ import {
   useDelayedLoading,
   useToast,
 } from '@/components/ui';
-import { formatAppVersion, getDisplayName } from '@/features/account/profile-display';
+import { formatAppVersion, getDisplayName, getInitial } from '@/features/account/profile-display';
 import { useMeQuery } from '@/features/account/queries';
 import type { Me } from '@/features/account/types';
 import { useAuth } from '@/features/session/SessionProvider';
@@ -33,39 +32,61 @@ const THEME_OPTIONS = [
   { value: 'dark', label: 'Oscuro' },
 ] as const satisfies readonly { value: ThemePreference; label: string }[];
 
+const SIGN_OUT_ERROR = 'No pudimos cerrar sesión. Intenta de nuevo.';
+const AVATAR_SIZE = 76;
+
 function goBack() {
   if (router.canGoBack()) router.back();
   else router.replace('/');
 }
 
-const SIGN_OUT_ERROR = 'No pudimos cerrar sesión. Intenta de nuevo.';
-
-/** Name and email of GET /me. The kit's Avatar, once published, goes before them in this card. */
-function ProfileCard({ profile }: { profile: Me }) {
+/** The same raised circle as the Perfil button in Explorar, larger and with the initial of the name. */
+function Avatar({ name }: { name: string }) {
+  const { colors } = useTheme();
   return (
-    <Card>
-      <View className="gap-1">
-        <Text variant="h3">{getDisplayName(profile)}</Text>
-        <Text variant="sec" tone="secondary">
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      className="items-center justify-center rounded-chip"
+      style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, backgroundColor: colors.avatar, boxShadow: colors.shadowRaised }}
+    >
+      <Text variant="title">{getInitial(name)}</Text>
+    </View>
+  );
+}
+
+/** Who is signed in: avatar, name and email of GET /me, centered, without a card around it. */
+function Identity({ profile }: { profile: Me }) {
+  const name = getDisplayName(profile);
+  return (
+    <View className="items-center gap-3">
+      <Avatar name={name} />
+      <View className="items-center gap-0.5">
+        <Text variant="h2" numberOfLines={2} className="text-center">
+          {name}
+        </Text>
+        <Text variant="sec" tone="secondary" numberOfLines={1} className="text-center">
           {profile.email}
         </Text>
       </View>
-    </Card>
+    </View>
   );
 }
 
-function ProfileSkeleton() {
+function IdentitySkeleton() {
   return (
-    <Card>
-      <View accessibilityLabel="Cargando tu perfil" className="gap-2">
-        <Skeleton className="h-6 w-40 rounded-input" />
-        <Skeleton className="h-4 w-48 rounded-input" />
-      </View>
-    </Card>
+    <View accessibilityLabel="Cargando tu perfil" className="items-center gap-3">
+      <Skeleton className="h-[76px] w-[76px] rounded-chip" />
+      <Skeleton className="h-7 w-40 rounded-input" />
+      <Skeleton className="h-4 w-48 rounded-input" />
+    </View>
   );
 }
 
-/** Profile tab (PBI "Consultar perfil y cerrar sesión"): name and email, theme, "Cerrar sesión" with confirmation, version. */
+/**
+ * Perfil (Sprint 4, simple version): who is signed in, the theme and «Cerrar sesión» with confirmation, plus the version.
+ * Opens from the avatar in Explorar's search field and goes back to it (mobile v3 has no bottom bar).
+ */
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const me = useMeQuery();
@@ -89,10 +110,10 @@ export default function ProfileScreen() {
     }
   };
 
-  const renderProfile = () => {
+  const renderIdentity = () => {
     if (me.data) {
       return (
-        <>
+        <View className="gap-4">
           {me.isError ? (
             // A failed refresh keeps the last data on screen and says so (the full error state is for no data).
             <Alert
@@ -101,11 +122,11 @@ export default function ProfileScreen() {
               action={<Button size="sm" variant="outline" label={RETRY_LABEL} onPress={() => me.refetch()} />}
             />
           ) : null}
-          <ProfileCard profile={me.data} />
-        </>
+          <Identity profile={me.data} />
+        </View>
       );
     }
-    if (me.isPending) return showSkeleton ? <ProfileSkeleton /> : null;
+    if (me.isPending) return showSkeleton ? <IdentitySkeleton /> : <View style={{ height: AVATAR_SIZE }} />;
     return (
       <ErrorState
         title="No pudimos cargar tu perfil"
@@ -121,28 +142,30 @@ export default function ProfileScreen() {
       <AmbientGround variant="screen" />
       <ScrollView
         className="flex-1"
-        contentContainerClassName="gap-6 px-4 pb-6"
-        contentContainerStyle={{ paddingTop: insets.top + 8 }}
+        contentContainerClassName="flex-grow gap-8 px-4"
+        contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }}
       >
-        {/* Mobile v3: no bottom bar, Perfil opens from Explorar's search field and goes back to it. */}
         <ScreenHeader title="Perfil" showBack onBack={goBack} />
-        {renderProfile()}
+        {renderIdentity()}
+
+        <Card>
+          <View className="gap-3">
+            <Text variant="strong">Tema</Text>
+            <SegmentedControl options={THEME_OPTIONS} value={preference} onChange={setPreference} accessibilityLabel="Tema" />
+          </View>
+        </Card>
+
+        {/* Pushes «Cerrar sesión» and the version to the bottom when the screen is taller than the content. */}
+        <View className="flex-1" />
 
         <View className="gap-2">
-          <Text variant="label" tone="secondary">
-            Tema
-          </Text>
-          <SegmentedControl options={THEME_OPTIONS} value={preference} onChange={setPreference} accessibilityLabel="Tema" />
+          <Button variant="quiet" shape="pill" size="field" label="Cerrar sesión" fullWidth onPress={() => setConfirmingSignOut(true)} />
+          {version ? (
+            <Text variant="sec" tone="caption" className="text-center">
+              {version}
+            </Text>
+          ) : null}
         </View>
-
-        <Button variant="outline" label="Cerrar sesión" fullWidth onPress={() => setConfirmingSignOut(true)} />
-
-        {version ? (
-          <Text variant="sec" tone="secondary" className="text-center">
-            {version}
-          </Text>
-        ) : null}
-        {__DEV__ ? <PlaceholderLink href="/kit" label="Ver el kit móvil" /> : null}
 
         <Dialog
           visible={confirmingSignOut}

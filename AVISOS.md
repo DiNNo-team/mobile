@@ -4,6 +4,15 @@
 
 ---
 
+## 12 nov 2026 · Sebastián · Perfil más simple (Sprint 4)
+
+- **Perfil** muestra quién inició sesión (avatar con la inicial, nombre y correo, sin tarjeta), el tema en una tarjeta y, abajo, «Cerrar sesión» solo como texto (sigue pidiendo confirmación) y la versión.
+- **Se quitó el enlace «Ver el kit móvil».** La ruta `/kit` sigue existiendo en desarrollo: ábrela con `npx uri-scheme open dinno://kit --android` o escribiendo la ruta en Expo Router.
+- `getInitial(name)` nuevo en `src/features/account/profile-display.ts`. Se borró `src/components/ScreenPlaceholder.tsx`, que ya nadie usaba.
+- **Sin cambios de API, dependencias ni configuración nativa:** no hace falta recompilar.
+
+---
+
 ## 11 nov 2026 · Sebastián · Rediseño de la app: diseño definitivo (B + C)
 
 La app del comensal pasa al diseño definitivo que elegimos en el canvas «DiNNo Mobile · Diseño definitivo». Cambian Explorar, Restaurante y Tu reserva, en claro y en oscuro. La lógica (búsqueda, tiempo real, reservar, cancelar, temporizador) no cambia.
