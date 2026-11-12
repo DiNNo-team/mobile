@@ -4,6 +4,16 @@
 
 ---
 
+## 12 nov 2026 · Sebastián · QR de check-in real (Sprint 4)
+
+- **El QR del tiquete ahora es real:** contiene solo el código de 6 caracteres (modo alfanumérico, nivel M, 21 × 21 + 2 módulos de margen). El restaurante lo lee con un lector USB o con la cámara del portátil en la web, o sigue escribiendo el código. **El backend no cambia:** el check-in es el mismo `POST /v1/restaurants/me/check-ins`.
+- **Tocar el QR lo abre en grande** («Tu código de reserva», con el código debajo y «Listo»), para leerlo más fácil desde la webcam.
+- Siempre tinta sobre claro, también en modo oscuro (muchos lectores no leen el QR invertido).
+- **Dependencia nueva: `qrcode-generator`** (JS puro, sin dependencias ni código nativo): después del pull corre `npm install`; **no hace falta recompilar**.
+- Código: `src/features/reservations/qr.ts` (`reservationQr(code)` → `{ size, path }`, con pruebas) y `ReservationQr` recibe `code`.
+
+---
+
 ## 11 nov 2026 · Sebastián · Rediseño de la app: diseño definitivo (B + C)
 
 La app del comensal pasa al diseño definitivo que elegimos en el canvas «DiNNo Mobile · Diseño definitivo». Cambian Explorar, Restaurante y Tu reserva, en claro y en oscuro. La lógica (búsqueda, tiempo real, reservar, cancelar, temporizador) no cambia.
