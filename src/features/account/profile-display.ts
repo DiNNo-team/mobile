@@ -12,3 +12,9 @@ export function formatAppVersion(version: string | null | undefined): string | n
   const value = version?.trim();
   return value ? `Versión ${value}` : null;
 }
+
+/** Letter inside the Profile avatar: the first letter of the shown name, uppercase ("ana" → "A"). */
+export function getInitial(name: string): string {
+  const first = [...name.trim()][0];
+  return first ? first.toLocaleUpperCase('es') : '?';
+}

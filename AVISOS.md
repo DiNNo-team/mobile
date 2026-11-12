@@ -11,6 +11,12 @@
 - Siempre tinta sobre claro, también en modo oscuro (muchos lectores no leen el QR invertido).
 - **Dependencia nueva: `qrcode-generator`** (JS puro, sin dependencias ni código nativo): después del pull corre `npm install`; **no hace falta recompilar**.
 - Código: `src/features/reservations/qr.ts` (`reservationQr(code)` → `{ size, path }`, con pruebas) y `ReservationQr` recibe `code`.
+## 12 nov 2026 · Sebastián · Perfil más simple (Sprint 4)
+
+- **Perfil** muestra quién inició sesión (avatar con la inicial, nombre y correo, sin tarjeta), el tema en una tarjeta y, abajo, «Cerrar sesión» solo como texto (sigue pidiendo confirmación) y la versión.
+- **Se quitó el enlace «Ver el kit móvil».** La ruta `/kit` sigue existiendo en desarrollo: ábrela con `npx uri-scheme open dinno://kit --android` o escribiendo la ruta en Expo Router.
+- `getInitial(name)` nuevo en `src/features/account/profile-display.ts`. Se borró `src/components/ScreenPlaceholder.tsx`, que ya nadie usaba.
+- **Sin cambios de API, dependencias ni configuración nativa:** no hace falta recompilar.
 
 ---
 
