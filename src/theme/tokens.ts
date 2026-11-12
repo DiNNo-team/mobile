@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // DiNNo design tokens (manual de identidad v2.0, sección 16.5). This is the only file with raw design values.
 // `light`, `dark`, `lightExtras`, `darkExtras`, `radius`, `space`, `type`, `motion` and `textExtras` are a verbatim
 // copy of section 16.5. Tints and edges are the same mixes the web gets with `color-mix` (manual 2.3).
@@ -114,3 +116,20 @@ export const themes: Record<ColorScheme, ThemeColors> = {
   light: { ...light, ...lightExtras },
   dark: { ...dark, ...darkExtras },
 };
+
+/**
+ * iOS (Sprint 4): the expo-font plugin embeds Plus Jakarta Sans in both systems, but Android finds each weight by its
+ * file name (the names above, verbatim from the manual) and iOS only by its PostScript name. Without this, every text
+ * on iPhone falls back to San Francisco. The same three names are in tailwind.config.js (`platformSelect`).
+ */
+export const IOS_FONT_NAMES: Record<string, string> = {
+  PlusJakartaSans_500Medium: 'PlusJakartaSans-Medium',
+  PlusJakartaSans_700Bold: 'PlusJakartaSans-Bold',
+  PlusJakartaSans_800ExtraBold: 'PlusJakartaSans-ExtraBold',
+};
+
+if (Platform.OS === 'ios') {
+  for (const style of Object.values(type) as { fontFamily?: string }[]) {
+    if (style.fontFamily) style.fontFamily = IOS_FONT_NAMES[style.fontFamily] ?? style.fontFamily;
+  }
+}

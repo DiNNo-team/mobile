@@ -26,7 +26,10 @@ let signOutPending = false;
 
 function configureOnce(): void {
   if (configured) return;
-  GoogleSignin.configure({ webClientId: env.googleWebClientId ?? undefined });
+  GoogleSignin.configure({
+    webClientId: env.googleWebClientId ?? undefined,
+    iosClientId: env.googleIosClientId ?? undefined,
+  });
   configured = true;
 }
 

@@ -4,6 +4,19 @@
 
 ---
 
+## 12 nov 2026 · Sebastián · La app corre en iPhone (Sprint 4)
+
+- **iOS listo en el simulador de Xcode** (solo en Mac): `npx expo prebuild --clean --platform ios` y `npx expo run:ios`. Probado en un iPhone 18 Pro con iOS 27.2, en claro y en oscuro: login, Explorar con Google Maps, la reserva y Perfil.
+- **iOS 27 cierra al arrancar** las apps que no usan el ciclo de vida por escenas, y la plantilla de Expo SDK 57 todavía no lo trae. `app.config.ts` lo agrega (`withIosSceneLifecycle`, con el `ExpoAppSceneDelegate` oficial de Expo). Si una actualización de Expo cambia la plantilla, el prebuild falla con un mensaje que dice qué revisar.
+- **Fuentes:** iOS busca Plus Jakarta Sans por nombre PostScript (`PlusJakartaSans-Bold`). `tokens.ts` (`IOS_FONT_NAMES`) y `tailwind.config.js` (`platformSelect`) lo resuelven; en Android no cambia nada.
+- **Mapa:** Google Maps también en iOS, con la llave `GOOGLE_MAPS_IOS_API_KEY` (va en `.env`, nunca en el repo; está en `.env.example`). Sin ella, iOS muestra solo la lista.
+- **Google Sign-In en iOS:** lee el cliente de iOS de `GoogleService-Info.plist` (Firebase, fuera del repo, igual que `google-services.json`; pídeselos a Sebastián). Sin el archivo, «Continuar con Google» no está disponible en iOS y el correo funciona igual.
+- **Notificaciones en iOS:** solo el recordatorio local. La push remota exige el programa pago de Apple; `app.config.ts` quita el permiso `aps-environment` (un Apple ID gratis no lo puede firmar) salvo con `IOS_PUSH_ENABLED=true`.
+- El vidrio es real en iOS (`GlassSurface` ya lo hacía): las superficies se desenfocan de verdad, también sobre el mapa.
+- `google-services.json` y `GoogleService-Info.plist` quedan en el `.gitignore`.
+
+---
+
 ## 12 nov 2026 · Sebastián · Notificaciones de la reserva (Sprint 4)
 
 - **Qué hace:** el comensal recibe notificaciones cuando su reserva se crea, se cancela, se vence o tiene check-in (push por Firebase Cloud Messaging en Android, enviadas por el backend; los textos nunca llevan el código). Además, un **recordatorio local** «Tu reserva vence pronto» 5 minutos antes (1 minuto si la reserva dura 5 o menos, como en la demo de 3 minutos), que funciona en Android y en iOS, sin red. Tocar una notificación abre la reserva.
