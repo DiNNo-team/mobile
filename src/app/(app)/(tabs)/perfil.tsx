@@ -21,6 +21,8 @@ import {
 } from '@/components/ui';
 import { formatAppVersion, getDisplayName, getInitial } from '@/features/account/profile-display';
 import { useMeQuery } from '@/features/account/queries';
+import { NOTIFICATION_TEXT } from '@/features/notifications/messages';
+import { unregisterThisPhone, usePushPermission, type PermissionState } from '@/features/notifications/push';
 import type { Me } from '@/features/account/types';
 import { useAuth } from '@/features/session/SessionProvider';
 import { getErrorMessage } from '@/lib/api/errors';
@@ -83,6 +85,37 @@ function IdentitySkeleton() {
   );
 }
 
+const NOTIFICATION_STATE_TEXT: Record<PermissionState, string> = {
+  unknown: NOTIFICATION_TEXT.rowOff,
+  undetermined: NOTIFICATION_TEXT.rowOff,
+  granted: NOTIFICATION_TEXT.rowOn,
+  blocked: NOTIFICATION_TEXT.rowBlocked,
+};
+
+/** Whether this phone gets the reservation notifications, with the way to turn them on (Sprint 4). */
+function NotificationsRow() {
+  const state = usePushPermission((store) => store.state);
+  const request = usePushPermission((store) => store.request);
+  return (
+    <View className="flex-row items-center gap-3">
+      <View className="min-w-0 flex-1 gap-0.5">
+        <Text variant="strong">{NOTIFICATION_TEXT.rowTitle}</Text>
+        <Text variant="sec" tone="secondary">
+          {NOTIFICATION_STATE_TEXT[state]}
+        </Text>
+      </View>
+      {state === 'undetermined' || state === 'blocked' ? (
+        <Button
+          size="sm"
+          variant="outline"
+          label={state === 'blocked' ? NOTIFICATION_TEXT.openSettings : NOTIFICATION_TEXT.activate}
+          onPress={() => void request()}
+        />
+      ) : null}
+    </View>
+  );
+}
+
 /**
  * Perfil (Sprint 4, simple version): who is signed in, the theme and «Cerrar sesión» with confirmation, plus the version.
  * Opens from the avatar in Explorar's search field and goes back to it (mobile v3 has no bottom bar).
@@ -102,6 +135,8 @@ export default function ProfileScreen() {
   const confirmSignOut = async () => {
     setSigningOut(true);
     try {
+      // This phone stops getting this diner's notifications before the session ends (it needs the token).
+      await unregisterThisPhone();
       await signOut();
     } catch {
       setSigningOut(false);
@@ -153,6 +188,10 @@ export default function ProfileScreen() {
             <Text variant="strong">Tema</Text>
             <SegmentedControl options={THEME_OPTIONS} value={preference} onChange={setPreference} accessibilityLabel="Tema" />
           </View>
+        </Card>
+
+        <Card>
+          <NotificationsRow />
         </Card>
 
         {/* Pushes «Cerrar sesión» and the version to the bottom when the screen is taller than the content. */}
