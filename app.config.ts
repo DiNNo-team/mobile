@@ -1,3 +1,6 @@
+/// <reference types="node" />
+import { existsSync } from 'node:fs';
+
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 // Native configuration of the app (Continuous Native Generation): `npx expo prebuild` / `npx expo run:android`
@@ -8,6 +11,11 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 // never EXPO_PUBLIC_* (so it is not in the JavaScript bundle). Without it the build has no map and the app
 // shows only the list (`extra.mapsEnabled`), because the Maps SDK crashes without a key.
 const googleMapsAndroidApiKey = process.env.GOOGLE_MAPS_ANDROID_API_KEY?.trim() || undefined;
+
+// Push notifications (Sprint 4) on Android come through Firebase Cloud Messaging, which needs the google-services.json
+// of the Firebase project in the build. It is not in the repo (ask Sebastián; it goes at the root): without it the app
+// builds the same, only without remote push (the local reminder still works).
+const googleServicesFile = existsSync('./google-services.json') ? './google-services.json' : undefined;
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -27,6 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    googleServicesFile,
   },
   ios: {
     bundleIdentifier: 'com.dinno.app',
@@ -74,6 +83,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ['react-native-maps', { androidGoogleMapsApiKey: googleMapsAndroidApiKey }],
+    [
+      // Notifications (Sprint 4): white symbol on the status bar, tinted with the brand orange in the shade.
+      'expo-notifications',
+      { icon: './assets/images/notification-icon.png', color: '#F46935' },
+    ],
     // @react-native-google-signin/google-signin is not listed on purpose: its plugin only sets up Firebase native
     // files (google-services.json, which we do not use: Firebase is the JS SDK) or, with options, the iOS URL
     // scheme (`iosUrlScheme`, required by the plugin). On Android the native module needs no config: autolinking

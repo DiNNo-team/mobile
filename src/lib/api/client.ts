@@ -30,7 +30,7 @@ export function subscribeToApiErrors(listener: ApiErrorListener): () => void {
 export type QueryParams = Record<string, string | number | undefined>;
 
 export interface ApiRequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   query?: QueryParams;
   signal?: AbortSignal;

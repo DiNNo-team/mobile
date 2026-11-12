@@ -4,6 +4,19 @@
 
 ---
 
+## 12 nov 2026 · Sebastián · Notificaciones de la reserva (Sprint 4)
+
+- **Qué hace:** el comensal recibe notificaciones cuando su reserva se crea, se cancela, se vence o tiene check-in (push por Firebase Cloud Messaging en Android, enviadas por el backend; los textos nunca llevan el código). Además, un **recordatorio local** «Tu reserva vence pronto» 5 minutos antes (1 minuto si la reserva dura 5 o menos, como en la demo de 3 minutos), que funciona en Android y en iOS, sin red. Tocar una notificación abre la reserva.
+- **Permiso:** se pide después de la **primera reserva**, no al iniciar sesión. En Perfil hay una fila «Notificaciones» con «Activar» (o «Abrir ajustes» si están bloqueadas).
+- Con la app abierta, las push no salen como banner (la pantalla ya lo muestra) y quedan en la bandeja. El recordatorio sí sale como banner.
+- **Dependencia nueva con código nativo: `expo-notifications`.** Después del pull: `npm install`, `npx expo prebuild --clean` y `npx expo run:android`.
+- **`google-services.json`** (Firebase, Android) va en la raíz de la app y **no está en el repo**: pídeselo a Sebastián. Sin él la app compila igual, solo sin push remota (el recordatorio local funciona).
+- **Backend:** necesita el PR de notificaciones del backend (tabla `push_devices`, migración en Neon por Elizabeth, y la cuenta de servicio en Render). Sin eso, el registro del teléfono falla en silencio y la app sigue igual.
+- **iOS:** sin el programa pago de Apple no hay push remota; solo el recordatorio local.
+- Código: `src/features/notifications/` (`push.ts`, `hooks.ts` montados en `(app)/_layout.tsx`, `reminder.ts` con pruebas, `api.ts`). `apiRequest` acepta `PUT`.
+
+---
+
 ## 12 nov 2026 · Sebastián · QR de check-in real (Sprint 4)
 
 - **El QR del tiquete ahora es real:** contiene solo el código de 6 caracteres (modo alfanumérico, nivel M, 21 × 21 + 2 módulos de margen). El restaurante lo lee con un lector USB o con la cámara del portátil en la web, o sigue escribiendo el código. **El backend no cambia:** el check-in es el mismo `POST /v1/restaurants/me/check-ins`.
@@ -11,6 +24,9 @@
 - Siempre tinta sobre claro, también en modo oscuro (muchos lectores no leen el QR invertido).
 - **Dependencia nueva: `qrcode-generator`** (JS puro, sin dependencias ni código nativo): después del pull corre `npm install`; **no hace falta recompilar**.
 - Código: `src/features/reservations/qr.ts` (`reservationQr(code)` → `{ size, path }`, con pruebas) y `ReservationQr` recibe `code`.
+
+---
+
 ## 12 nov 2026 · Sebastián · Perfil más simple (Sprint 4)
 
 - **Perfil** muestra quién inició sesión (avatar con la inicial, nombre y correo, sin tarjeta), el tema en una tarjeta y, abajo, «Cerrar sesión» solo como texto (sigue pidiendo confirmación) y la versión.
