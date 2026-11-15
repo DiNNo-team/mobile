@@ -4,6 +4,15 @@
 
 ---
 
+## 15 nov 2026 · Elizabeth · Administrador, cobro y KPIs: backend desplegado y contratos
+
+- **Qué quedó listo y desplegado (backend):** aprobación de restaurantes (`pending`, `approved`, `rejected`), rol `platform_admin` con su panel de API (`/v1/admin/restaurants*`), registro público (`POST /v1/restaurants/signup`), reenvío (`POST /v1/restaurants/me/resubmit`), cobro por check-in (`GET /v1/restaurants/me/billing/check-ins`, tarifa fija de COP 2.000) y resumen con KPIs (`GET /v1/restaurants/me/summary`).
+- **`errorCode` nuevos:** `ACCOUNT_PENDING_APPROVAL`, `ACCOUNT_REJECTED` y `ADMIN_ACCOUNT` (403), `RESTAURANT_NOT_PENDING` y `RESTAURANT_NOT_REJECTED` (409). También son `connect_error` del WebSocket (no reintentar).
+- **Contratos:** §1, §8, §10 y §12 (nueva §12.12) quedan idénticos en los tres `CLAUDE.md` desde este día. El texto salió de `backend/docs/contratos-pendientes.md`, que queda marcado como aplicado.
+- **Mobile, PENDIENTE de ajuste (sin cambios de código en este trabajo):** `ErrorCode` y `UserRole` de la app no tienen los valores nuevos. Hoy `platform_admin` (`ADMIN_ACCOUNT`) y un restaurante pendiente o rechazado (`RESTAURANT_ACCOUNT`) caen en «cuenta de restaurante». Hay que agregar `ADMIN_ACCOUNT` y el rol `platform_admin` con su propio texto.
+
+---
+
 ## 12 nov 2026 · Sebastián · La app corre en iPhone (Sprint 4)
 
 - **iOS listo en el simulador de Xcode** (solo en Mac): `npx expo prebuild --clean --platform ios` y `npx expo run:ios`. Probado en un iPhone 18 Pro con iOS 27.2, en claro y en oscuro: login, Explorar con Google Maps, la reserva y Perfil.
