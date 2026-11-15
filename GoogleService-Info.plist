@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>658474091818-inutvjdlfo54le54qk0cfq0bcs66bvbr.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.658474091818-inutvjdlfo54le54qk0cfq0bcs66bvbr</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>658474091818-d33jpmsbndgub15l1s13g4ttph8lmh4k.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAL6gY2S0UWn5PEDFaAPXMOPeW9zhgS5tY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>658474091818</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.dinno.app</string>
+	<key>PROJECT_ID</key>
+	<string>dinno-8f55c</string>
+	<key>STORAGE_BUCKET</key>
+	<string>dinno-8f55c.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:658474091818:ios:203c2e8144f8e98af00a53</string>
+</dict>
+</plist>

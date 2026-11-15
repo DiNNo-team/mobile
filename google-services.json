@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "658474091818",
+    "project_id": "dinno-8f55c",
+    "storage_bucket": "dinno-8f55c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658474091818:android:598abbe092f4bb96f00a53",
+        "android_client_info": {
+          "package_name": "com.dinno.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "658474091818-d33jpmsbndgub15l1s13g4ttph8lmh4k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dinno.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "658474091818-nik31av0v9oik9pn2p2fp1709k3osvf4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9AUi5QY1afmKA1YtL6Q8_oWnNnbbLJ6g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "658474091818-nik31av0v9oik9pn2p2fp1709k3osvf4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

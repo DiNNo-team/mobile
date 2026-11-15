@@ -43,6 +43,3 @@ yarn-error.*
 /ios
 /android
 
-# Firebase (Sprint 4): configuración nativa de Android (FCM) e iOS (Google Sign-In). Se pide a Sebastián.
-google-services.json
-GoogleService-Info.plist

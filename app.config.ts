@@ -14,16 +14,16 @@ import { withAppDelegate, withEntitlementsPlist, withInfoPlist, type ConfigPlugi
 const googleMapsAndroidApiKey = process.env.GOOGLE_MAPS_ANDROID_API_KEY?.trim() || undefined;
 
 // Push notifications (Sprint 4) on Android come through Firebase Cloud Messaging, which needs the google-services.json
-// of the Firebase project in the build. It is not in the repo (ask Sebastián; it goes at the root): without it the app
-// builds the same, only without remote push (the local reminder still works).
+// of the Firebase project in the build. It is versioned at the root; if it were missing, the app would build the same,
+// only without remote push (the local reminder still works).
 const googleServicesFile = existsSync('./google-services.json') ? './google-services.json' : undefined;
 
 // iOS (Sprint 4). Google Maps for iOS has its own key (GOOGLE_MAPS_IOS_API_KEY, same rules as the Android one).
 const googleMapsIosApiKey = process.env.GOOGLE_MAPS_IOS_API_KEY?.trim() || undefined;
 
 // Google Sign-In on iOS needs the iOS OAuth client of the Firebase project and its reversed id as URL scheme. Both
-// come from GoogleService-Info.plist (Firebase console → iOS app), which is not in the repo either: without it, iOS
-// builds the same and «Continuar con Google» says it is not available (email sign-in works).
+// come from GoogleService-Info.plist (Firebase console → iOS app), versioned at the root: if it were missing, iOS would
+// build the same and «Continuar con Google» would say it is not available (email sign-in works).
 function readIosGoogleClient(): { clientId: string; urlScheme: string } | undefined {
   if (!existsSync('./GoogleService-Info.plist')) return undefined;
   const plist = readFileSync('./GoogleService-Info.plist', 'utf8');

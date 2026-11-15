@@ -4,6 +4,16 @@
 
 ---
 
+## 15 nov 2026 · Sebastián · Los archivos de Firebase ya están en el repo
+
+- **`google-services.json`** (Android) y **`GoogleService-Info.plist`** (iOS) ahora se versionan en la raíz de la app. Ya no hay que pedírselos a nadie: con el pull los tienes.
+- Con ellos, tu build recibe **notificaciones push** en Android y tiene **«Continuar con Google» en iOS**.
+- Son configuración nativa: después del pull **recompila** (`npx expo run:android`, o `npx expo prebuild --clean` + `npx expo run:ios`). Reiniciar Metro no basta.
+- No traen secretos (son los mismos datos que viajan dentro de cada APK). La **cuenta de servicio** de Firebase del backend sí es secreta y **nunca** va en un repo: vive solo en Render como Secret File.
+- Las notas de abajo que dicen «fuera del repo, pídeselo a Sebastián» quedan reemplazadas por esta.
+
+---
+
 ## 12 nov 2026 · Sebastián · La app corre en iPhone (Sprint 4)
 
 - **iOS listo en el simulador de Xcode** (solo en Mac): `npx expo prebuild --clean --platform ios` y `npx expo run:ios`. Probado en un iPhone 18 Pro con iOS 27.2, en claro y en oscuro: login, Explorar con Google Maps, la reserva y Perfil.
