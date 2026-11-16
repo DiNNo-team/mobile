@@ -4,6 +4,16 @@
 
 ---
 
+## 15 nov 2026 · Sebastián · Los archivos de Firebase ya están en el repo
+
+- **`google-services.json`** (Android) y **`GoogleService-Info.plist`** (iOS) ahora se versionan en la raíz de la app. Ya no hay que pedírselos a nadie: con el pull los tienes.
+- Con ellos, tu build recibe **notificaciones push** en Android y tiene **«Continuar con Google» en iOS**.
+- Son configuración nativa: después del pull **recompila** (`npx expo run:android`, o `npx expo prebuild --clean` + `npx expo run:ios`). Reiniciar Metro no basta.
+- No traen secretos (son los mismos datos que viajan dentro de cada APK). La **cuenta de servicio** de Firebase del backend sí es secreta y **nunca** va en un repo: vive solo en Render como Secret File.
+- Las notas de abajo que dicen «fuera del repo, pídeselo a Sebastián» quedan reemplazadas por esta.
+
+---
+
 ## 15 nov 2026 · Elizabeth · Administrador, cobro y KPIs: backend desplegado y contratos
 
 - **Qué quedó listo y desplegado (backend):** aprobación de restaurantes (`pending`, `approved`, `rejected`), rol `platform_admin` con su panel de API (`/v1/admin/restaurants*`), registro público (`POST /v1/restaurants/signup`), reenvío (`POST /v1/restaurants/me/resubmit`), cobro por check-in (`GET /v1/restaurants/me/billing/check-ins`, tarifa fija de COP 2.000) y resumen con KPIs (`GET /v1/restaurants/me/summary`).
