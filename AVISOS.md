@@ -4,6 +4,16 @@
 
 ---
 
+## 17 nov 2026 · Elizabeth · Restaurantes suspendidos: qué cambia para la app (Sprint 4, §12.15)
+
+- **No hay pantallas nuevas en la app.** El panel del administrador y la pantalla de «restaurante suspendido» son solo de la web.
+- **Estado nuevo `suspended`:** un administrador de DiNNo puede suspender un restaurante aprobado (y reactivarlo). Para el comensal un restaurante suspendido **no existe**: desaparece de la búsqueda y del mapa, y su detalle y su reserva responden `404 RESTAURANT_NOT_FOUND` (el mismo caso que ya tratan como «ya no está disponible»; la app no necesita un texto nuevo).
+- **Reservas ya creadas:** se respetan hasta el check-in o el vencimiento (máximo 15 minutos). Nada cambia en el tiquete, el QR ni la cuenta regresiva.
+- **Tiempo real:** al suspender o reactivar se emite `availability.changed` como siempre (con `isSearchable` en `false` se quita de la lista y del mapa).
+- **Contrato:** §8, §10 y §12.15 de `CLAUDE.md` cambiaron y quedan iguales en los tres repos. El contrato completo del panel está en `backend/docs/admin-panel-contract.md`; esta app no lo copia porque no consume `/v1/admin/*`.
+
+---
+
 ## 16 nov 2026 · Sebastián · Límite de peticiones: texto del 429 y reintento con RATE_LIMITED (Sprint 4, §12.14)
 
 - **El backend ahora limita las peticiones** (backend PR #65). Al pasar un límite responde `429` sin `errorCode`; el WebSocket rechaza una conexión de más con `connect_error` `RATE_LIMITED`.
