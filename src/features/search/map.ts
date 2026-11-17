@@ -1,25 +1,18 @@
-import type { MapStyleElement, Region } from 'react-native-maps';
+import type { MapStyleElement } from "react-native-maps";
 
-import type { ThemeColors } from '@/theme/tokens';
+import type { ThemeColors } from "@/theme/tokens";
 
-import type { Coordinates } from './types';
+import type { Coordinates } from "./types";
 
-const KM_PER_DEGREE = 111;
-/** The visible area shows the whole radius with a margin. */
-const REGION_MARGIN = 1.2;
-
-/** Area that shows `radiusKm` around `center`. */
-export function getRegion(center: Coordinates, radiusKm: number): Region {
-  const delta = (radiusKm * 2 * REGION_MARGIN) / KM_PER_DEGREE;
-  return { latitude: center.latitude, longitude: center.longitude, latitudeDelta: delta, longitudeDelta: delta };
-}
+/** Center of Bogotá: the first frame of the map before it fits the restaurants. */
+export const BOGOTA: Coordinates = { latitude: 4.65, longitude: -74.06 };
 
 /** Mobile v3: the camera leans like the design's map (rotateX ≈ 50°); Google caps the tilt by zoom level. */
 export const MAP_PITCH = 60;
 /** Street-level zoom when the diner picks a restaurant («el mapa se acerca»). */
 export const FOCUS_ZOOM = 16;
-/** Explorar never opens further than this: the design's map is close, a few blocks around the chosen restaurant. */
-export const EXPLORE_MIN_ZOOM = 16;
+/** One restaurant alone on the map (a search by name): close, but with its blocks around it. */
+export const SINGLE_RESTAURANT_ZOOM = 15;
 /** «Cámara: al elegir restaurante, el mapa gira y se acerca en 600 ms». */
 export const FOCUS_MS = 600;
 
@@ -41,17 +34,31 @@ export function getFitCamera(
   const south = Math.min(...lats);
   const east = Math.max(...lngs);
   const west = Math.min(...lngs);
-  const mercator = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+  const mercator = (lat: number) =>
+    Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
   const usableWidth = Math.max(1, size.width - padding.left - padding.right);
   const usableHeight = Math.max(1, size.height - padding.top - padding.bottom);
   const lngFraction = Math.max((east - west) / 360, 1e-6);
-  const latFraction = Math.max((mercator(north) - mercator(south)) / (2 * Math.PI), 1e-6);
-  const zoom = Math.min(MAX_ZOOM, Math.log2(usableWidth / TILE / lngFraction), Math.log2(usableHeight / TILE / latFraction));
+  const latFraction = Math.max(
+    (mercator(north) - mercator(south)) / (2 * Math.PI),
+    1e-6,
+  );
+  const zoom = Math.min(
+    MAX_ZOOM,
+    Math.log2(usableWidth / TILE / lngFraction),
+    Math.log2(usableHeight / TILE / latFraction),
+  );
   // Shift the center so the padded area, not the whole map, is centered on the points.
   const degreesPerPixel = 360 / (TILE * 2 ** zoom);
   const center = {
-    latitude: (north + south) / 2 - ((padding.bottom - padding.top) / 2) * degreesPerPixel * Math.cos((((north + south) / 2) * Math.PI) / 180),
-    longitude: (east + west) / 2 + ((padding.right - padding.left) / 2) * degreesPerPixel,
+    latitude:
+      (north + south) / 2 -
+      ((padding.bottom - padding.top) / 2) *
+        degreesPerPixel *
+        Math.cos((((north + south) / 2) * Math.PI) / 180),
+    longitude:
+      (east + west) / 2 +
+      ((padding.right - padding.left) / 2) * degreesPerPixel,
   };
   return { center, zoom };
 }
@@ -63,21 +70,61 @@ export function getFitCamera(
  */
 export function getMapStyle(colors: ThemeColors): MapStyleElement[] {
   return [
-    { elementType: 'geometry', stylers: [{ color: colors.mapGround }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: colors.mapLabel }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: colors.mapFade }] },
-    { featureType: 'administrative', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
-    { featureType: 'landscape.man_made', elementType: 'geometry', stylers: [{ color: colors.mapBlock }] },
-    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-    { featureType: 'poi.park', stylers: [{ visibility: 'on' }] },
-    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: colors.mapPark }] },
-    { featureType: 'poi.park', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-    { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: colors.mapRoad }] },
-    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: colors.mapRoadEdge }] },
-    { featureType: 'road.arterial', elementType: 'geometry.fill', stylers: [{ color: colors.mapAvenue }] },
-    { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: colors.mapAvenue }] },
-    { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-    { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: colors.mapWater }] },
+    { elementType: "geometry", stylers: [{ color: colors.mapGround }] },
+    { elementType: "labels.text.fill", stylers: [{ color: colors.mapLabel }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: colors.mapFade }] },
+    {
+      featureType: "administrative",
+      elementType: "geometry",
+      stylers: [{ visibility: "off" }],
+    },
+    {
+      featureType: "landscape.man_made",
+      elementType: "geometry",
+      stylers: [{ color: colors.mapBlock }],
+    },
+    { featureType: "poi", stylers: [{ visibility: "off" }] },
+    { featureType: "poi.park", stylers: [{ visibility: "on" }] },
+    {
+      featureType: "poi.park",
+      elementType: "geometry",
+      stylers: [{ color: colors.mapPark }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }],
+    },
+    {
+      featureType: "road",
+      elementType: "geometry.fill",
+      stylers: [{ color: colors.mapRoad }],
+    },
+    {
+      featureType: "road",
+      elementType: "geometry.stroke",
+      stylers: [{ color: colors.mapRoadEdge }],
+    },
+    {
+      featureType: "road.arterial",
+      elementType: "geometry.fill",
+      stylers: [{ color: colors.mapAvenue }],
+    },
+    {
+      featureType: "road.highway",
+      elementType: "geometry.fill",
+      stylers: [{ color: colors.mapAvenue }],
+    },
+    {
+      featureType: "road",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }],
+    },
+    { featureType: "transit", stylers: [{ visibility: "off" }] },
+    {
+      featureType: "water",
+      elementType: "geometry",
+      stylers: [{ color: colors.mapWater }],
+    },
   ];
 }

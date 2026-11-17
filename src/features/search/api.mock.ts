@@ -1,96 +1,101 @@
-import { ApiError, ErrorCode } from '@/lib/api/errors';
-import { distanceKm } from '@/lib/geo';
+import { ApiError, ErrorCode } from "@/lib/api/errors";
+import { distanceKm } from "@/lib/geo";
 
-import { MOCK_RESTAURANTS, MOCK_ZONES, type MockRestaurant } from './mock-data';
+import { MOCK_RESTAURANTS, type MockRestaurant } from "./mock-data";
 import type {
   Coordinates,
-  GeocodeResult,
   RestaurantDetail,
   RestaurantSummary,
   SearchApi,
   SearchFilters,
-  SearchOrigin,
-} from './types';
+} from "./types";
 
 const MOCK_LATENCY_MS = 400;
-const MAX_RESULTS = 50;
+const MAX_RESULTS = 500;
 
-const wait = () => new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS));
+const wait = () =>
+  new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS));
 
-function resolveOrigin(origin: SearchOrigin): Coordinates {
-  if (origin.type !== 'zone') return origin;
-  const zone = MOCK_ZONES.find((item) => item.id === origin.zoneId);
-  if (!zone) throw new ApiError({ status: 400, kind: 'http', message: 'La zona no existe.' });
-  return zone;
+function toSummary(
+  restaurant: MockRestaurant,
+  from: Coordinates | null,
+): RestaurantSummary {
+  const { id, name, category, address, latitude, longitude, availability } =
+    restaurant;
+  return {
+    id,
+    name,
+    category,
+    address,
+    latitude,
+    longitude,
+    availability,
+    distanceKm: from ? distanceKm(from, restaurant) : null,
+  };
 }
 
-function toSummary(restaurant: MockRestaurant, from: Coordinates): RestaurantSummary {
-  const { id, name, category, address, latitude, longitude, availability } = restaurant;
-  return { id, name, category, address, latitude, longitude, availability, distanceKm: distanceKm(from, restaurant) };
+/** Closest first with the phone's position; by name without it (same order as the backend). */
+function byDistanceOrName(a: RestaurantSummary, b: RestaurantSummary): number {
+  if (a.distanceKm !== null && b.distanceKm !== null)
+    return a.distanceKm - b.distanceKm;
+  return a.name.localeCompare(b.name, "es", { sensitivity: "base" });
 }
 
 /** Same as the reservations mock: its reservations last 3 minutes (like the expiry demo). */
 const MOCK_RESERVATION_TTL_MINUTES = 3;
 
-function toDetail(restaurant: MockRestaurant, from?: Coordinates): RestaurantDetail {
-  const { searchable: _searchable, maxFreeCapacity: _maxFreeCapacity, ...rest } = restaurant;
-  const detail = { ...rest, reservationTtlMinutes: MOCK_RESERVATION_TTL_MINUTES };
-  return from ? { ...detail, distanceKm: distanceKm(from, restaurant) } : detail;
+function toDetail(
+  restaurant: MockRestaurant,
+  from?: Coordinates,
+): RestaurantDetail {
+  const {
+    searchable: _searchable,
+    maxFreeCapacity: _maxFreeCapacity,
+    ...rest
+  } = restaurant;
+  const detail = {
+    ...rest,
+    reservationTtlMinutes: MOCK_RESERVATION_TTL_MINUTES,
+  };
+  return from
+    ? { ...detail, distanceKm: distanceKm(from, restaurant) }
+    : detail;
 }
 
-/** Same rules as the backend search: searchable only, radius, category, party size, by distance, max 50. */
-export function searchMockRestaurants(origin: SearchOrigin, filters: SearchFilters): RestaurantSummary[] {
-  const from = resolveOrigin(origin);
+/** Same rules as the backend search without a radius: searchable only, category, party size, sorted, max 500. */
+export function searchMockRestaurants(
+  from: Coordinates | null,
+  filters: SearchFilters,
+): RestaurantSummary[] {
   return MOCK_RESTAURANTS.filter((restaurant) => restaurant.searchable)
-    .filter((restaurant) => !filters.category || restaurant.category === filters.category)
-    .filter((restaurant) => !filters.partySize || restaurant.maxFreeCapacity >= filters.partySize)
+    .filter(
+      (restaurant) =>
+        !filters.category || restaurant.category === filters.category,
+    )
+    .filter(
+      (restaurant) =>
+        !filters.partySize || restaurant.maxFreeCapacity >= filters.partySize,
+    )
     .map((restaurant) => toSummary(restaurant, from))
-    .filter((summary) => summary.distanceKm <= filters.radiusKm)
-    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .sort(byDistanceOrName)
     .slice(0, MAX_RESULTS);
 }
 
-/** Point of the example addresses: the Calle 72 with Carrera 9, where the example restaurants are. */
-const MOCK_ADDRESS_POINT: Coordinates = { latitude: 4.6576, longitude: -74.0567 };
-const FIRST_STREET_NUMBER = /\b(?:calle|cl|carrera|cra|kr|avenida|av|diagonal|dg|transversal|tv)\.?\s*(\d+)/i;
-/** Bogotá's streets and carreras do not go this high: like the backend, the address is not in Bogotá. */
-const MAX_BOGOTA_STREET = 200;
-
-/**
- * Example answers of GET /geocode, same shape and codes as the backend: "Medellín" or a street number above 200
- * → 404 ADDRESS_NOT_FOUND; "sin servicio" → 503 GEOCODING_UNAVAILABLE; anything else → a point on the Calle 72.
- */
-export function geocodeMockAddress(address: string): GeocodeResult {
-  const text = address.trim();
-  const street = Number(FIRST_STREET_NUMBER.exec(text)?.[1] ?? 0);
-  if (/medell[ií]n/i.test(text) || street > MAX_BOGOTA_STREET) {
-    throw new ApiError({ status: 404, kind: 'http', errorCode: ErrorCode.AddressNotFound });
-  }
-  if (/sin servicio/i.test(text)) {
-    throw new ApiError({ status: 503, kind: 'http', errorCode: ErrorCode.GeocodingUnavailable });
-  }
-  return { ...MOCK_ADDRESS_POINT, formattedAddress: `${text}, Bogotá, Colombia` };
-}
-
 export const mockSearchApi: SearchApi = {
-  async getZones() {
+  async searchRestaurants(from, filters) {
     await wait();
-    return MOCK_ZONES;
-  },
-  async searchRestaurants(origin, filters) {
-    await wait();
-    return searchMockRestaurants(origin, filters);
+    return searchMockRestaurants(from, filters);
   },
   async getRestaurant(id, from) {
     await wait();
     const restaurant = MOCK_RESTAURANTS.find((item) => item.id === id);
     if (!restaurant) {
-      throw new ApiError({ status: 404, kind: 'http', errorCode: ErrorCode.RestaurantNotFound });
+      throw new ApiError({
+        status: 404,
+        kind: "http",
+        errorCode: ErrorCode.RestaurantNotFound,
+      });
     }
     return toDetail(restaurant, from);
-  },
-  async geocode(address) {
-    await wait();
-    return geocodeMockAddress(address);
   },
 };

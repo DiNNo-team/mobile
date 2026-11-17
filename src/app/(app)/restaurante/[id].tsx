@@ -1,10 +1,10 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowRight, ChevronLeft, MapIcon } from 'lucide-react-native';
-import { useState } from 'react';
-import { Linking, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router, useLocalSearchParams } from "expo-router";
+import { ArrowRight, ChevronLeft, MapIcon } from "lucide-react-native";
+import { useState } from "react";
+import { Linking, ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AmbientGround } from '@/components/AmbientGround';
+import { AmbientGround } from "@/components/AmbientGround";
 import {
   Alert,
   AvailabilityLabel,
@@ -23,26 +23,33 @@ import {
   useDelayedLoading,
   useToast,
   type Stat,
-} from '@/components/ui';
-import { ReserveAction, useReserveNote } from '@/features/reservations/components/ReserveAction';
-import { RestaurantMapPreview } from '@/features/search/components/RestaurantMapPreview';
-import { WeekSchedule } from '@/features/search/components/WeekSchedule';
-import { getDirectionsUrl } from '@/features/search/filters';
-import { useRestaurantDetail } from '@/features/search/queries';
-import { getTodayClosing } from '@/features/search/schedule';
-import { getOriginCoordinates, useSearchStore } from '@/features/search/store';
-import { ADDRESS_FALLBACK, getCategoryLabel, type RestaurantDetail } from '@/features/search/types';
-import { ErrorCode, getErrorMessage, isApiError } from '@/lib/api/errors';
-import { splitDistance } from '@/lib/format/distance';
-import { env } from '@/config/env';
-import { useTheme } from '@/theme/ThemeProvider';
+} from "@/components/ui";
+import {
+  ReserveAction,
+  useReserveNote,
+} from "@/features/reservations/components/ReserveAction";
+import { RestaurantMapPreview } from "@/features/search/components/RestaurantMapPreview";
+import { WeekSchedule } from "@/features/search/components/WeekSchedule";
+import { getDirectionsUrl } from "@/features/search/filters";
+import { useRestaurantDetail } from "@/features/search/queries";
+import { getTodayClosing } from "@/features/search/schedule";
+import { useSearchStore } from "@/features/search/store";
+import {
+  ADDRESS_FALLBACK,
+  getCategoryLabel,
+  type RestaurantDetail,
+} from "@/features/search/types";
+import { ErrorCode, getErrorMessage, isApiError } from "@/lib/api/errors";
+import { splitDistance } from "@/lib/format/distance";
+import { env } from "@/config/env";
+import { useTheme } from "@/theme/ThemeProvider";
 
 /** Where the content starts (mobile v3): over the faded lower part of the map. */
 const CONTENT_TOP = 244;
 
 function goBack() {
   if (router.canGoBack()) router.back();
-  else router.replace('/');
+  else router.replace("/");
 }
 
 function DetailSkeleton() {
@@ -62,12 +69,16 @@ function getStats(restaurant: RestaurantDetail): Stat[] {
   const stats: Stat[] = [];
   if (restaurant.distanceKm !== undefined) {
     const distance = splitDistance(restaurant.distanceKm);
-    stats.push({ value: `${distance.value} ${distance.unit}`, label: 'Distancia' });
+    stats.push({
+      value: `${distance.value} ${distance.unit}`,
+      label: "Distancia",
+    });
   }
   const closing = getTodayClosing(restaurant.schedules);
   stats.push({ value: closing.value, label: closing.label });
   const category = getCategoryLabel(restaurant.category);
-  if (category) stats.push({ value: category, label: 'Tipo de comida', wide: true });
+  if (category)
+    stats.push({ value: category, label: "Tipo de comida", wide: true });
   return stats;
 }
 
@@ -88,12 +99,23 @@ function DetailContent({ restaurant }: { restaurant: RestaurantDetail }) {
           <StatusLabel status={OPEN_STATUS_PRESENTATION.closed} />
         )}
       </View>
-      <Text variant="hero" accessibilityRole="header" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6} className="mt-1">
+      <Text
+        variant="hero"
+        accessibilityRole="header"
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
+        className="mt-1"
+      >
         {restaurant.name}
       </Text>
 
       {restaurant.isOpenNow ? null : (
-        <Alert type="info" message="Este restaurante está cerrado ahora. Revisa su horario para saber cuándo abre." className="mt-4" />
+        <Alert
+          type="info"
+          message="Este restaurante está cerrado ahora. Revisa su horario para saber cuándo abre."
+          className="mt-4"
+        />
       )}
 
       <StatGroup stats={getStats(restaurant)} className="mt-4" />
@@ -118,7 +140,13 @@ function DetailContent({ restaurant }: { restaurant: RestaurantDetail }) {
 }
 
 /** The fixed bar at the bottom: «Cómo llegar →» and the orange «Reservar mesa», over a fade into the ground. */
-function ActionBar({ restaurant, onHeight }: { restaurant: RestaurantDetail; onHeight: (height: number) => void }) {
+function ActionBar({
+  restaurant,
+  onHeight,
+}: {
+  restaurant: RestaurantDetail;
+  onHeight: (height: number) => void;
+}) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { showToast } = useToast();
@@ -129,7 +157,10 @@ function ActionBar({ restaurant, onHeight }: { restaurant: RestaurantDetail; onH
     try {
       await Linking.openURL(getDirectionsUrl(restaurant));
     } catch {
-      showToast({ type: 'error', message: 'No pudimos abrir Google Maps. Intenta de nuevo.' });
+      showToast({
+        type: "error",
+        message: "No pudimos abrir Google Maps. Intenta de nuevo.",
+      });
     }
   };
 
@@ -141,15 +172,33 @@ function ActionBar({ restaurant, onHeight }: { restaurant: RestaurantDetail; onH
         onHeight(event.nativeEvent.layout.height);
       }}
     >
-      {height > 0 ? <EdgeFade color={colors.bg} height={height} direction="up" solidAt={0.3} style={{ position: 'absolute', left: 0, right: 0, top: 0 }} /> : null}
-      <View className="gap-2.5 px-4 pt-[26px]" style={{ paddingBottom: insets.bottom + 22 }}>
+      {height > 0 ? (
+        <EdgeFade
+          color={colors.bg}
+          height={height}
+          direction="up"
+          solidAt={0.3}
+          style={{ position: "absolute", left: 0, right: 0, top: 0 }}
+        />
+      ) : null}
+      <View
+        className="gap-2.5 px-4 pt-[26px]"
+        style={{ paddingBottom: insets.bottom + 22 }}
+      >
         {note ? (
           <Text variant="sec" tone="secondary" className="text-center">
             {note}
           </Text>
         ) : null}
         <View className="flex-row gap-2.5">
-          <Button variant="soft" shape="pill" size="xl" label="Cómo llegar" trailingIcon={ArrowRight} onPress={openDirections} />
+          <Button
+            variant="soft"
+            shape="pill"
+            size="xl"
+            label="Cómo llegar"
+            trailingIcon={ArrowRight}
+            onPress={openDirections}
+          />
           <View className="flex-1">
             <ReserveAction restaurant={restaurant} />
           </View>
@@ -167,15 +216,18 @@ function ActionBar({ restaurant, onHeight }: { restaurant: RestaurantDetail; onH
 export default function RestaurantDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  // Sends lat/lng only when the search uses the phone's position (Reparto: distance in the detail).
-  const from = getOriginCoordinates(useSearchStore((state) => state.origin));
+  // Sends lat/lng only with the phone's position (Reparto: distance in the detail).
+  const from = useSearchStore((state) => state.location) ?? undefined;
   const detail = useRestaurantDetail(id, from);
   const showSkeleton = useDelayedLoading(detail.isPending);
   const notFound = isApiError(detail.error, ErrorCode.RestaurantNotFound);
   const [barHeight, setBarHeight] = useState(0);
   const restaurant = detail.data;
   // Without the map (no key, or still loading) the content starts right under the back button.
-  const top = restaurant && env.mapsEnabled ? Math.max(CONTENT_TOP, insets.top + 190) : insets.top + 72;
+  const top =
+    restaurant && env.mapsEnabled
+      ? Math.max(CONTENT_TOP, insets.top + 190)
+      : insets.top + 72;
 
   const renderBody = () => {
     if (restaurant) {
@@ -186,7 +238,14 @@ export default function RestaurantDetailScreen() {
             <Alert
               type="error"
               message={getErrorMessage(detail.error)}
-              action={<Button size="sm" variant="outline" label={RETRY_LABEL} onPress={() => detail.refetch()} />}
+              action={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  label={RETRY_LABEL}
+                  onPress={() => detail.refetch()}
+                />
+              }
               className="mb-4"
             />
           ) : null}
@@ -221,19 +280,24 @@ export default function RestaurantDetailScreen() {
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-5"
-        contentContainerStyle={{ paddingTop: top, paddingBottom: (restaurant ? barHeight : insets.bottom) + 16 }}
+        contentContainerStyle={{
+          paddingTop: top,
+          paddingBottom: (restaurant ? barHeight : insets.bottom) + 16,
+        }}
       >
         {renderBody()}
       </ScrollView>
       <View className="absolute left-4" style={{ top: insets.top + 8 }}>
         <IconButton
-          variant={restaurant && env.mapsEnabled ? 'overMap' : 'raised'}
+          variant={restaurant && env.mapsEnabled ? "overMap" : "raised"}
           icon={ChevronLeft}
           accessibilityLabel="Volver"
           onPress={goBack}
         />
       </View>
-      {restaurant ? <ActionBar restaurant={restaurant} onHeight={setBarHeight} /> : null}
+      {restaurant ? (
+        <ActionBar restaurant={restaurant} onHeight={setBarHeight} />
+      ) : null}
     </View>
   );
 }

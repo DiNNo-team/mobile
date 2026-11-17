@@ -1,54 +1,74 @@
-import { ApiError } from '@/lib/api/errors';
+import { filterByName } from "./filters";
+import { searchMockRestaurants } from "./api.mock";
+import { MOCK_RESTAURANTS } from "./mock-data";
 
-import { toSearchQuery } from './api.http';
-import { searchMockRestaurants } from './api.mock';
-import { MOCK_RESTAURANTS } from './mock-data';
+const CALLE_72 = { latitude: 4.6576, longitude: -74.0567 };
 
-const calle72 = { type: 'zone', zoneId: 'calle-72' } as const;
-
-describe('mock search follows the backend rules', () => {
-  it('returns only searchable restaurants inside the radius, nearest first', () => {
-    const results = searchMockRestaurants(calle72, { radiusKm: 2 });
-    const hidden = MOCK_RESTAURANTS.filter((restaurant) => !restaurant.searchable).map((restaurant) => restaurant.id);
-    expect(results.length).toBeGreaterThan(0);
-    expect(results.every((result) => result.distanceKm <= 2)).toBe(true);
-    expect(results.some((result) => hidden.includes(result.id))).toBe(false);
-    expect(results.map((result) => result.distanceKm)).toEqual([...results.map((r) => r.distanceKm)].sort((a, b) => a - b));
+describe("mock search follows the backend rules (no radius)", () => {
+  it("with the position: every searchable restaurant, nearest first, with its distance", () => {
+    const results = searchMockRestaurants(CALLE_72, {});
+    const searchable = MOCK_RESTAURANTS.filter(
+      (restaurant) => restaurant.searchable,
+    );
+    expect(results).toHaveLength(searchable.length);
+    const distances = results.map((result) => result.distanceKm as number);
+    expect(distances.every((distance) => typeof distance === "number")).toBe(
+      true,
+    );
+    expect(distances).toEqual([...distances].sort((a, b) => a - b));
   });
 
-  it('never returns closed and covers the three search levels', () => {
-    const levels = new Set(searchMockRestaurants(calle72, { radiusKm: 10 }).map((result) => result.availability));
-    expect(levels).toEqual(new Set(['available', 'few', 'none']));
+  it("without the position: the same restaurants by name, without distance", () => {
+    const results = searchMockRestaurants(null, {});
+    const names = results.map((result) => result.name);
+    expect(names).toEqual(
+      [...names].sort((a, b) =>
+        a.localeCompare(b, "es", { sensitivity: "base" }),
+      ),
+    );
+    expect(results.every((result) => result.distanceKm === null)).toBe(true);
   });
 
-  it('filters by category and party size', () => {
-    expect(searchMockRestaurants(calle72, { radiusKm: 10, category: 'italian' }).map((r) => r.name)).toEqual([
-      'Trattoria Quinta',
+  it("never returns closed and covers the three search levels", () => {
+    const levels = new Set(
+      searchMockRestaurants(null, {}).map((result) => result.availability),
+    );
+    expect(levels).toEqual(new Set(["available", "few", "none"]));
+  });
+
+  it("filters by category and party size", () => {
+    expect(
+      searchMockRestaurants(null, { category: "italian" }).map((r) => r.name),
+    ).toEqual(["Trattoria Quinta"]);
+    const forSix = searchMockRestaurants(null, { partySize: 6 });
+    expect(forSix.map((result) => result.name).sort()).toEqual([
+      "Brasa Chapinero",
+      "Casa 72",
+      "Fonda Teusaquillo",
     ]);
-    const forSix = searchMockRestaurants(calle72, { radiusKm: 10, partySize: 6 });
-    expect(forSix.map((result) => result.name).sort()).toEqual(['Brasa Chapinero', 'Casa 72', 'Fonda Teusaquillo']);
-  });
-
-  it('rejects an unknown zone with a 400', () => {
-    expect(() => searchMockRestaurants({ type: 'zone', zoneId: 'narnia' }, { radiusKm: 2 })).toThrow(ApiError);
-  });
-
-  it('a location far from Bogotá has no results', () => {
-    expect(searchMockRestaurants({ type: 'location', latitude: 6.2442, longitude: -75.5812 }, { radiusKm: 10 })).toEqual([]);
   });
 });
 
-describe('toSearchQuery', () => {
-  it('sends lat/lng or zone, never both', () => {
-    expect(toSearchQuery({ type: 'location', latitude: 4.65, longitude: -74.05 }, { radiusKm: 2 })).toEqual({
-      lat: 4.65,
-      lng: -74.05,
-      radiusKm: 2,
-      category: undefined,
-      partySize: undefined,
-    });
-    const byZone = toSearchQuery(calle72, { radiusKm: 5, category: 'cafe', partySize: 2 });
-    expect(byZone).toEqual({ zone: 'calle-72', radiusKm: 5, category: 'cafe', partySize: 2 });
-    expect(byZone).not.toHaveProperty('lat');
+describe("filterByName («Buscar restaurante»)", () => {
+  const results = searchMockRestaurants(null, {});
+
+  it("keeps the names that contain the text, ignoring case, accents and spaces around it", () => {
+    expect(filterByName(results, "  CASA ").map((r) => r.name)).toEqual([
+      "Casa 72",
+    ]);
+    expect(filterByName(results, "trattoria").map((r) => r.name)).toEqual([
+      "Trattoria Quinta",
+    ]);
+  });
+
+  it("an empty text keeps them all; a name nobody has keeps none", () => {
+    expect(filterByName(results, "   ")).toBe(results);
+    expect(filterByName(results, "zzz")).toEqual([]);
+  });
+
+  it("accents do not matter, in the name or in the text", () => {
+    const named = [{ ...results[0], name: "Café Ñam" }];
+    expect(filterByName(named, "cafe nam")).toHaveLength(1);
+    expect(filterByName(named, "CAFÉ")).toHaveLength(1);
   });
 });

@@ -1,32 +1,35 @@
-import { apiRequest } from '@/lib/api/client';
+import { apiRequest } from "@/lib/api/client";
 
 import type {
   Coordinates,
-  GeocodeResult,
   RestaurantDetail,
   RestaurantSummary,
   SearchApi,
   SearchFilters,
-  SearchOrigin,
-  Zone,
-} from './types';
+} from "./types";
 
 /**
- * Query of GET /search/restaurants: `lat` + `lng` or `zone`, never both (the backend answers 400). An address
- * searches like the phone's position, with the point GET /geocode gave (the search never receives `address`).
+ * Query of GET /search/restaurants without `radiusKm` (Sprint 4): every restaurant. With the phone's position it adds
+ * `lat` + `lng`, so each one brings its distance and they come closest first.
  */
-export function toSearchQuery(origin: SearchOrigin, filters: SearchFilters) {
-  const place = origin.type === 'zone' ? { zone: origin.zoneId } : { lat: origin.latitude, lng: origin.longitude };
-  return { ...place, radiusKm: filters.radiusKm, category: filters.category, partySize: filters.partySize };
+export function toSearchQuery(
+  from: Coordinates | null,
+  filters: SearchFilters,
+) {
+  const place = from ? { lat: from.latitude, lng: from.longitude } : {};
+  return { ...place, category: filters.category, partySize: filters.partySize };
 }
 
 export const httpSearchApi: SearchApi = {
-  getZones: () => apiRequest<Zone[]>('/search/zones'),
-  searchRestaurants: (origin, filters) =>
-    apiRequest<RestaurantSummary[]>('/search/restaurants', { query: toSearchQuery(origin, filters) }),
-  getRestaurant: (id: string, from?: Coordinates) =>
-    apiRequest<RestaurantDetail>(`/restaurants/${encodeURIComponent(id)}/public`, {
-      query: from ? { lat: from.latitude, lng: from.longitude } : undefined,
+  searchRestaurants: (from, filters) =>
+    apiRequest<RestaurantSummary[]>("/search/restaurants", {
+      query: toSearchQuery(from, filters),
     }),
-  geocode: (address: string) => apiRequest<GeocodeResult>('/geocode', { query: { address } }),
+  getRestaurant: (id: string, from?: Coordinates) =>
+    apiRequest<RestaurantDetail>(
+      `/restaurants/${encodeURIComponent(id)}/public`,
+      {
+        query: from ? { lat: from.latitude, lng: from.longitude } : undefined,
+      },
+    ),
 };

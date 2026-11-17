@@ -1,12 +1,23 @@
-import { ArrowRight } from 'lucide-react-native';
-import { View } from 'react-native';
+import { ArrowRight } from "lucide-react-native";
+import { View } from "react-native";
 
-import { AvailabilityLabel, Button, getAvailabilityPresentation, PageDots, Skeleton, Text } from '@/components/ui';
-import { cn } from '@/lib/cn';
-import { formatDistance, splitDistance } from '@/lib/format/distance';
-import { useTheme } from '@/theme/ThemeProvider';
+import {
+  AvailabilityLabel,
+  Button,
+  getAvailabilityPresentation,
+  PageDots,
+  Skeleton,
+  Text,
+} from "@/components/ui";
+import { cn } from "@/lib/cn";
+import { formatDistance, splitDistance } from "@/lib/format/distance";
+import { useTheme } from "@/theme/ThemeProvider";
 
-import { ADDRESS_FALLBACK, getCategoryLabel, type RestaurantSummary } from '../types';
+import {
+  ADDRESS_FALLBACK,
+  getCategoryLabel,
+  type RestaurantSummary,
+} from "../types";
 
 interface RestaurantCardProps {
   restaurant: RestaurantSummary;
@@ -18,39 +29,78 @@ interface RestaurantCardProps {
 
 /**
  * One search result as the mobile v3 editorial card: availability in the line, the name big, the distance as a figure
- * («a 50 m»), category, address and «Ver restaurante →». Never a number of tables.
+ * («a 50 m», only with the phone's position), category, address and «Ver restaurante →». Never a number of tables.
  */
-export function RestaurantCard({ restaurant, onPress, position, className }: RestaurantCardProps) {
+export function RestaurantCard({
+  restaurant,
+  onPress,
+  position,
+  className,
+}: RestaurantCardProps) {
   const { colors } = useTheme();
   const category = getCategoryLabel(restaurant.category);
-  const distance = splitDistance(restaurant.distanceKm);
+  const distance =
+    restaurant.distanceKm === null
+      ? null
+      : splitDistance(restaurant.distanceKm);
   const address = restaurant.address ?? ADDRESS_FALLBACK;
-  const availability = getAvailabilityPresentation(restaurant.availability).label;
+  const availability = getAvailabilityPresentation(
+    restaurant.availability,
+  ).label;
 
   return (
     <View
-      className={cn('rounded-panel bg-surface px-5 pb-5 pt-[18px]', className)}
+      className={cn("rounded-panel bg-surface px-5 pb-5 pt-[18px]", className)}
       style={{ boxShadow: colors.shadowCard }}
-      accessibilityLabel={[restaurant.name, availability, category, formatDistance(restaurant.distanceKm), address].filter(Boolean).join(', ')}
+      accessibilityLabel={[
+        restaurant.name,
+        availability,
+        category,
+        restaurant.distanceKm === null
+          ? null
+          : formatDistance(restaurant.distanceKm),
+        address,
+      ]
+        .filter(Boolean)
+        .join(", ")}
     >
       <View className="flex-row items-center justify-between">
         <AvailabilityLabel availability={restaurant.availability} />
-        {position ? <PageDots index={position.index} count={position.count} itemLabel="Restaurante" /> : null}
+        {position ? (
+          <PageDots
+            index={position.index}
+            count={position.count}
+            itemLabel="Restaurante"
+          />
+        ) : null}
       </View>
 
       <View className="mt-3 flex-row items-end justify-between gap-3">
-        <Text variant="title" accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} className="min-w-0 flex-1">
+        <Text
+          variant="title"
+          accessibilityRole="header"
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+          className="min-w-0 flex-1"
+        >
           {restaurant.name}
         </Text>
-        <View className="flex-row items-baseline gap-1 pb-[3px]" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <Text variant="lead" tone="secondary">
-            a
-          </Text>
-          <Text variant="distance">{distance.value}</Text>
-          <Text variant="lead" tone="secondary">
-            {distance.unit}
-          </Text>
-        </View>
+        {distance ? (
+          <View
+            className="flex-row items-baseline gap-1 pb-[3px]"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            <Text variant="lead" tone="secondary">
+              a
+            </Text>
+            <Text variant="distance">{distance.value}</Text>
+            <Text variant="lead" tone="secondary">
+              {distance.unit}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       {category ? (
@@ -58,7 +108,12 @@ export function RestaurantCard({ restaurant, onPress, position, className }: Res
           {category}
         </Text>
       ) : null}
-      <Text variant="sec" tone="secondary" numberOfLines={1} className={category ? undefined : 'mt-2'}>
+      <Text
+        variant="sec"
+        tone="secondary"
+        numberOfLines={1}
+        className={category ? undefined : "mt-2"}
+      >
         {address}
       </Text>
 

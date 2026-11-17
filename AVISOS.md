@@ -4,6 +4,17 @@
 
 ---
 
+## 16 nov 2026 · Sebastián · Explorar muestra todos los restaurantes (Sprint 4)
+
+- **Fuera la búsqueda por zona, por dirección y el radio.** Explorar abre el mapa con **todos** los restaurantes que se pueden reservar ahora, encuadrados de una vez.
+- **«Buscar restaurante»:** el campo de arriba filtra por nombre mientras escribes (sin importar mayúsculas ni tildes). Con un nombre que no existe sale «No encontramos «…»» con «Borrar búsqueda».
+- **Filtros:** quedan Categoría y Personas; «Distancia» se fue.
+- **Ubicación opcional:** se pide una vez al abrir. Con ella las tarjetas dicen «a 650 m» y van de la más cercana a la más lejana; sin ella van por nombre y sin distancia. Ya no hay pantalla de «Usar mi ubicación» ni de zonas.
+- **Necesita el backend nuevo** (PR de backend «buscar todos los restaurantes cuando no llega radio»): la app ya no envía `radiusKm`, y el backend de antes responde 400 sin ubicación. **Fusionar primero el backend.**
+- Código: `filterByName` (`search/filters.ts`), `useOptionalLocation` (`location/use-optional-location.ts`), `ExploreHeader` con el campo de texto, `ResultsMap` encuadra todos. Se borraron `OriginSheet`, `AddressSearch`, `address.ts` y los estados de zona.
+
+---
+
 ## 15 nov 2026 · Sebastián · Los archivos de Firebase ya están en el repo
 
 - **`google-services.json`** (Android) y **`GoogleService-Info.plist`** (iOS) ahora se versionan en la raíz de la app. Ya no hay que pedírselos a nadie: con el pull los tienes.

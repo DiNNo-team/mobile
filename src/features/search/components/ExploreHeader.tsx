@@ -1,21 +1,34 @@
-import { Search, SlidersHorizontal, UserRound } from 'lucide-react-native';
-import type { ReactNode } from 'react';
-import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { Search, SlidersHorizontal, UserRound, X } from "lucide-react-native";
+import type { ReactNode } from "react";
+import {
+  Pressable,
+  TextInput,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
+import Animated from "react-native-reanimated";
 
-import { FilterChip, Icon, SegmentedControl, Text, usePressScale } from '@/components/ui';
-import { useTheme } from '@/theme/ThemeProvider';
+import {
+  FilterChip,
+  Icon,
+  IconButton,
+  SegmentedControl,
+  Text,
+  usePressScale,
+} from "@/components/ui";
+import { useTheme } from "@/theme/ThemeProvider";
 
-import type { ActiveFilter, FilterKey } from '../filters';
+import type { ActiveFilter, FilterKey } from "../filters";
 
-export type ResultsView = 'map' | 'list';
+export type ResultsView = "map" | "list";
 
 const VIEW_OPTIONS = [
-  { value: 'map', label: 'Mapa' },
-  { value: 'list', label: 'Lista' },
+  { value: "map", label: "Mapa" },
+  { value: "list", label: "Lista" },
 ] as const satisfies readonly { value: ResultsView; label: string }[];
 
-/** A pill that sinks to 0.97 when pressed (the search field and «Filtros»). */
+/** A pill that sinks to 0.97 when pressed («Filtros»). */
 function PressablePill({
   children,
   onPress,
@@ -42,7 +55,10 @@ function PressablePill({
       onPressOut={press.onPressOut}
       className={className}
     >
-      <Animated.View style={[press.style, style]} className="h-full flex-row items-center rounded-chip">
+      <Animated.View
+        style={[press.style, style]}
+        className="h-full flex-row items-center rounded-chip"
+      >
         {children}
       </Animated.View>
     </Pressable>
@@ -50,17 +66,16 @@ function PressablePill({
 }
 
 interface ExploreHeaderProps {
-  /** «Cerca de ti» or the zone's name. */
   title: string;
-  /** «· 2 km», or what the app is doing («Buscando tu ubicación…»). */
+  /** «· 12 con mesa», or what the app is doing («Buscando…»). */
   detail?: string;
-  /** What the search field shows: the typed address or the zone; the placeholder when it is the phone's position. */
-  place?: string;
+  /** What the diner typed in «Buscar restaurante». */
+  query: string;
+  onChangeQuery: (query: string) => void;
   view: ResultsView;
   /** «Mapa · Lista» only with the Maps key and results. */
   showViewToggle: boolean;
   onChangeView: (view: ResultsView) => void;
-  onSearch: () => void;
   onProfile: () => void;
   onFilters: () => void;
   activeFilters: ActiveFilter[];
@@ -69,23 +84,23 @@ interface ExploreHeaderProps {
 
 /**
  * Explorar's typographic header (mobile v3, diseño definitivo): «Explorar» + «Mapa · Lista», the screen title big
- * («Cerca de ti · 2 km»), the search field (it opens «¿Dónde buscamos?»; Perfil lives inside it because there is no
- * bottom bar) and «Filtros». Active filters show under it as removable chips.
+ * («Restaurantes · 12 con mesa»), «Buscar restaurante» (filters by name as the diner types; Perfil lives inside it
+ * because there is no bottom bar) and «Filtros». Active filters show under it as removable chips.
  */
 export function ExploreHeader({
   title,
   detail,
-  place,
+  query,
+  onChangeQuery,
   view,
   showViewToggle,
   onChangeView,
-  onSearch,
   onProfile,
   onFilters,
   activeFilters,
   onRemoveFilter,
 }: ExploreHeaderProps) {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const profilePress = usePressScale();
   const track = { backgroundColor: colors.searchTrack };
 
@@ -108,30 +123,58 @@ export function ExploreHeader({
       </View>
 
       <View className="flex-row items-baseline gap-2.5">
-        <Text variant="screen" accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} className="shrink">
+        <Text
+          variant="screen"
+          accessibilityRole="header"
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+          className="shrink"
+        >
           {title}
         </Text>
         {detail ? (
-          <Text variant="lead" tone="caption" numberOfLines={1} className="shrink-0">
+          <Text
+            variant="lead"
+            tone="caption"
+            numberOfLines={1}
+            className="shrink-0"
+          >
             {detail}
           </Text>
         ) : null}
       </View>
 
       <View className="mt-1.5 flex-row items-center gap-2">
-        <View className="h-[50px] min-w-0 flex-1 flex-row items-center gap-1 rounded-chip pl-1 pr-1.5" style={track}>
-          <PressablePill
-            onPress={onSearch}
-            accessibilityLabel={place ? `Buscando cerca de ${place}. Cambiar dirección o zona` : 'Buscar por dirección o zona'}
-            className="h-11 min-w-0 flex-1 pl-3"
-          >
-            <View className="flex-row items-center gap-2.5">
-              <Icon icon={Search} size={18} strokeWidth={2.1} />
-              <Text variant="lead" tone={place ? 'default' : 'caption'} numberOfLines={1} className="shrink">
-                {place ?? 'Dirección o zona'}
-              </Text>
-            </View>
-          </PressablePill>
+        <View
+          className="h-[50px] min-w-0 flex-1 flex-row items-center gap-1 rounded-chip pl-1 pr-1.5"
+          style={track}
+        >
+          <View className="h-11 min-w-0 flex-1 flex-row items-center gap-2.5 pl-3">
+            <Icon icon={Search} size={18} strokeWidth={2.1} />
+            <TextInput
+              value={query}
+              onChangeText={onChangeQuery}
+              placeholder="Buscar restaurante"
+              placeholderTextColor={colors.text2}
+              accessibilityLabel="Buscar restaurante por nombre"
+              autoCorrect={false}
+              autoCapitalize="none"
+              returnKeyType="search"
+              clearButtonMode="never"
+              keyboardAppearance={scheme}
+              className="h-full min-w-0 flex-1 font-sans text-lead text-fg"
+            />
+            {query ? (
+              <IconButton
+                icon={X}
+                accessibilityLabel="Borrar búsqueda"
+                color="text2"
+                onPress={() => onChangeQuery("")}
+                className="-mx-2"
+              />
+            ) : null}
+          </View>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Perfil"
@@ -142,7 +185,13 @@ export function ExploreHeader({
           >
             <Animated.View
               className="h-[38px] w-[38px] items-center justify-center rounded-chip"
-              style={[profilePress.style, { backgroundColor: colors.avatar, boxShadow: colors.shadowRaised }]}
+              style={[
+                profilePress.style,
+                {
+                  backgroundColor: colors.avatar,
+                  boxShadow: colors.shadowRaised,
+                },
+              ]}
             >
               <Icon icon={UserRound} size={19} strokeWidth={2} />
             </Animated.View>
@@ -150,14 +199,20 @@ export function ExploreHeader({
         </View>
         <PressablePill
           onPress={onFilters}
-          accessibilityLabel={activeFilters.length > 0 ? `Filtros, ${activeFilters.length} activos` : 'Filtros'}
+          accessibilityLabel={
+            activeFilters.length > 0
+              ? `Filtros, ${activeFilters.length} activos`
+              : "Filtros"
+          }
           className="h-[50px]"
           style={[track, { paddingLeft: 13, paddingRight: 16 }]}
         >
           <View className="flex-row items-center gap-2">
             <Icon icon={SlidersHorizontal} size={18} strokeWidth={2} />
             <Text variant="strong">
-              {activeFilters.length > 0 ? `Filtros · ${activeFilters.length}` : 'Filtros'}
+              {activeFilters.length > 0
+                ? `Filtros · ${activeFilters.length}`
+                : "Filtros"}
             </Text>
           </View>
         </PressablePill>
@@ -166,7 +221,11 @@ export function ExploreHeader({
       {activeFilters.length > 0 ? (
         <View className="mt-1 flex-row flex-wrap gap-2">
           {activeFilters.map((filter) => (
-            <FilterChip key={filter.key} label={filter.label} onRemove={() => onRemoveFilter(filter.key)} />
+            <FilterChip
+              key={filter.key}
+              label={filter.label}
+              onRemove={() => onRemoveFilter(filter.key)}
+            />
           ))}
         </View>
       ) : null}
