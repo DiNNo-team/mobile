@@ -72,6 +72,7 @@ export const errorMessages = {
   emailNotVerified: 'Verifica tu correo para continuar.',
   restaurantAccount: 'Esta es una cuenta de restaurante. Administra tu restaurante desde la web.',
   forbidden: 'No tienes acceso a esta sección.',
+  rateLimited: 'Hiciste muchas solicitudes seguidas. Espera un momento e intenta de nuevo.',
 } as const;
 
 /** Manual texts (14.2 and CLAUDE.md §10) for the generic cases; `fallback` for everything else. */
@@ -83,6 +84,7 @@ export function getErrorMessage(error: unknown, fallback: string = errorMessages
   if (error.errorCode === ErrorCode.RestaurantAccount) return errorMessages.restaurantAccount;
   if (error.status === 401) return errorMessages.sessionExpired;
   if (error.status === 403) return errorMessages.forbidden;
+  if (error.status === 429) return errorMessages.rateLimited;
   if (error.status >= 500) return errorMessages.server;
   return fallback;
 }

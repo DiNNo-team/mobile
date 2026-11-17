@@ -51,6 +51,16 @@ export function applyToDetail(detail: RestaurantDetail | undefined, event: Avail
 /** Socket.IO does not retry a rejected handshake: with SERVER_ERROR the app waits 5 s, 15 s, then every 30 s. */
 export const SERVER_ERROR_RETRY_MS = [5_000, 15_000, 30_000] as const;
 
+/**
+ * `connect_error` codes the app retries by itself: the server failed (SERVER_ERROR, §10) or too many connections
+ * came from the same network (RATE_LIMITED, §12.14). Session codes are final.
+ */
+const RETRYABLE_REJECTIONS: readonly string[] = ['SERVER_ERROR', 'RATE_LIMITED'];
+
+export function isRetryableRejection(message: string): boolean {
+  return RETRYABLE_REJECTIONS.includes(message);
+}
+
 export function getRetryDelay(attempt: number): number {
   return SERVER_ERROR_RETRY_MS[Math.min(attempt, SERVER_ERROR_RETRY_MS.length - 1)];
 }

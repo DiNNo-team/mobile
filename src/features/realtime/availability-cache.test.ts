@@ -8,6 +8,7 @@ import {
   applyToResults,
   getRetryDelay,
   isAvailabilityChangedEvent,
+  isRetryableRejection,
   type AvailabilityChangedEvent,
 } from "./availability-cache";
 
@@ -112,5 +113,15 @@ describe("getRetryDelay (SERVER_ERROR)", () => {
     expect([0, 1, 2, 3, 9].map(getRetryDelay)).toEqual([
       5_000, 15_000, 30_000, 30_000, 30_000,
     ]);
+  });
+});
+
+describe("isRetryableRejection", () => {
+  it("retries SERVER_ERROR and RATE_LIMITED (§12.14); session codes are final", () => {
+    expect(isRetryableRejection("SERVER_ERROR")).toBe(true);
+    expect(isRetryableRejection("RATE_LIMITED")).toBe(true);
+    for (const code of ["UNAUTHORIZED", "PROFILE_REQUIRED", "EMAIL_NOT_VERIFIED", "ADMIN_ACCOUNT"]) {
+      expect(isRetryableRejection(code)).toBe(false);
+    }
   });
 });
