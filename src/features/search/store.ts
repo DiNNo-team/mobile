@@ -1,65 +1,47 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-import { onSignOut } from '@/features/session/SessionProvider';
+import { onSignOut } from "@/features/session/SessionProvider";
 
-import { DEFAULT_RADIUS_KM, RADIUS_OPTIONS_KM, type Coordinates, type RadiusKm, type RestaurantCategory, type SearchFilters, type SearchOrigin } from './types';
+import type { Coordinates, RestaurantCategory, SearchFilters } from "./types";
 
 interface SearchState {
-  /** Null until the diner chooses: the phone's position or a zone. */
-  origin: SearchOrigin | null;
+  /** The phone's position, only when the diner allowed it: adds the distance and sorts by it. Null otherwise. */
+  location: Coordinates | null;
+  /** What the diner typed in «Buscar restaurante»: filters the results by name on screen. */
+  query: string;
   filters: SearchFilters;
   setLocation: (coordinates: Coordinates) => void;
-  setZone: (zoneId: string) => void;
-  /** An address already located by GET /geocode (point + what Google understood + what the diner typed). */
-  setAddress: (address: { latitude: number; longitude: number; formattedAddress: string; query: string }) => void;
-  setRadius: (radiusKm: RadiusKm) => void;
+  setQuery: (query: string) => void;
   setCategory: (category: RestaurantCategory | undefined) => void;
   setPartySize: (partySize: number | undefined) => void;
   /** Applies the filters sheet at once ("Ver restaurantes"). */
   setFilters: (filters: SearchFilters) => void;
-  /** Back to the general search: default radius, no category, no party size. The origin stays. */
+  /** Back to every restaurant: no category, no party size. The position and the typed name stay. */
   clearFilters: () => void;
   /** Everything back to the start (sign out). */
   reset: () => void;
 }
 
-const DEFAULT_FILTERS: SearchFilters = { radiusKm: DEFAULT_RADIUS_KM };
+const DEFAULT_FILTERS: SearchFilters = {};
 
 /**
- * Search kept across screens (Reparto: "un store global ligero"), so the origin and the filters survive
- * going to the detail and back. Server data stays in TanStack Query; this holds only what the diner chose.
+ * Search kept across screens (Reparto: "un store global ligero"), so the typed name and the filters survive going to
+ * the detail and back. Server data stays in TanStack Query; this holds only what the diner chose.
  */
 export const useSearchStore = create<SearchState>()((set) => ({
-  origin: null,
+  location: null,
+  query: "",
   filters: DEFAULT_FILTERS,
-  setLocation: ({ latitude, longitude }) => set({ origin: { type: 'location', latitude, longitude } }),
-  setZone: (zoneId) => set({ origin: { type: 'zone', zoneId } }),
-  setAddress: (address) => set({ origin: { type: 'address', ...address } }),
-  setRadius: (radiusKm) => set((state) => ({ filters: { ...state.filters, radiusKm } })),
-  setCategory: (category) => set((state) => ({ filters: { ...state.filters, category } })),
-  setPartySize: (partySize) => set((state) => ({ filters: { ...state.filters, partySize } })),
+  setLocation: ({ latitude, longitude }) =>
+    set({ location: { latitude, longitude } }),
+  setQuery: (query) => set({ query }),
+  setCategory: (category) =>
+    set((state) => ({ filters: { ...state.filters, category } })),
+  setPartySize: (partySize) =>
+    set((state) => ({ filters: { ...state.filters, partySize } })),
   setFilters: (filters) => set({ filters }),
   clearFilters: () => set({ filters: DEFAULT_FILTERS }),
-  reset: () => set({ origin: null, filters: DEFAULT_FILTERS }),
+  reset: () => set({ location: null, query: "", filters: DEFAULT_FILTERS }),
 }));
 
 onSignOut(() => useSearchStore.getState().reset());
-
-/** Next radius of the list (1 → 2 → 5 → 10), or null at 10 km: the "Ampliar a X km" action. */
-export function getNextRadius(radiusKm: RadiusKm): RadiusKm | null {
-  const index = RADIUS_OPTIONS_KM.indexOf(radiusKm);
-  return RADIUS_OPTIONS_KM[index + 1] ?? null;
-}
-
-/**
- * Point of the search, to send to the detail (`distanceKm`): the phone's position or the typed address. A zone
- * has no point of its own (CLAUDE.md §10: lat/lng only when the search has them).
- */
-export function getOriginCoordinates(origin: SearchOrigin | null): Coordinates | undefined {
-  return origin && origin.type !== 'zone' ? { latitude: origin.latitude, longitude: origin.longitude } : undefined;
-}
-
-/** The diner's own position (the orange dot on the map), only when the search uses the phone's GPS. */
-export function getUserLocation(origin: SearchOrigin | null): Coordinates | undefined {
-  return origin?.type === 'location' ? { latitude: origin.latitude, longitude: origin.longitude } : undefined;
-}
