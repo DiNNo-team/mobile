@@ -478,7 +478,7 @@ Los 404 y 409 existentes de mesas siguen sin `errorCode`; no se cambian en este 
 - Que el restaurante cancele una reserva.
 - Notificaciones push (llegaron en el Sprint 4: §12.13).
 - Comisiones variables, facturas y pagos (el estado de cuenta con tarifa fija por check-in está en §12.12).
-- Límite de peticiones y de conexiones WebSocket (Sprint 4, seguridad).
+- Límite de peticiones y de conexiones WebSocket (llegó en el Sprint 4: §12.14).
 - Adaptador de Redis para Socket.IO (Sprint 4, Azure).
 - Extender el tiempo de una reserva.
 
@@ -588,3 +588,31 @@ Los 404 y 409 existentes de mesas siguen sin `errorCode`; no se cambian en este 
   - Se calcula con la hora del servidor.
   - Se cancela si la reserva termina antes.
 - Tabla `push_devices` (`token` único, `user_id` con borrado en cascada, `platform`).
+
+### 12.14 Sprint 4 · Límite de peticiones y cabeceras de seguridad
+
+**Límite de peticiones (tarea 6.1.3)**
+- **Respuesta al pasar un límite:** `429` con `{ "statusCode": 429, "message": "Hiciste muchas solicitudes seguidas. Espera un momento e intenta de nuevo.", "error": "Too Many Requests" }`, sin `errorCode`, y la cabecera `Retry-After-<límite>` con los segundos que faltan.
+- **En los clientes:** cada uno muestra su propio texto por el status `429` y **no reintenta solo**. La persona vuelve a intentar.
+- **A quién se le cuenta:** con sesión, a la cuenta (el `sub` del token de Firebase); sin sesión, a la IP. En una misma red (por ejemplo, la universidad) todos salen por la misma IP, y así una persona no bloquea a las demás.
+- **Límites:** por ventana fija de 1 minuto, salvo donde se indica.
+
+| Qué | Límite |
+|---|---|
+| Toda la API, por cuenta (o IP sin sesión) | 300 |
+| Toda la API, por IP | 1000 |
+| `GET /v1/me` · `POST /v1/diners/me` | 20 |
+| `POST /v1/restaurants` · `POST /v1/restaurants/signup` · `POST /v1/restaurants/me/resubmit` | 10 cada 10 minutos |
+| `POST /v1/reservations` · `POST /v1/reservations/:id/cancel` (un solo contador) | 10 |
+| `POST /v1/restaurants/me/check-ins` | 30 |
+| `GET /v1/geocode` | 20 |
+| WebSocket: conexiones nuevas por IP | 120 |
+
+- **WebSocket:** una conexión de más se rechaza con `connect_error` `RATE_LIMITED`, antes de revisar el token. A diferencia de los códigos de sesión, **este sí se reintenta**, igual que `SERVER_ERROR` (5 s, 15 s, 30 s). Mientras tanto sigue la consulta periódica.
+- **Varias réplicas:** los contadores viven en Redis, así que con 2 réplicas cada cuenta tiene un solo límite. Si Redis falla, cada réplica cuenta en su memoria y la API sigue respondiendo.
+- **Prueba de carga:** `RATE_LIMIT_FACTOR` (entero de 1 a 1000) multiplica todos los límites y `RATE_LIMIT_ENABLED=false` los apaga. Solo durante la prueba: después se dejan como estaban.
+
+**Cabeceras de seguridad (tarea 6.1.4)**
+- La API responde con las cabeceras de helmet: `Content-Security-Policy` que no permite cargar nada ni incrustar la API, HSTS, `nosniff`, `Referrer-Policy: no-referrer` y sin `X-Powered-By`.
+- Swagger (`/docs`) usa la política por defecto de helmet, que permite sus propios scripts.
+- Para web y app no cambia nada: CORS sigue con `CORS_ORIGINS` y la app nativa no usa CORS.

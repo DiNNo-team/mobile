@@ -4,6 +4,15 @@
 
 ---
 
+## 16 nov 2026 · Sebastián · Límite de peticiones: texto del 429 y reintento con RATE_LIMITED (Sprint 4, §12.14)
+
+- **El backend ahora limita las peticiones** (backend PR #65). Al pasar un límite responde `429` sin `errorCode`; el WebSocket rechaza una conexión de más con `connect_error` `RATE_LIMITED`.
+- **`getErrorMessage`** muestra con un `429` `errorMessages.rateLimited` («Hiciste muchas solicitudes seguidas. Espera un momento e intenta de nuevo.»). Las consultas no lo reintentan (`shouldRetry` no reintenta un 4xx).
+- **Tiempo real:** `RATE_LIMITED` se reintenta como `SERVER_ERROR` (5 s, 15 s, 30 s), con `isRetryableRejection` (`features/realtime/availability-cache.ts`). Los códigos de sesión siguen sin reintentarse.
+- **Contrato:** nueva §12.14 en `CLAUDE.md`, igual en los tres repos.
+
+---
+
 ## 16 nov 2026 · Sebastián · Explorar muestra todos los restaurantes (Sprint 4)
 
 - **Fuera la búsqueda por zona, por dirección y el radio.** Explorar abre el mapa con **todos** los restaurantes que se pueden reservar ahora, encuadrados de una vez.

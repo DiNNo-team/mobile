@@ -5,9 +5,7 @@ import { io, type Socket } from 'socket.io-client';
 import { env } from '@/config/env';
 import { getAuthToken } from '@/lib/api/client';
 
-import { getRetryDelay } from './availability-cache';
-
-const SERVER_ERROR = 'SERVER_ERROR';
+import { getRetryDelay, isRetryableRejection } from './availability-cache';
 
 // One Socket.IO connection per diner session (CLAUDE.md §10 and §12.7), shared by every live feature: availability
 // (`availability.changed`, room `diners`) and the diner's reservations (`reservation.*`, room `diner:{userId}`). The
@@ -46,9 +44,9 @@ function start(): () => void {
   });
 
   // Network problems: Socket.IO retries by itself (`socket.active`). A rejected handshake is final; only SERVER_ERROR
-  // deserves new tries. Session codes are handled by the session flow over HTTP.
+  // and RATE_LIMITED deserve new tries. Session codes are handled by the session flow over HTTP.
   created.on('connect_error', (error) => {
-    if (created.active || error.message !== SERVER_ERROR) return;
+    if (created.active || !isRetryableRejection(error.message)) return;
     clearRetry();
     retryTimer = setTimeout(() => created.connect(), getRetryDelay(retryAttempt));
     retryAttempt += 1;
