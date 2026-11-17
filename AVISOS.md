@@ -4,6 +4,13 @@
 
 ---
 
+## 17 nov 2026 · Elizabeth · Resumen del restaurante: ampliación de `GET /v1/restaurants/me/summary` (Sprint 4) · la app no lo usa
+
+- **Qué cambia (aditivo):** la respuesta del resumen del **restaurante** agrega `billing.guests`, `previousComparable`, `byDate`, `byDayHour`, `monthly` y `payment` para la nueva pantalla Resumen de la web. No cambia ningún campo existente. Contrato: `backend/docs/restaurant-summary-contract.md`.
+- **Para la app:** nada. Es un endpoint de `restaurant_admin` (un comensal recibe `DINER_ACCOUNT`) y la app no lo consume. No hay código ni pantallas que tocar.
+
+---
+
 ## 17 nov 2026 · Elizabeth · Restaurantes suspendidos: qué cambia para la app (Sprint 4, §12.15)
 
 - **No hay pantallas nuevas en la app.** El panel del administrador y la pantalla de «restaurante suspendido» son solo de la web.
