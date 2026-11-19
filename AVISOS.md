@@ -4,6 +4,16 @@
 
 ---
 
+## 18 nov 2026 · Elizabeth · Cobro por comensal: COP 1.500 por persona (Sprint 4) · la app no cambia · rama `feat/sprint4-tarifa-por-comensal` · para revisar: Sebastián
+
+- **Qué cambia:** el cobro pasa de una tarifa fija por check-in (COP 2.000) a **COP 1.500 por persona**: `fee_cop` = personas de la reserva × tarifa por comensal. Se calcula **solo al hacer el check-in** (crear, cancelar o vencer una reserva no cobra). Ejemplos: 1 persona = 1.500, 2 = 3.000, 4 = 6.000, 5 = 7.500.
+- **Nombres nuevos (iguales en los tres repos):** variable `CHECKIN_FEE_PER_GUEST_COP` (default 1500) y campo de API `currentFeePerGuestCop` (antes `currentFeeCop`).
+- **Para la app: nada.** La app del comensal no muestra ni usa la tarifa, el cobro ni los ingresos: esos datos viven solo en rutas de `restaurant_admin` (`/v1/restaurants/me/summary`, `/v1/restaurants/me/billing/check-ins`) y de `platform_admin` (`/v1/admin/*`), y un comensal recibe `DINER_ACCOUNT`. Se revisó el código (`src/`) y no hay referencias a `feeCop`, `currentFeeCop`, `amountCop` ni a la tarifa. No se tocó código; solo `CLAUDE.md` (§8 y §12.12, idénticos a los otros repos) y este aviso.
+- **Lo que no cambia para el comensal:** crear, cancelar o vencer una reserva sigue sin costo para él; el cobro es del restaurante a DiNNo y ocurre solo en el check-in. El comensal sigue viendo su tiquete, el QR y la cuenta regresiva como siempre.
+- **Backend:** variable `CHECKIN_FEE_COP` → `CHECKIN_FEE_PER_GUEST_COP` (default 1500), campo `currentFeeCop` → `currentFeePerGuestCop`, sin migración. Los PR a `develop` los abre Elizabeth.
+
+---
+
 ## 17 nov 2026 · Elizabeth · Resumen del restaurante: ampliación de `GET /v1/restaurants/me/summary` (Sprint 4) · la app no lo usa
 
 - **Qué cambia (aditivo):** la respuesta del resumen del **restaurante** agrega `billing.guests`, `previousComparable`, `byDate`, `byDayHour`, `monthly` y `payment` para la nueva pantalla Resumen de la web. No cambia ningún campo existente. Contrato: `backend/docs/restaurant-summary-contract.md`.

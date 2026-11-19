@@ -131,7 +131,7 @@ Las decisiones y contratos del Sprint 2 están en la sección 10.
 - **Suspensión de restaurantes:** solo el `platform_admin` suspende (solo desde `approved`, motivo obligatorio de 10 a 300 caracteres) y reactiva (solo desde `suspended`, vuelve a `approved`); se guarda solo la última suspensión en el restaurante (`suspension_reason`, `suspended_at`, `suspended_by`), también después de reactivar; no hay tabla de auditoría. Un suspendido no existe para el comensal (igual que uno no disponible) y su cuenta solo ve su restaurante, su cobro y sus reservas y hace check-in de las activas, que se respetan hasta el check-in o el vencimiento (`403 RESTAURANT_SUSPENDED` en lo demás).
 - **Estado de cobro mensual:** el administrador marca a mano cada mes cerrado de cada restaurante como cobrado o lo deshace (`billing_periods`, sin pasarela de pagos); el monto es siempre `SUM(check_ins.fee_cop)` del mes de Bogotá, se guarda un snapshot al marcarlo y, si después no coincide, se avisa (`amountMismatch`), nunca se corrige solo. El mes en curso no se marca y un mes sin check-ins no se cobra. Sin tarifa por restaurante, sin exportación por HTTP.
 - **Pendiente y rechazado editan:** un restaurante `pending` o `rejected` puede editar sus datos sin cambiar de estado; el rechazado reenvía (`rejected` → `pending`, se limpian motivo y revisión y cambia `submitted_at`).
-- **Cobro por check-in:** tarifa fija en COP por check-in válido (`CHECKIN_FEE_COP`, por defecto 2000); cada check-in guarda la tarifa vigente (`check_ins.fee_cop`) y cambiarla no altera el historial; cancelaciones y vencimientos no se cobran.
+- **Cobro por check-in:** tarifa por comensal en COP (`CHECKIN_FEE_PER_GUEST_COP`, por defecto 1500); el cobro de un check-in válido es personas de la reserva × esa tarifa y se guarda en `check_ins.fee_cop` (el total); cambiarla no altera el historial, y los check-ins anteriores (cobro fijo de 2000 por check-in) conservan su monto; cancelaciones y vencimientos no se cobran.
 - **Reportes del restaurante:** el estado de cuenta y el resumen (KPIs) van por rango de fechas en hora de Bogotá, inclusivo (`from`..`to`, `AAAA-MM-DD`), por defecto del día 1 del mes en curso hasta hoy, máximo 366 días. Para la pantalla Resumen de la web, `GET /v1/restaurants/me/summary` agrega `billing.guests`, `previousComparable`, `byDate`, `byDayHour`, `monthly` y `payment` (aditivo; contrato en `backend/docs/restaurant-summary-contract.md`). La app del comensal no consume estos endpoints.
 - Nuevas decisiones: se agregan aquí, en una línea, en el mismo PR que las aplica.
 
@@ -481,7 +481,7 @@ Los 404 y 409 existentes de mesas siguen sin `errorCode`; no se cambian en este 
 ### 12.10 Fuera de alcance del Sprint 3
 - Que el restaurante cancele una reserva.
 - Notificaciones push (llegaron en el Sprint 4: §12.13).
-- Comisiones variables, facturas y pagos (el estado de cuenta con tarifa fija por check-in está en §12.12).
+- Comisiones variables, facturas y pagos (el estado de cuenta con tarifa por comensal está en §12.12).
 - Límite de peticiones y de conexiones WebSocket (llegó en el Sprint 4: §12.14).
 - Adaptador de Redis para Socket.IO (Sprint 4, Azure).
 - Extender el tiempo de una reserva.
@@ -517,7 +517,7 @@ Los 404 y 409 existentes de mesas siguen sin `errorCode`; no se cambian en este 
 - Si la cuenta ya existe: comensal → `403 DINER_ACCOUNT`; `platform_admin` → `403 ADMIN_ACCOUNT`; restaurante con restaurante → `409` «Ya registraste tu restaurante…»; restaurante habilitado sin restaurante → `409` (sin `errorCode`) «Tu cuenta ya está habilitada como restaurante. Registra tu restaurante desde el formulario de registro.».
 
 **Cobro por check-in**
-- Tarifa fija en pesos colombianos por cada check-in válido: `CHECKIN_FEE_COP` (por defecto 2000). Cada check-in guarda la tarifa vigente en ese momento; cambiarla no altera los anteriores. Cancelaciones y vencimientos no se cobran.
+- Tarifa por comensal en pesos colombianos: `CHECKIN_FEE_PER_GUEST_COP` (por defecto 1500). El cobro de cada check-in válido es personas de la reserva × la tarifa por comensal, y se guarda en `check_ins.fee_cop` (el total) en el momento del check-in; cambiarla no altera los anteriores. Los check-ins hechos con el cobro fijo anterior (2000 por check-in) conservan su monto. Cancelaciones y vencimientos no se cobran.
 
 **Reportes del restaurante** (solo `restaurant_admin` **aprobado**)
 - **Periodo:** `from` y `to` son días de Bogotá (`AAAA-MM-DD`), rango inclusivo. Por defecto, del día 1 del mes en curso hasta hoy (si solo llega `to`, desde el día 1 de ese mes). `to` no puede ser posterior a hoy y el periodo tiene como máximo 366 días; si no, `400` con la lista de mensajes.
@@ -551,9 +551,9 @@ Los 404 y 409 existentes de mesas siguen sin `errorCode`; no se cambian en este 
 **`BillingStatement`**: `{ period: { from, to, timezone: 'America/Bogota' }, totalCheckIns, amountCop, items: [{ checkInId, reservationId, checkedInAt, partySize, tableIdentifier, feeCop }], page, pageSize, serverTime }`
 - `totalCheckIns` y `amountCop` (suma de `feeCop`, en COP) son del periodo completo; `items` es la página pedida, el check-in más reciente primero. Se filtra por la fecha del check-in.
 
-**`RestaurantSummary`**: `{ period: { from, to, timezone: 'America/Bogota' }, billing: { checkIns, amountCop, currentFeeCop }, reservations: { created, completed, cancelled, expired, active }, rates: { conversion, noShow, cancellation }, averagePartySize, peakHours: [{ hour, reservations }], byDayOfWeek: [{ dayOfWeek, reservations }], serverTime }`
+**`RestaurantSummary`**: `{ period: { from, to, timezone: 'America/Bogota' }, billing: { checkIns, amountCop, currentFeePerGuestCop }, reservations: { created, completed, cancelled, expired, active }, rates: { conversion, noShow, cancellation }, averagePartySize, peakHours: [{ hour, reservations }], byDayOfWeek: [{ dayOfWeek, reservations }], serverTime }`
 - `reservations`: reservas **creadas** en el periodo, por su estado actual. Antes de contar, el backend vence las reservas debidas.
-- `billing`: check-ins **hechos** en el periodo; `amountCop` = suma de la tarifa guardada en cada uno; `currentFeeCop` = la tarifa vigente.
+- `billing`: check-ins **hechos** en el periodo; `amountCop` = suma del total guardado en cada uno (`fee_cop`); `currentFeePerGuestCop` = la tarifa por comensal vigente (informativa: nunca se usa para recalcular montos).
 - `rates` (4 decimales; `null` si el denominador es 0): `conversion` = completed / created · `noShow` = expired / (completed + expired) · `cancellation` = cancelled / created.
 - `averagePartySize`: promedio de personas de las creadas, con 2 decimales; `null` si no hay.
 - `peakHours`: las 3 horas (0 a 23, hora de Bogotá) con más reservas creadas, de mayor a menor; a igual cantidad, la hora menor primero; vacío si no hay.
