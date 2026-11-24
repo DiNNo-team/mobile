@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { Timer } from 'lucide-react-native';
 
 import { Alert, BottomSheet, Button, GlassCard, Icon, NumberStepper, RETRY_LABEL, Text, useToast } from '@/components/ui';
+import { askAfterReserving } from '@/features/notifications/push';
 import { getErrorMessage } from '@/lib/api/errors';
 import { primaryTapHaptic } from '@/lib/haptics';
 import { formatPeople } from '@/lib/format/table';
@@ -78,6 +79,8 @@ export function ReserveSheet({ visible, onClose, restaurant, initialPartySize, o
       const reservation = await create.mutateAsync({ restaurantId: restaurant.id, partySize });
       onClose();
       router.replace({ pathname: '/reserva/[id]', params: { id: reservation.id } });
+      // Sprint 4: the first reservation is when notifications make sense («te avisamos si se vence»).
+      void askAfterReserving();
     } catch (error) {
       const view = createErrorView(error);
       setFailure(view);

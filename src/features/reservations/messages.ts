@@ -31,6 +31,9 @@ export const RESERVATION_TEXT = {
   cancelled: 'Cancelaste tu reserva. La mesa quedó libre.',
   codeLabel: 'Tu código',
   codeHint: 'Muestra el QR o el código al restaurante al llegar.',
+  qrEnlarge: 'Ver el QR en grande',
+  qrTitle: 'Tu código de reserva',
+  qrClose: 'Listo',
   closedReason: 'Este restaurante está cerrado ahora.',
   noTablesReason: 'Ahora no tiene mesas disponibles.',
   // createErrorText.

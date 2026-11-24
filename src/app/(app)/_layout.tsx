@@ -3,6 +3,7 @@ import { View } from 'react-native';
 
 import { SlowConnectionNotice } from '@/components/SlowConnectionNotice';
 import { env } from '@/config/env';
+import { useNotificationNavigation, usePushRegistration, useReservationReminder } from '@/features/notifications/hooks';
 import { useDinerSocketConnection } from '@/features/realtime/socket';
 import { useActiveReservation } from '@/features/reservations/queries';
 import { useAvailabilityRealtime } from '@/features/realtime/use-availability-realtime';
@@ -21,6 +22,10 @@ export default function AppLayout() {
   // Sprint 3: the diner's reservation in course is read as soon as the session starts (opening the app, signing in) and
   // again on returning to the foreground, so the detail, Explorar and the reservation screen agree from the first frame.
   useActiveReservation();
+  // Sprint 4: this phone's notifications (FCM on Android), the «vence pronto» reminder and opening a tapped one.
+  usePushRegistration();
+  useReservationReminder();
+  useNotificationNavigation();
   return (
     <View className="flex-1">
       <Stack screenOptions={{ headerShown: false }} />

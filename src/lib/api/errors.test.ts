@@ -46,6 +46,7 @@ describe('getErrorMessage', () => {
     expect(getErrorMessage(http(403, ErrorCode.RestaurantAccount))).toBe(errorMessages.restaurantAccount);
     expect(getErrorMessage(http(403))).toBe(errorMessages.forbidden);
     expect(getErrorMessage(http(500))).toBe(errorMessages.server);
+    expect(getErrorMessage(http(429), 'Otro texto')).toBe(errorMessages.rateLimited);
   });
 
   it('uses the fallback for anything else', () => {

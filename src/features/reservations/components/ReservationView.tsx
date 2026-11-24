@@ -154,7 +154,7 @@ export function ReservationView({ reservation, now, activeActions }: Reservation
 
         <View className="gap-3 px-[22px] pb-5 pt-3">
           <View className="flex-row items-center gap-3.5">
-            <ReservationQr />
+            <ReservationQr code={code} />
             <View className="min-w-0 flex-1 gap-2">
               <Text variant="strong" tone="secondary">
                 {RESERVATION_TEXT.codeLabel}

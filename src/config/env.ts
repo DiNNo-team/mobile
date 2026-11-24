@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 // The only place that reads process.env. Expo inlines EXPO_PUBLIC_* only with static access
 // (process.env.EXPO_PUBLIC_X), so each variable is read by its full name.
@@ -43,5 +44,10 @@ export const env = {
    * True when the build has the Google Maps key (GOOGLE_MAPS_ANDROID_API_KEY in app.config.ts). The key itself
    * never reaches JavaScript. After adding it: `npx expo prebuild --clean` + `npx expo run:android`.
    */
-  mapsEnabled: Constants.expoConfig?.extra?.mapsEnabled === true,
+  mapsEnabled:
+    Platform.OS === 'ios'
+      ? Constants.expoConfig?.extra?.mapsEnabledIos === true
+      : Constants.expoConfig?.extra?.mapsEnabled === true,
+  /** iOS OAuth client of the Firebase project (from GoogleService-Info.plist at build time). Null on Android. */
+  googleIosClientId: (Constants.expoConfig?.extra?.googleIosClientId as string | null | undefined) ?? null,
 } as const;

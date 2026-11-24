@@ -3,6 +3,8 @@
 // Colors read CSS variables that src/theme/ThemeProvider sets for light and dark
 // (values in src/theme/tokens.ts, names in src/theme/css-vars.ts; a test keeps both lists equal).
 
+const { platformSelect } = require('nativewind/theme');
+
 const colorNames = [
   'bg', 'surface', 'surface-2', 'fg', 'fg-2', 'line', 'line-strong',
   'accent', 'accent-pressed', 'accent-text', 'on-accent', 'brand', 'on-brand',
@@ -61,9 +63,10 @@ module.exports = {
     extend: {
       // In `extend` because the NativeWind preset extends `sans` with the system font and would win otherwise.
       fontFamily: {
-        sans: ['PlusJakartaSans_500Medium'],
-        bold: ['PlusJakartaSans_700Bold'],
-        extrabold: ['PlusJakartaSans_800ExtraBold'],
+        // Android finds the embedded font by file name, iOS by PostScript name (same pairs as src/theme/tokens.ts).
+        sans: platformSelect({ ios: 'PlusJakartaSans-Medium', default: 'PlusJakartaSans_500Medium' }),
+        bold: platformSelect({ ios: 'PlusJakartaSans-Bold', default: 'PlusJakartaSans_700Bold' }),
+        extrabold: platformSelect({ ios: 'PlusJakartaSans-ExtraBold', default: 'PlusJakartaSans_800ExtraBold' }),
       },
       borderWidth: { 1.5: '1.5px', 3: '3px' },
       opacity: { 12: '0.12', 45: '0.45', 55: '0.55' },

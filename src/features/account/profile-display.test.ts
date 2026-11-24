@@ -1,4 +1,4 @@
-import { formatAppVersion, getDisplayName } from './profile-display';
+import { formatAppVersion, getDisplayName, getInitial } from './profile-display';
 
 describe('getDisplayName', () => {
   it('uses the displayName of GET /me', () => {
@@ -27,5 +27,21 @@ describe('formatAppVersion', () => {
     expect(formatAppVersion(undefined)).toBeNull();
     expect(formatAppVersion(null)).toBeNull();
     expect(formatAppVersion(' ')).toBeNull();
+  });
+});
+
+describe('getInitial', () => {
+  it('is the first letter of the name, uppercase', () => {
+    expect(getInitial('ana María')).toBe('A');
+    expect(getInitial('  laura.gomez')).toBe('L');
+  });
+
+  it('keeps accented letters and emoji whole', () => {
+    expect(getInitial('élise')).toBe('É');
+    expect(getInitial('🍕 Ana')).toBe('🍕');
+  });
+
+  it('shows a question mark when there is no name', () => {
+    expect(getInitial('  ')).toBe('?');
   });
 });

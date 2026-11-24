@@ -4,6 +4,117 @@
 
 ---
 
+## 18 nov 2026 · Elizabeth · Cobro por comensal: COP 1.500 por persona (Sprint 4) · la app no cambia · rama `feat/sprint4-tarifa-por-comensal` · para revisar: Sebastián
+
+- **Qué cambia:** el cobro pasa de una tarifa fija por check-in (COP 2.000) a **COP 1.500 por persona**: `fee_cop` = personas de la reserva × tarifa por comensal. Se calcula **solo al hacer el check-in** (crear, cancelar o vencer una reserva no cobra). Ejemplos: 1 persona = 1.500, 2 = 3.000, 4 = 6.000, 5 = 7.500.
+- **Nombres nuevos (iguales en los tres repos):** variable `CHECKIN_FEE_PER_GUEST_COP` (default 1500) y campo de API `currentFeePerGuestCop` (antes `currentFeeCop`).
+- **Para la app: nada.** La app del comensal no muestra ni usa la tarifa, el cobro ni los ingresos: esos datos viven solo en rutas de `restaurant_admin` (`/v1/restaurants/me/summary`, `/v1/restaurants/me/billing/check-ins`) y de `platform_admin` (`/v1/admin/*`), y un comensal recibe `DINER_ACCOUNT`. Se revisó el código (`src/`) y no hay referencias a `feeCop`, `currentFeeCop`, `amountCop` ni a la tarifa. No se tocó código; solo `CLAUDE.md` (§8 y §12.12, idénticos a los otros repos) y este aviso.
+- **Lo que no cambia para el comensal:** crear, cancelar o vencer una reserva sigue sin costo para él; el cobro es del restaurante a DiNNo y ocurre solo en el check-in. El comensal sigue viendo su tiquete, el QR y la cuenta regresiva como siempre.
+- **Backend:** variable `CHECKIN_FEE_COP` → `CHECKIN_FEE_PER_GUEST_COP` (default 1500), campo `currentFeeCop` → `currentFeePerGuestCop`, sin migración. Los PR a `develop` los abre Elizabeth.
+
+---
+
+## 17 nov 2026 · Elizabeth · Resumen del restaurante: ampliación de `GET /v1/restaurants/me/summary` (Sprint 4) · la app no lo usa
+
+- **Qué cambia (aditivo):** la respuesta del resumen del **restaurante** agrega `billing.guests`, `previousComparable`, `byDate`, `byDayHour`, `monthly` y `payment` para la nueva pantalla Resumen de la web. No cambia ningún campo existente. Contrato: `backend/docs/restaurant-summary-contract.md`.
+- **Para la app:** nada. Es un endpoint de `restaurant_admin` (un comensal recibe `DINER_ACCOUNT`) y la app no lo consume. No hay código ni pantallas que tocar.
+
+---
+
+## 17 nov 2026 · Elizabeth · Restaurantes suspendidos: qué cambia para la app (Sprint 4, §12.15)
+
+- **No hay pantallas nuevas en la app.** El panel del administrador y la pantalla de «restaurante suspendido» son solo de la web.
+- **Estado nuevo `suspended`:** un administrador de DiNNo puede suspender un restaurante aprobado (y reactivarlo). Para el comensal un restaurante suspendido **no existe**: desaparece de la búsqueda y del mapa, y su detalle y su reserva responden `404 RESTAURANT_NOT_FOUND` (el mismo caso que ya tratan como «ya no está disponible»; la app no necesita un texto nuevo).
+- **Reservas ya creadas:** se respetan hasta el check-in o el vencimiento (máximo 15 minutos). Nada cambia en el tiquete, el QR ni la cuenta regresiva.
+- **Tiempo real:** al suspender o reactivar se emite `availability.changed` como siempre (con `isSearchable` en `false` se quita de la lista y del mapa).
+- **Contrato:** §8, §10 y §12.15 de `CLAUDE.md` cambiaron y quedan iguales en los tres repos. El contrato completo del panel está en `backend/docs/admin-panel-contract.md`; esta app no lo copia porque no consume `/v1/admin/*`.
+
+---
+
+## 16 nov 2026 · Sebastián · Límite de peticiones: texto del 429 y reintento con RATE_LIMITED (Sprint 4, §12.14)
+
+- **El backend ahora limita las peticiones** (backend PR #65). Al pasar un límite responde `429` sin `errorCode`; el WebSocket rechaza una conexión de más con `connect_error` `RATE_LIMITED`.
+- **`getErrorMessage`** muestra con un `429` `errorMessages.rateLimited` («Hiciste muchas solicitudes seguidas. Espera un momento e intenta de nuevo.»). Las consultas no lo reintentan (`shouldRetry` no reintenta un 4xx).
+- **Tiempo real:** `RATE_LIMITED` se reintenta como `SERVER_ERROR` (5 s, 15 s, 30 s), con `isRetryableRejection` (`features/realtime/availability-cache.ts`). Los códigos de sesión siguen sin reintentarse.
+- **Contrato:** nueva §12.14 en `CLAUDE.md`, igual en los tres repos.
+
+---
+
+## 16 nov 2026 · Sebastián · Explorar muestra todos los restaurantes (Sprint 4)
+
+- **Fuera la búsqueda por zona, por dirección y el radio.** Explorar abre el mapa con **todos** los restaurantes que se pueden reservar ahora, encuadrados de una vez.
+- **«Buscar restaurante»:** el campo de arriba filtra por nombre mientras escribes (sin importar mayúsculas ni tildes). Con un nombre que no existe sale «No encontramos «…»» con «Borrar búsqueda».
+- **Filtros:** quedan Categoría y Personas; «Distancia» se fue.
+- **Ubicación opcional:** se pide una vez al abrir. Con ella las tarjetas dicen «a 650 m» y van de la más cercana a la más lejana; sin ella van por nombre y sin distancia. Ya no hay pantalla de «Usar mi ubicación» ni de zonas.
+- **Necesita el backend nuevo** (PR de backend «buscar todos los restaurantes cuando no llega radio»): la app ya no envía `radiusKm`, y el backend de antes responde 400 sin ubicación. **Fusionar primero el backend.**
+- Código: `filterByName` (`search/filters.ts`), `useOptionalLocation` (`location/use-optional-location.ts`), `ExploreHeader` con el campo de texto, `ResultsMap` encuadra todos. Se borraron `OriginSheet`, `AddressSearch`, `address.ts` y los estados de zona.
+
+---
+
+## 15 nov 2026 · Sebastián · Los archivos de Firebase ya están en el repo
+
+- **`google-services.json`** (Android) y **`GoogleService-Info.plist`** (iOS) ahora se versionan en la raíz de la app. Ya no hay que pedírselos a nadie: con el pull los tienes.
+- Con ellos, tu build recibe **notificaciones push** en Android y tiene **«Continuar con Google» en iOS**.
+- Son configuración nativa: después del pull **recompila** (`npx expo run:android`, o `npx expo prebuild --clean` + `npx expo run:ios`). Reiniciar Metro no basta.
+- No traen secretos (son los mismos datos que viajan dentro de cada APK). La **cuenta de servicio** de Firebase del backend sí es secreta y **nunca** va en un repo: vive solo en Render como Secret File.
+- Las notas de abajo que dicen «fuera del repo, pídeselo a Sebastián» quedan reemplazadas por esta.
+
+---
+
+## 15 nov 2026 · Elizabeth · Administrador, cobro y KPIs: backend desplegado y contratos
+
+- **Qué quedó listo y desplegado (backend):** aprobación de restaurantes (`pending`, `approved`, `rejected`), rol `platform_admin` con su panel de API (`/v1/admin/restaurants*`), registro público (`POST /v1/restaurants/signup`), reenvío (`POST /v1/restaurants/me/resubmit`), cobro por check-in (`GET /v1/restaurants/me/billing/check-ins`, tarifa fija de COP 2.000) y resumen con KPIs (`GET /v1/restaurants/me/summary`).
+- **`errorCode` nuevos:** `ACCOUNT_PENDING_APPROVAL`, `ACCOUNT_REJECTED` y `ADMIN_ACCOUNT` (403), `RESTAURANT_NOT_PENDING` y `RESTAURANT_NOT_REJECTED` (409). También son `connect_error` del WebSocket (no reintentar).
+- **Contratos:** §1, §8, §10 y §12 (nueva §12.12) quedan idénticos en los tres `CLAUDE.md` desde este día. El texto salió de `backend/docs/contratos-pendientes.md`, que queda marcado como aplicado.
+- **Mobile, PENDIENTE de ajuste (sin cambios de código en este trabajo):** `ErrorCode` y `UserRole` de la app no tienen los valores nuevos. Hoy `platform_admin` (`ADMIN_ACCOUNT`) y un restaurante pendiente o rechazado (`RESTAURANT_ACCOUNT`) caen en «cuenta de restaurante». Hay que agregar `ADMIN_ACCOUNT` y el rol `platform_admin` con su propio texto.
+
+---
+
+## 12 nov 2026 · Sebastián · La app corre en iPhone (Sprint 4)
+
+- **iOS listo en el simulador de Xcode** (solo en Mac): `npx expo prebuild --clean --platform ios` y `npx expo run:ios`. Probado en un iPhone 18 Pro con iOS 27.2, en claro y en oscuro: login, Explorar con Google Maps, la reserva y Perfil.
+- **iOS 27 cierra al arrancar** las apps que no usan el ciclo de vida por escenas, y la plantilla de Expo SDK 57 todavía no lo trae. `app.config.ts` lo agrega (`withIosSceneLifecycle`, con el `ExpoAppSceneDelegate` oficial de Expo). Si una actualización de Expo cambia la plantilla, el prebuild falla con un mensaje que dice qué revisar.
+- **Fuentes:** iOS busca Plus Jakarta Sans por nombre PostScript (`PlusJakartaSans-Bold`). `tokens.ts` (`IOS_FONT_NAMES`) y `tailwind.config.js` (`platformSelect`) lo resuelven; en Android no cambia nada.
+- **Mapa:** Google Maps también en iOS, con la llave `GOOGLE_MAPS_IOS_API_KEY` (va en `.env`, nunca en el repo; está en `.env.example`). Sin ella, iOS muestra solo la lista.
+- **Google Sign-In en iOS:** lee el cliente de iOS de `GoogleService-Info.plist` (Firebase, fuera del repo, igual que `google-services.json`; pídeselos a Sebastián). Sin el archivo, «Continuar con Google» no está disponible en iOS y el correo funciona igual.
+- **Notificaciones en iOS:** solo el recordatorio local. La push remota exige el programa pago de Apple; `app.config.ts` quita el permiso `aps-environment` (un Apple ID gratis no lo puede firmar) salvo con `IOS_PUSH_ENABLED=true`.
+- El vidrio es real en iOS (`GlassSurface` ya lo hacía): las superficies se desenfocan de verdad, también sobre el mapa.
+- `google-services.json` y `GoogleService-Info.plist` quedan en el `.gitignore`.
+
+---
+
+## 12 nov 2026 · Sebastián · Notificaciones de la reserva (Sprint 4)
+
+- **Qué hace:** el comensal recibe notificaciones cuando su reserva se crea, se cancela, se vence o tiene check-in (push por Firebase Cloud Messaging en Android, enviadas por el backend; los textos nunca llevan el código). Además, un **recordatorio local** «Tu reserva vence pronto» 5 minutos antes (1 minuto si la reserva dura 5 o menos, como en la demo de 3 minutos), que funciona en Android y en iOS, sin red. Tocar una notificación abre la reserva.
+- **Permiso:** se pide después de la **primera reserva**, no al iniciar sesión. En Perfil hay una fila «Notificaciones» con «Activar» (o «Abrir ajustes» si están bloqueadas).
+- Con la app abierta, las push no salen como banner (la pantalla ya lo muestra) y quedan en la bandeja. El recordatorio sí sale como banner.
+- **Dependencia nueva con código nativo: `expo-notifications`.** Después del pull: `npm install`, `npx expo prebuild --clean` y `npx expo run:android`.
+- **`google-services.json`** (Firebase, Android) va en la raíz de la app y **no está en el repo**: pídeselo a Sebastián. Sin él la app compila igual, solo sin push remota (el recordatorio local funciona).
+- **Backend:** necesita el PR de notificaciones del backend (tabla `push_devices`, migración en Neon por Elizabeth, y la cuenta de servicio en Render). Sin eso, el registro del teléfono falla en silencio y la app sigue igual.
+- **iOS:** sin el programa pago de Apple no hay push remota; solo el recordatorio local.
+- Código: `src/features/notifications/` (`push.ts`, `hooks.ts` montados en `(app)/_layout.tsx`, `reminder.ts` con pruebas, `api.ts`). `apiRequest` acepta `PUT`.
+
+---
+
+## 12 nov 2026 · Sebastián · QR de check-in real (Sprint 4)
+
+- **El QR del tiquete ahora es real:** contiene solo el código de 6 caracteres (modo alfanumérico, nivel M, 21 × 21 + 2 módulos de margen). El restaurante lo lee con un lector USB o con la cámara del portátil en la web, o sigue escribiendo el código. **El backend no cambia:** el check-in es el mismo `POST /v1/restaurants/me/check-ins`.
+- **Tocar el QR lo abre en grande** («Tu código de reserva», con el código debajo y «Listo»), para leerlo más fácil desde la webcam.
+- Siempre tinta sobre claro, también en modo oscuro (muchos lectores no leen el QR invertido).
+- **Dependencia nueva: `qrcode-generator`** (JS puro, sin dependencias ni código nativo): después del pull corre `npm install`; **no hace falta recompilar**.
+- Código: `src/features/reservations/qr.ts` (`reservationQr(code)` → `{ size, path }`, con pruebas) y `ReservationQr` recibe `code`.
+
+---
+
+## 12 nov 2026 · Sebastián · Perfil más simple (Sprint 4)
+
+- **Perfil** muestra quién inició sesión (avatar con la inicial, nombre y correo, sin tarjeta), el tema en una tarjeta y, abajo, «Cerrar sesión» solo como texto (sigue pidiendo confirmación) y la versión.
+- **Se quitó el enlace «Ver el kit móvil».** La ruta `/kit` sigue existiendo en desarrollo: ábrela con `npx uri-scheme open dinno://kit --android` o escribiendo la ruta en Expo Router.
+- `getInitial(name)` nuevo en `src/features/account/profile-display.ts`. Se borró `src/components/ScreenPlaceholder.tsx`, que ya nadie usaba.
+- **Sin cambios de API, dependencias ni configuración nativa:** no hace falta recompilar.
+
+---
+
 ## 11 nov 2026 · Sebastián · Rediseño de la app: diseño definitivo (B + C)
 
 La app del comensal pasa al diseño definitivo que elegimos en el canvas «DiNNo Mobile · Diseño definitivo». Cambian Explorar, Restaurante y Tu reserva, en claro y en oscuro. La lógica (búsqueda, tiempo real, reservar, cancelar, temporizador) no cambia.

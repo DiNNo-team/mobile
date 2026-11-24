@@ -1,85 +1,58 @@
-// Contract of CLAUDE.md §10 (Elizabeth): /search/zones, /search/restaurants and /restaurants/:id/public.
+// Contract of CLAUDE.md §10 (Elizabeth): /search/restaurants and /restaurants/:id/public. Since Sprint 4 the app
+// searches every restaurant (no zone, address or radius) and filters by name on screen.
 // A contract change touches this file first.
 
 /** The only four values; the app never shows a number of tables. */
-export type Availability = 'available' | 'few' | 'none' | 'closed';
+export type Availability = "available" | "few" | "none" | "closed";
 
 /** Backend categories, same order as the web (`frontend/src/features/restaurant/types.ts`). */
 export const RESTAURANT_CATEGORIES = [
-  'colombian',
-  'italian',
-  'mexican',
-  'asian',
-  'grill',
-  'fast_food',
-  'healthy',
-  'seafood',
-  'cafe',
-  'other',
+  "colombian",
+  "italian",
+  "mexican",
+  "asian",
+  "grill",
+  "fast_food",
+  "healthy",
+  "seafood",
+  "cafe",
+  "other",
 ] as const;
 
 export type RestaurantCategory = (typeof RESTAURANT_CATEGORIES)[number];
 
 /** Same texts as the web, so both products name a category the same way. */
 export const RESTAURANT_CATEGORY_LABELS: Record<RestaurantCategory, string> = {
-  colombian: 'Colombiana',
-  italian: 'Italiana',
-  mexican: 'Mexicana',
-  asian: 'Asiática',
-  grill: 'Parrilla',
-  fast_food: 'Comida rápida',
-  healthy: 'Saludable',
-  seafood: 'Mariscos',
-  cafe: 'Cafetería',
-  other: 'Otra',
+  colombian: "Colombiana",
+  italian: "Italiana",
+  mexican: "Mexicana",
+  asian: "Asiática",
+  grill: "Parrilla",
+  fast_food: "Comida rápida",
+  healthy: "Saludable",
+  seafood: "Mariscos",
+  cafe: "Cafetería",
+  other: "Otra",
 };
 
 /** Label of a category, or null when the restaurant has none yet. */
-export function getCategoryLabel(category: RestaurantCategory | null): string | null {
+export function getCategoryLabel(
+  category: RestaurantCategory | null,
+): string | null {
   return category ? RESTAURANT_CATEGORY_LABELS[category] : null;
 }
 
 /** Shown when a restaurant has no address yet (category and address can be null, CLAUDE.md §10). */
-export const ADDRESS_FALLBACK = 'Dirección por confirmar';
-
-export const RADIUS_OPTIONS_KM = [1, 2, 5, 10] as const;
-export type RadiusKm = (typeof RADIUS_OPTIONS_KM)[number];
-export const DEFAULT_RADIUS_KM: RadiusKm = 2;
+export const ADDRESS_FALLBACK = "Dirección por confirmar";
 
 export const PARTY_SIZE_LIMITS = { min: 1, max: 20 } as const;
 
-/** GET /search/zones item. */
-export interface Zone {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-}
-
-/** Where the search is centered: the phone's GPS or one zone of the closed list (never both). */
-export type SearchOrigin =
-  | { type: 'location'; latitude: number; longitude: number }
-  | { type: 'zone'; zoneId: string }
-  /**
-   * An address the diner typed, already turned into a point by GET /geocode. `formattedAddress` is what Google
-   * understood (shown as "Cerca de: …", CLAUDE.md §10); `query` is what the diner typed, to show it again.
-   */
-  | { type: 'address'; latitude: number; longitude: number; formattedAddress: string; query: string };
-
-/** 200 of GET /geocode: always inside Bogotá. */
-export interface GeocodeResult {
-  latitude: number;
-  longitude: number;
-  formattedAddress: string;
-}
-
 export interface SearchFilters {
-  radiusKm: RadiusKm;
   category?: RestaurantCategory;
   partySize?: number;
 }
 
-/** GET /search/restaurants item, ordered by distance (max 50). */
+/** GET /search/restaurants item without a radius: every restaurant, by distance with the phone's position, else by name. */
 export interface RestaurantSummary {
   id: string;
   name: string;
@@ -89,8 +62,8 @@ export interface RestaurantSummary {
   address: string | null;
   latitude: number;
   longitude: number;
-  /** Kilometers with 2 decimals; the app formats it ("a 650 m", "a 1,4 km"). */
-  distanceKm: number;
+  /** Kilometers with 2 decimals; the app formats it ("a 650 m", "a 1,4 km"). Null without the phone's position. */
+  distanceKm: number | null;
   availability: Availability;
 }
 
@@ -127,9 +100,10 @@ export interface Coordinates {
 }
 
 export interface SearchApi {
-  getZones(): Promise<Zone[]>;
-  searchRestaurants(origin: SearchOrigin, filters: SearchFilters): Promise<RestaurantSummary[]>;
+  /** Every restaurant that can be booked now; `from` (the phone's position) adds the distance and sorts by it. */
+  searchRestaurants(
+    from: Coordinates | null,
+    filters: SearchFilters,
+  ): Promise<RestaurantSummary[]>;
   getRestaurant(id: string, from?: Coordinates): Promise<RestaurantDetail>;
-  /** GET /geocode: 404 ADDRESS_NOT_FOUND outside Bogotá, 503 GEOCODING_UNAVAILABLE when Google fails. */
-  geocode(address: string): Promise<GeocodeResult>;
 }
