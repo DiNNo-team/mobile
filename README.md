@@ -495,11 +495,11 @@ Quien lo reciba lo instala con `adb install -r app-release.apk` o arrastrándolo
 
 | Integrante | Rol | GitHub |
 |---|---|---|
-| Elizabeth Correa | Backend base, mesas, edición del restaurante, integración y demo | [@Eliza-05](https://github.com/Eliza-05) |
-| Juan Sebastián Ortega Muñoz | Kit visual, pantallas de mesas y dueño de esta app | _pendiente_ |
+| Elizabeth Correa Suárez | Backend base, mesas, edición del restaurante, integración y demo | [@Eliza-05](https://github.com/Eliza-05) |
+| Juan Sebastián Ortega Muñoz | Kit visual, pantallas de mesas y dueño de esta app | [@Juanseom](https://github.com/Juanseom) |
 | Jacobo Díaz | Autenticación y control de acceso | [@Jacobo2025](https://github.com/Jacobo2025) |
-| Santiago Carmona | Registro del restaurante (onboarding) | _pendiente_ |
-| Sergio Alejandro Idarraga Torres | Estado abierto/cerrado del restaurante y bitácora de mesas | _pendiente_ |
+| Santiago Carmona | Registro del restaurante (onboarding) | [@Carmo0982](https://github.com/Carmo0982) |
+| Sergio Alejandro Idarraga Torres | Estado abierto/cerrado del restaurante y bitácora de mesas | [@ALEJO21005](https://github.com/ALEJO21005) |
 
 ---
 
