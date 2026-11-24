@@ -1,11 +1,17 @@
 <div align="center">
 
-<img src="assets/images/icon.png" alt="Ícono de la app DiNNo" width="96" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.svg">
+  <img src="docs/images/logo-light.svg" alt="Logo de DiNNo" height="72" />
+</picture>
 
 # 📍 DiNNo · App móvil
 
-**Dile no a la espera.**
+### **Dile no a la espera.**
+
 La app del comensal: encuentra un restaurante con mesa disponible *ahora* y asegúrala mientras llegas.
+
+<br/>
 
 ![Expo](https://img.shields.io/badge/Expo-SDK_57-000020?style=for-the-badge&logo=expo&logoColor=white)
 ![React Native](https://img.shields.io/badge/React_Native-0.86-61DAFB?style=for-the-badge&logo=react&logoColor=black)
