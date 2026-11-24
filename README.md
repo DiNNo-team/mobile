@@ -5,7 +5,7 @@
   <img src="docs/images/logo-light.svg" alt="Logo de DiNNo" height="72" />
 </picture>
 
-# 📍 DiNNo · App móvil
+<h1><img src="docs/images/app-icon.png" alt="Ícono de la app DiNNo" height="56" align="absmiddle" />&nbsp; DiNNo · App móvil</h1>
 
 ### **Dile no a la espera.**
 
